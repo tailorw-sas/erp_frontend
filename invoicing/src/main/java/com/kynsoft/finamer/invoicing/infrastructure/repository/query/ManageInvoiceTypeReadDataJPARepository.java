@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +34,6 @@ public interface ManageInvoiceTypeReadDataJPARepository extends JpaRepository<Ma
 
     @Query("SELECT b FROM ManageInvoiceType b WHERE b.invoice = true AND b.deleted = false AND status = 'ACTIVE'")
     Optional<ManageInvoiceType> findByInvoice();
+
+    List<ManageInvoiceType> findByIdIn(List<UUID> ids);
 }

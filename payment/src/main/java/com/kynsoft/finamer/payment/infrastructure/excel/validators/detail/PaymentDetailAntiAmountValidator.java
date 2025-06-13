@@ -18,9 +18,7 @@ public class PaymentDetailAntiAmountValidator extends ExcelListRuleValidator<Pay
 
     private final Cache cache;
 
-    protected PaymentDetailAntiAmountValidator(ApplicationEventPublisher applicationEventPublisher,
-                                               Cache cache) {
-        super(applicationEventPublisher);
+    protected PaymentDetailAntiAmountValidator(Cache cache) {
         this.cache = cache;
     }
 

@@ -1,36 +1,60 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.anti;
 
+import com.kynsof.share.core.application.excel.validator.ExcelListRuleValidator;
 import com.kynsof.share.core.domain.exception.BusinessException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.response.ErrorField;
+import com.kynsof.share.core.domain.response.RowErrorField;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
+import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
+import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-public class PaymentTotalAmountValidator {
+import java.util.stream.Collectors;
 
-    private final PaymentImportCacheRepository paymentImportCacheRepository;
+public class PaymentTotalAmountValidator extends ExcelListRuleValidator<AntiToIncomeRow> {
 
-    public PaymentTotalAmountValidator( PaymentImportCacheRepository paymentImportCacheRepository) {
-        this.paymentImportCacheRepository = paymentImportCacheRepository;
+    private final Cache cache;
+
+    public PaymentTotalAmountValidator(Cache cache) {
+        this.cache = cache;
     }
 
+    @Override
+    public void validate(List<AntiToIncomeRow> obj, List<RowErrorField> errorRowList) {
+        Map<Long, List<AntiToIncomeRow>> paymentDetailGroupedMap = this.getAntiToIncomeGroupedById(obj);
 
-    public void validate(double totalAmount,double currentImportAmount,String importProcessId) {
-        Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.ASC, "id"));
+        for(Map.Entry<Long, List<AntiToIncomeRow>> entry : paymentDetailGroupedMap.entrySet()){
+            PaymentDetailDto depositPaymentDetail = this.cache.getPaymentDetailByPaymentDetailId(entry.getKey());
+            List<Integer> rowNumberList = entry.getValue().stream().map(AntiToIncomeRow::getRowNumber).toList();
 
-        Page<PaymentImportCache> pageCache;
-        double amountTotal = 0;
-        do {
-            pageCache = paymentImportCacheRepository.findAllByImportProcessId(importProcessId, pageable);
-            amountTotal += pageCache.stream().filter(Objects::nonNull).map(paymentCache -> Double.parseDouble(paymentCache.getPaymentAmount())).reduce(0.0, Double::sum);
-            pageable=pageable.next();
-        } while (pageCache.hasNext());
-       if (amountTotal+ currentImportAmount != totalAmount){
-           throw new BusinessException(DomainErrorMessage.AMOUNT_MISMATCH,"The total amount isn't equals to the imported total amount");
-       }
+            if(Objects.nonNull(depositPaymentDetail)){
+                double amountToImport = entry.getValue().stream()
+                        .filter(antiToIncomeRow -> Objects.nonNull(antiToIncomeRow.getAmount()))
+                        .mapToDouble(AntiToIncomeRow::getAmount).sum();
+
+                if(amountToImport > depositPaymentDetail.getApplyDepositValue()){
+                    addErrorsToRowList(errorRowList, rowNumberList, new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
+                }
+            }else{
+                addErrorsToRowList(errorRowList, rowNumberList, new ErrorField("Payment Details", "Payment Details not found."));
+            }
+        }
+    }
+
+    private Map<Long, List<AntiToIncomeRow>> getAntiToIncomeGroupedById(List<AntiToIncomeRow> antiToIncomeRows){
+        return antiToIncomeRows.stream()
+                .filter(row -> row.getTransactionId() != null)
+                .collect(Collectors.groupingBy(antiToIncomeRow -> antiToIncomeRow.getTransactionId().longValue()));
     }
 }

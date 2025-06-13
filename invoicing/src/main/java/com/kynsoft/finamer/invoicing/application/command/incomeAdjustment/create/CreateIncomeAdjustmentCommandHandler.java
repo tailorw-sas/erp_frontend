@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.creat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
@@ -53,9 +54,6 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
     @Override
     public void handle(CreateIncomeAdjustmentCommand command) {
 
-        // RulesChecker.checkRule(new
-        // ValidateObjectNotNullRule<>(command.getTransactionType(), "transactionType",
-        // "Manage Invoice Transaction Type ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(command.getIncome(), "income",
                 "Income ID cannot be null."));
 
@@ -83,6 +81,8 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
         Double invoiceAmount = 0.0;
         List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
 
+        String employeeFullName = this.employeeService.getEmployeeFullName(command.getEmployee());
+
         for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
@@ -101,7 +101,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     null,
                     paymentTransactionTypeDto,
                     null,
-                    this.employeeService.getEmployeeFullName(command.getEmployee()),
+                    employeeFullName,
                     false
             ));
             invoiceAmount += adjustment.getAmount();

@@ -8,7 +8,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeMessage;
-import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.antiToIncome.CreateAntiToIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.delete.DeleteIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.delete.DeleteIncomeMessage;
@@ -42,6 +42,10 @@ public class IncomeController {
         CreateIncomeCommand createCommand = CreateIncomeCommand.fromRequest(request);
         CreateIncomeMessage response = mediator.send(createCommand);
 
+        //FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
+        //ManageInvoiceResponse resp = mediator.send(query);
+
+//        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
     }
 

@@ -17,18 +17,12 @@ import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
 import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
-import com.kynsoft.finamer.payment.domain.dto.ManageEmployeeDto;
-import com.kynsoft.finamer.payment.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailSimpleDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentStatusHistoryDto;
+import com.kynsoft.finamer.payment.domain.dto.*;
 import com.kynsoft.finamer.payment.domain.dto.helper.DetailAndIncomeHelper;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
@@ -47,7 +41,6 @@ import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentA
 import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
 import com.kynsoft.finamer.payment.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentStatus;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentTransactionType;
 import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageBookingWriteDataJPARepository;
@@ -71,9 +64,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -118,11 +114,9 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     @Value("${payment.relate.invoice.status.code}")
     private String RELATE_INCOME_STATUS_CODE;
 
-    private List<PaymentDetail> details;
-    private List<PaymentDetail> newDetails;
-    private List<Payment> uniquePayments;
-    private List<Booking> bookins;
     private String attachment;
+
+    private static final Logger logger = LoggerFactory.getLogger(PaymentImportAntiIncomeHelperServiceImpl.class);
 
     public PaymentImportAntiIncomeHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentAntiValidatorFactory paymentAntiValidatorFactory,
@@ -146,10 +140,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             PaymentUploadAttachmentUtil paymentUploadAttachmentUtil,
             ApplicationEventPublisher applicationEventPublisher,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
-        this.details = new ArrayList<>();
-        this.newDetails = new ArrayList<>();
-        this.uniquePayments = new ArrayList<>();
-        this.bookins = new ArrayList<>();
         this.attachment = "";
         this.paymentImportCacheRepository = paymentImportCacheRepository;
         this.paymentAntiValidatorFactory = paymentAntiValidatorFactory;
@@ -177,24 +167,31 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
     @Override
     public void readExcel(ReaderConfiguration readerConfiguration, Object rawRequest) {
+        printLog("Start readExcel process");
         this.totalProcessRow = 0;
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        List<UUID> agencys = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
-        List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployeeId()));
+        ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(UUID.fromString(request.getEmployeeId()));
 
-        paymentAntiValidatorFactory.createValidators();
         ExcelBeanReader<AntiToIncomeRow> excelBeanReader = new ExcelBeanReader<>(readerConfiguration, AntiToIncomeRow.class);
         ExcelBean<AntiToIncomeRow> excelBean = new ExcelBean<>(excelBeanReader);
-        for (AntiToIncomeRow row : excelBean) {
-            row.setImportProcessId(request.getImportProcessId());
-            row.setImportType(request.getImportPaymentType().name());
-            row.setAgencys(agencys);
-            row.setHotels(hotels);
-            if (paymentAntiValidatorFactory.validate(row)) {
+        List<AntiToIncomeRow> antiToIncomeRows = new ArrayList<>();
+        excelBean.forEach(antiToIncomeRows::add);
+
+        printLog("Antes de obtener cache");
+        Cache cache = this.createCache(antiToIncomeRows, employeeDto, request);
+        printLog("Antes de obtener cache");
+
+        paymentAntiValidatorFactory.createValidators(cache);
+
+        boolean result = paymentAntiValidatorFactory.validate(antiToIncomeRows);
+        if(result){
+            antiToIncomeRows.forEach(row -> {
                 cachingPaymentImport(row);
                 totalProcessRow++;
-            }
+            });
+
         }
+        printLog("End readExcel process");
     }
 
     public void createAttachment(PaymentImportDetailRequest request) {
@@ -232,60 +229,58 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     @Override
     public void readPaymentCacheAndSave(Object rawRequest) {
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        Pageable pageable = PageRequest.of(0, 5000, Sort.by(Sort.Direction.ASC, "rowNumber"));
-        Page<PaymentImportCache> cacheList;
         if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
-            /*todo: subir el attachment y enviar esa misma info para los income a crear,
-             * sustituir el envío del byte[] por esa info
-             */
-//            String attachment = "";
+            ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(UUID.fromString(request.getEmployeeId()));
+            ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByApplyDepositAndDefaults();
+
+            //TODO: subir el attachment y enviar esa misma info para los income a crear, sustituir el envío del byte[] por esa info
             try {
                 LinkedHashMap<String, String> response = paymentUploadAttachmentUtil.uploadAttachmentContent("detail.pdf", request.getAttachment());
                 attachment = response.get("url");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            ManageEmployeeDto employeeDto = this.manageEmployeeService.findById(UUID.fromString(request.getEmployeeId()));
-            ManagePaymentTransactionTypeDto transactionTypeDto = this.transactionTypeService.findByApplyDepositAndDefaults();
-            do {
-                cacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId(), pageable);
 
-                List<Long> listaIds = cacheList.stream().map(obj -> Long.valueOf(obj.getTransactionId())).collect(Collectors.toList());
-                this.details = this.paymentDetailService.findByPaymentDetailsIdIn(listaIds);
-                this.uniquePayments = details.stream().map(PaymentDetail::getPayment).distinct().collect(Collectors.toList());
+            List<PaymentImportCache> paymentImportCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
+            Map<Long, PaymentDetailDto> depositPaymentDetailMap = this.getPaymentDetailMap(paymentImportCacheList);
 
-                System.err.println("Tamanno de la lista: " + details.size());
-                String finalAttachment = attachment;
-                cacheList.forEach(paymentImportCache -> {
-                    Optional<PaymentDetail> foundDetail = details.stream().filter(detail -> detail.getPaymentDetailId().equals(Long.valueOf(paymentImportCache.getTransactionId()))).findFirst();
+            //this.uniquePayments = details.stream().map(PaymentDetail::getPayment).distinct().collect(Collectors.toList());
+
+            String finalAttachment = attachment;
+
+            List<DetailAndIncomeHelper> incomes = new ArrayList<>();
+            List<UUID> incoList = new ArrayList<>();
+
+            for(PaymentImportCache paymentImportCache : paymentImportCacheList){
+                PaymentDetailDto depositPaymentDetail = depositPaymentDetailMap.get(Long.parseLong(paymentImportCache.getTransactionId()));
+                if(Objects.nonNull(depositPaymentDetail)){
                     double amount = Double.parseDouble(paymentImportCache.getPaymentAmount());
-                    if (foundDetail.get().getApplyDepositValue() - amount < 0) {
+                    if (depositPaymentDetail.getApplyDepositValue() - amount < 0) {
                         this.totalProcessRow--;
                         return;
                     }
                     String remark = paymentImportCache.getRemarks() == null ? transactionTypeDto.getDefaultRemark() : paymentImportCache.getRemarks();
-                    this.createPaymentDetails(transactionTypeDto, foundDetail.get(), amount, remark);
-                });
-                pageable = pageable.next();
-            } while (cacheList.hasNext());
-            this.repositoryPaymentDetailsCommand.saveAll(newDetails);
-            this.repositoryPaymentDetailsCommand.saveAll(details);
-            this.repositoryPaymentCommand.saveAll(uniquePayments);
+                    //this.createPaymentDetails(transactionTypeDto, depositPaymentDetail, amount, remark);
+                }
 
-            List<DetailAndIncomeHelper> incomes = new ArrayList<>();
-            List<UUID> incoList = new ArrayList<>();
-            for (PaymentDetail newDetail : this.newDetails) {
-                CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(sendToCreateRelatedIncome(newDetail, employeeDto, transactionTypeDto.getId(), attachment));
-                incomes.add(new DetailAndIncomeHelper(msg.getId(), newDetail.getId()));
-                incoList.add(msg.getId());
-                this.createAdjustmentHttpService.sendCreateIncomeRequest(this.createAdjustmentRequest(newDetail, employeeDto.getId(), UUID.fromString(request.getInvoiceTransactionTypeId()), msg.getId()));
+                CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(getRelatedIncome(depositPaymentDetail, employeeDto, transactionTypeDto.getId(), attachment));
+                //incomes.add(new DetailAndIncomeHelper(msg.getId(), newDetail.getId()));
+                //incoList.add(msg.getId());
+                this.createAdjustmentHttpService.sendCreateIncomeRequest(this.createAdjustmentRequest(depositPaymentDetail, employeeDto.getId(), UUID.fromString(request.getInvoiceTransactionTypeId()), msg.getId()));
             }
+
+
+
+            //this.repositoryPaymentDetailsCommand.saveAll(newDetails);
+            //this.repositoryPaymentDetailsCommand.saveAll(details);
+            //this.repositoryPaymentCommand.saveAll(uniquePayments);
+
             this.applyPayment(employeeDto, incomes, incoList);
         }
     }
 
     public void applyPayment(ManageEmployeeDto employeeDto, List<DetailAndIncomeHelper> incomes, List<UUID> incoList) {
-        try {
+        /*try {
             TimeUnit.SECONDS.sleep(5);
         } catch (Exception e) {
         }
@@ -339,6 +334,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                     }
                 });
         System.err.println("Culmina enviando a invoice: " + LocalTime.now());
+        */
     }
     //Este es para agregar el History del Payment. Aqui el estado es el del nomenclador Manage Payment Status
     private void createPaymentAttachmentStatusHistory(ManageEmployeeDto employeeDto, PaymentDto payment) {
@@ -363,10 +359,11 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         return OffsetDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
     }
 
-    public void createPaymentDetails(ManagePaymentTransactionTypeDto paymentTransactionTypeDto, PaymentDetail paymentDetailDto, double amount,
+    /*
+    public void createPaymentDetails(ManagePaymentTransactionTypeDto paymentTransactionTypeDto, PaymentDetailDto paymentDetailDto, double amount,
                                      String remarks) {
 
-        Payment paymentUpdate = uniquePayments.stream().filter(payment -> payment.getId().equals(paymentDetailDto.getPayment().getId())).findFirst().get();
+        PaymentDto paymentUpdate = paymentDetailDto.getPayment();
 
         ConsumerUpdate updatePayment = new ConsumerUpdate();
 
@@ -404,37 +401,37 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         //Actualizando el Deposit
         this.updatePaymentDetails(paymentDetailDto);
         this.updatePayment(paymentUpdate);
-    }
+    }*/
 
-    private void updatePaymentNewDetails(PaymentDetail update) {
-        int index = this.newDetails.indexOf(update);
-        if (index != -1) {
-            this.newDetails.set(index, update);
-        }
-    }
+//    private void updatePaymentNewDetails(PaymentDetail update) {
+//        int index = this.newDetails.indexOf(update);
+//        if (index != -1) {
+//            this.newDetails.set(index, update);
+//        }
+//    }
+//
+//    private void updatePaymentDetails(PaymentDetail update) {
+//        int index = this.details.indexOf(update);
+//        if (index != -1) {
+//            this.details.set(index, update);
+//        }
+//    }
+//
+//    private void updatePayment(Payment update) {
+//        int index = this.uniquePayments.indexOf(update);
+//        if (index != -1) {
+//            this.uniquePayments.set(index, update);
+//        }
+//    }
+//
+//    private void updateBooking(Booking update) {
+//        int index = this.bookins.indexOf(update);
+//        if (index != -1) {
+//            this.bookins.set(index, update);
+//        }
+//    }
 
-    private void updatePaymentDetails(PaymentDetail update) {
-        int index = this.details.indexOf(update);
-        if (index != -1) {
-            this.details.set(index, update);
-        }
-    }
-
-    private void updatePayment(Payment update) {
-        int index = this.uniquePayments.indexOf(update);
-        if (index != -1) {
-            this.uniquePayments.set(index, update);
-        }
-    }
-
-    private void updateBooking(Booking update) {
-        int index = this.bookins.indexOf(update);
-        if (index != -1) {
-            this.bookins.set(index, update);
-        }
-    }
-
-    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetail paymentDetailDto, UUID employeeId, UUID transactionType, UUID income) {
+    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId, UUID transactionType, UUID income) {
         CreateIncomeAdjustmentRequest request = new CreateIncomeAdjustmentRequest();
         request.setEmployee(employeeId.toString());
         request.setIncome(income);
@@ -451,18 +448,18 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         return request;
     }
 
-    private CreateAntiToIncomeRequest sendToCreateRelatedIncome(PaymentDetail paymentDetailDto, ManageEmployeeDto employeeDto, UUID status, String attachment) {
+    private CreateAntiToIncomeRequest getRelatedIncome(PaymentDetailDto paymentDetailDto, ManageEmployeeDto employeeDto, UUID status, String attachment) {
         CreateAntiToIncomeRequest income = new CreateAntiToIncomeRequest();
         income.setInvoiceDate(LocalDateTime.now().toString());
         income.setManual(Boolean.FALSE);
         income.setAgency(paymentDetailDto.getPayment().getAgency().getId());
         income.setHotel(paymentDetailDto.getPayment().getHotel().getId());
-        income.setInvoiceType(UUID.randomUUID());
+        income.setInvoiceType(UUID.randomUUID());//TODO Cambiar por INCOME
         income.setInvoiceStatus(status);
         income.setIncomeAmount(paymentDetailDto.getAmount());
         income.setStatus("ACTIVE");
         income.setInvoiceNumber(0L);
-        income.setDueDate(LocalDate.now().toString());
+        income.setDueDate(LocalDate.now().toString());//TODO Validar que debe ser segun el close operation
         income.setReSend(Boolean.FALSE);
         income.setReSendDate(LocalDate.now().toString());
         income.setEmployee(employeeDto.getId().toString());
@@ -523,4 +520,35 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         return response1.getId();
     }
 
+    private void printLog(String message){
+        logger.info("{} at: {}", message, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    }
+
+    private Cache createCache(List<AntiToIncomeRow> antiToIncomeRows, ManageEmployeeDto employeeDto, PaymentImportDetailRequest request){
+        Set<Long> paymentDetailGenIdSet = new HashSet<>();
+
+        for (AntiToIncomeRow row : antiToIncomeRows){
+            paymentDetailGenIdSet.add(row.getTransactionId().longValue());
+
+            row.setImportProcessId(request.getImportProcessId());
+            row.setImportType(request.getImportPaymentType().name());
+        }
+
+        List<Long> paymentDetailGenIdList = new ArrayList<>(paymentDetailGenIdSet);
+        List<PaymentDetailDto> paymentDetails = this.getPaymentDetailsByPaymentDetailGenId(paymentDetailGenIdList);
+
+        return new Cache(paymentDetails, employeeDto);
+    }
+
+    private List<PaymentDetailDto> getPaymentDetailsByPaymentDetailGenId(List<Long> paymentDetailGenIds){
+        return this.paymentDetailService.findByPaymentDetailsIdIn(paymentDetailGenIds).stream().map(PaymentDetail::toAggregate).collect(Collectors.toList());
+    }
+
+    private Map<Long, PaymentDetailDto> getPaymentDetailMap(List<PaymentImportCache> paymentImportCacheList){
+        List<Long> paymentDetailIds = paymentImportCacheList.stream()
+                .filter(paymentImportCache -> Objects.nonNull(paymentImportCache.getTransactionId()))
+                .map(paymentImportCache -> Long.parseLong(paymentImportCache.getTransactionId())).toList();
+        return this.getPaymentDetailsByPaymentDetailGenId(paymentDetailIds).stream()
+                .collect(Collectors.toMap(PaymentDetailDto::getPaymentDetailId, paymentDetailDto -> paymentDetailDto));
+    }
 }

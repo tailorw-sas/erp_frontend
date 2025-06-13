@@ -13,6 +13,8 @@ public interface IManageBookingService {
 
     ManageBookingDto create(ManageBookingDto dto);
 
+    UUID insert(ManageBookingDto dto);
+
     void update(ManageBookingDto dto);
 
     void calculateInvoiceAmount(ManageBookingDto dto);

@@ -23,10 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusService {
@@ -213,5 +211,15 @@ public class ManageInvoiceStatusServiceImpl implements IManageInvoiceStatusServi
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_INVOICE_STATUS_NOT_FOUND, new ErrorField("id", "The source not found.")));
+    }
+
+    @Override
+    public Map<UUID, ManageInvoiceStatusDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw  new IllegalArgumentException("The invoice status ID list must not be null or empty");
+        }
+
+        return this.findByIds(ids).stream()
+                .collect(Collectors.toMap(ManageInvoiceStatusDto::getId, invoiceStatusDto -> invoiceStatusDto));
     }
 }

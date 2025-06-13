@@ -36,9 +36,6 @@ public class AntiToIncomeRow extends Row implements Serializable {
     private String transactionCheckDepositAmount;
     private String transactionCheckDepositBalance;
 
-    private List<UUID> agencys = new ArrayList<>();
-    private List<UUID> hotels = new ArrayList<>();
-
     public PaymentDetailDto toAggregate() {
         PaymentDetailDto paymentDetailDto = new PaymentDetailDto();
         paymentDetailDto.setAmount(this.amount);

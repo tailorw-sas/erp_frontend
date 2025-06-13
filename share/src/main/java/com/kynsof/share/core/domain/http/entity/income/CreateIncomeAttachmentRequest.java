@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.command.income.create;
+package com.kynsof.share.core.domain.http.entity.income;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

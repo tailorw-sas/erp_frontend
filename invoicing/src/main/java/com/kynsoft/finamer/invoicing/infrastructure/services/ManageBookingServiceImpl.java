@@ -107,6 +107,17 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
+    public UUID insert(ManageBookingDto dto) {
+        Booking entity = new Booking(dto);
+        this.repositoryCommand.insert(entity);
+
+        dto.setId(entity.getId());
+        dto.setReservationNumber(entity.getReservationNumber());
+        dto.setBookingId(entity.getBookingId());
+        return entity.getId();
+    }
+
+    @Override
     public void update(ManageBookingDto dto) {
         Booking entity = new Booking(dto);
         entity.setUpdatedAt(LocalDateTime.now());

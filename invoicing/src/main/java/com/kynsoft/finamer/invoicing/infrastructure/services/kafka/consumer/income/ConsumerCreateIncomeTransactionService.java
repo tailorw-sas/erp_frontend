@@ -2,10 +2,10 @@ package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.inc
 
 import com.kynsof.share.core.domain.kafka.entity.*;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeAttachmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustmentCommand;
-import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.NewIncomeAdjustmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.*;

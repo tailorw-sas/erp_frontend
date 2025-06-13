@@ -2,8 +2,9 @@ package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.creat
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
-import java.time.LocalDate;
+
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;

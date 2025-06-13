@@ -17,9 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
@@ -122,6 +121,27 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
     @Override
     public ManageInvoiceTypeDto findByInvoice() {
         return this.repositoryQuery.findByInvoice().map(ManageInvoiceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public List<ManageInvoiceTypeDto> findByIds(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw new IllegalArgumentException("The invoice type ID list must not be null or empty");
+        }
+
+        return this.repositoryQuery.findByIdIn(ids).stream()
+                .map(ManageInvoiceType::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<UUID, ManageInvoiceTypeDto> getMapById(List<UUID> invoiceTypeIds) {
+        if(Objects.isNull(invoiceTypeIds) || invoiceTypeIds.isEmpty()){
+            throw new IllegalArgumentException("The invoice type ID list must not be null or empty");
+        }
+
+        return this.findByIds(invoiceTypeIds).stream()
+                .collect(Collectors.toMap(ManageInvoiceTypeDto::getId, invoiceTypeDto -> invoiceTypeDto));
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

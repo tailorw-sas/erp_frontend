@@ -3,12 +3,19 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
+import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
+import com.kynsof.share.core.domain.exception.GlobalBusinessException;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
+import com.kynsof.share.utils.BankerRounding;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
+import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
@@ -16,12 +23,11 @@ import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.mana
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.*;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -41,6 +47,11 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManageEmployeeService employeeService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
+    private final IManagePaymentTransactionTypeService transactionTypeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
+
+    private final IManageRoomRateService roomRateService;
+
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                       IManageHotelService hotelService,
                                       IManageInvoiceTypeService invoiceTypeService,
@@ -53,7 +64,9 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                                       IManageAttachmentService attachmentService,
                                       IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                       IManageEmployeeService employeeService,
-                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                      IManagePaymentTransactionTypeService transactionTypeService,
+                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
+                                      IManageRoomRateService roomRateService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -66,11 +79,14 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
+        this.transactionTypeService = transactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.roomRateService = roomRateService;
     }
 
     @Override
     public void handle(CreateIncomeCommand command) {
+        InvoiceCloseOperationDto closeOperationDto = this.getHotelCloseOperation(command.getHotel());
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
         RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
@@ -78,46 +94,75 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
-
         ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
+        ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
+        String employeeFullName = this.employeeService.getEmployeeFullName(command.getEmployee());
+      
+        String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
 
-        ManageInvoiceStatusDto invoiceStatusDto = null;
-        try {
-            invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        } catch (Exception e) {
+        ManageInvoiceDto income = this.generateNewManageInvoice(command.getId(),
+                invoiceNumber,
+                command.getInvoiceDate(),
+                command.getDueDate(),
+                command.getManual(),
+                hotelDto,
+                agencyDto,
+                command.getReSend(),
+                command.getReSendDate(),
+                invoiceTypeDto,
+                invoiceStatusDto);
+        income.setOriginalAmount(0.0);
+
+        this.createAdjustments(income, command.getAdjustments(), employeeFullName, closeOperationDto);
+
+        //ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
+        Instant before = Instant.now();
+        this.manageInvoiceService.insert(income);
+        Instant after = Instant.now();
+        System.out.println("Insert invoice - booking: " + Duration.between(before, after).toMillis() + " ms");
+
+        //TODO Luego guardar los bookings y rates con los ajustes
+        before = Instant.now();
+        if(Objects.nonNull(income.getBookings()) && !income.getBookings().isEmpty()){
+            //this.bookingService.updateAll(income.getBookings());
+            for (ManageBookingDto bookingDto : income.getBookings()){
+                if(Objects.nonNull(bookingDto.getRoomRates()) && !bookingDto.getRoomRates().isEmpty()){
+                    for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
+                        this.roomRateService.create(roomRateDto);
+                    }
+                }
+            }
         }
+        after = Instant.now();
+        System.out.println("Insert room rates - adjustments: " + Duration.between(before, after).toMillis() + " ms");
 
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
-        }
 
-        String id = command.getId().toString();
-        UUID invoiceUUID = (id == null || id.trim().isEmpty()) ? UUID.randomUUID() : command.getId();
-         ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
-                EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
-                 0.0, null, null, false,null);
+        command.setInvoiceId(income.getInvoiceId());
+        command.setInvoiceNo(income.getInvoiceNumber());
+        command.setIncome(income);
 
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
-        command.setId(invoiceUUID);
-        command.setInvoiceId(invoiceDto.getInvoiceId());
-        command.setInvoiceNo(invoiceDto.getInvoiceNumber());
-
-        this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
+        this.updateInvoiceStatusHistory(income, employeeFullName);
         if (command.getAttachments() != null) {
-            List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), invoiceDto);
-            invoiceDto.setAttachments(attachmentDtoList);
-            this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
+            List<ManageAttachmentDto> attachmentDtoList = this.createAttachment(command.getAttachments(), income);
+            income.setAttachments(attachmentDtoList);
+            this.updateAttachmentStatusHistory(income, attachmentDtoList, employeeFullName);
         }
 
-        try {
-            this.producerReplicateManageInvoiceService.create(invoiceDto, null, null);
-        } catch (Exception e) {
-            log.error(e.getMessage());
+        if(command.getManual()){
+            try {
+                this.producerReplicateManageInvoiceService.create(income, null, null);
+            } catch (Exception e) {
+                Logger.getLogger(CreateIncomeCommandHandler.class.getName()).log(Level.SEVERE, "Error at replicating new Income", e);
+            }
+        }
+
+    }
+
+    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceTypeCode) {
+        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
+            return invoiceTypeCode + "-" + hotel.getManageTradingCompanies().getCode();
+        } else {
+            return invoiceTypeCode + "-" + hotel.getCode();
         }
     }
 
@@ -130,8 +175,10 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         dto.setEmployee(employee);
         dto.setInvoiceStatus(invoiceDto.getStatus());
 
+        Instant before = Instant.now();
         this.invoiceStatusHistoryService.create(dto);
-
+        Instant after = Instant.now();
+        System.out.println("updateInvoiceStatusHistory: " + Duration.between(before, after).toMillis()+ " ms");
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments, String employeeFullName) {
@@ -190,5 +237,183 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
         this.attachmentService.create(dtos);
         return dtos;
+    }
+
+    private LocalDateTime invoiceDate(InvoiceCloseOperationDto closeOperationDto, LocalDateTime invoiceDate) {
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
+            return invoiceDate;
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    }
+
+    private InvoiceCloseOperationDto getHotelCloseOperation(UUID hotel){
+        return this.closeOperationService.findActiveByHotelId(hotel);
+    }
+
+    private void createAdjustments(ManageInvoiceDto incomeDto,
+                                   List<NewIncomeAdjustmentRequest> adjustmentRequests,
+                                   String employeeFullName,
+                                   InvoiceCloseOperationDto closeOperationDto){
+        if(Objects.nonNull(adjustmentRequests) && !adjustmentRequests.isEmpty()){
+            Double invoiceAmount = 0.0;
+            List<ManageAdjustmentDto> adjustmentDtos = new ArrayList<>();
+            Map<UUID, ManagePaymentTransactionTypeDto> paymentTransactionTypeDtoMap = this.getPaymentTransactionTypeMap(adjustmentRequests);
+
+            for (NewIncomeAdjustmentRequest adjustment : adjustmentRequests) {
+                // Puede ser + y -, pero no puede ser 0
+                RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
+                RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(adjustment.getDate()));
+                ManagePaymentTransactionTypeDto paymentTransactionTypeDto = this.getPaymentTransactionTypeFromMap(paymentTransactionTypeDtoMap, adjustment.getTransactionType());
+
+                adjustmentDtos.add(new ManageAdjustmentDto(
+                        UUID.randomUUID(),
+                        0L,
+                        adjustment.getAmount(),
+                        invoiceDate(closeOperationDto, adjustment.getDate().atStartOfDay()),
+                        adjustment.getRemark(),
+                        null,
+                        paymentTransactionTypeDto,
+                        null,
+                        employeeFullName,
+                        false
+                ));
+                invoiceAmount += adjustment.getAmount();
+            }
+            invoiceAmount = BankerRounding.round(invoiceAmount);
+
+            ManageRoomRateDto roomRateDto = this.generateNewManageRoomRate();
+            roomRateDto.setInvoiceAmount(invoiceAmount);
+            roomRateDto.setAdjustments(adjustmentDtos);
+
+            List<ManageRoomRateDto> roomRates = new ArrayList<>();
+            roomRates.add(roomRateDto);
+
+            ManageBookingDto bookingDto = this.generateNewManageBooking(incomeDto, invoiceAmount, roomRates);
+
+            incomeDto.setInvoiceAmount(invoiceAmount);
+            incomeDto.setDueAmount(invoiceAmount);
+            incomeDto.setOriginalAmount(invoiceAmount);
+            incomeDto.setBookings(List.of(bookingDto));
+
+            // this.manageAdjustmentService.create(adjustmentDtos);
+        }
+    }
+
+    private Map<UUID, ManagePaymentTransactionTypeDto> getPaymentTransactionTypeMap(List<NewIncomeAdjustmentRequest> adjustmentRequests){
+        List<UUID> ids = adjustmentRequests.stream()
+                .map(NewIncomeAdjustmentRequest::getTransactionType)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return this.transactionTypeService.findAllByIds(ids).stream()
+                .collect(Collectors.toMap(ManagePaymentTransactionTypeDto::getId, transactionType -> transactionType));
+    }
+
+    private ManagePaymentTransactionTypeDto getPaymentTransactionTypeFromMap(Map<UUID, ManagePaymentTransactionTypeDto> transactionTypeDtoMap, UUID transactionTypeId){
+        if(transactionTypeDtoMap.containsKey(transactionTypeId)){
+            return transactionTypeDtoMap.get(transactionTypeId);
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
+    }
+
+    private ManageInvoiceDto generateNewManageInvoice(UUID id,
+                                                      String invoiceNumber,
+                                                      LocalDateTime invoiceDate,
+                                                      LocalDate invoiceDueDate,
+                                                      boolean manual,
+                                                      ManageHotelDto hotelDto,
+                                                      ManageAgencyDto agencyDto,
+                                                      boolean isReSend,
+                                                      LocalDate reSendDate,
+                                                      ManageInvoiceTypeDto invoiceTypeDto,
+                                                      ManageInvoiceStatusDto invoiceStatusDto){
+        return  new ManageInvoiceDto(
+                id,//command.getId(),
+                0L,
+                0L,
+                invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
+                invoiceDate,//command.getInvoiceDate(),
+                invoiceDueDate,//command.getDueDate(),
+                manual,//command.getManual(),
+                0.0,
+                0.0,
+                hotelDto,
+                agencyDto,
+                EInvoiceType.INCOME,
+                EInvoiceStatus.SENT,
+                Boolean.FALSE,
+                null,
+                null,
+                isReSend,//command.getReSend(),
+                reSendDate,//command.getReSendDate(),
+                invoiceTypeDto,
+                invoiceStatusDto,
+                null,
+                false,
+                null, 0.0,0
+        );
+    }
+
+    private ManageRoomRateDto generateNewManageRoomRate(){
+        return new ManageRoomRateDto(
+                UUID.randomUUID(),
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                0.0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                0.00,
+                "",
+                null,
+                null,
+                null,
+                false,
+                null
+        );
+    }
+
+    private ManageBookingDto generateNewManageBooking(ManageInvoiceDto incomeDto, Double invoiceAmount, List<ManageRoomRateDto> roomRates){
+        return new ManageBookingDto(
+                UUID.randomUUID(),
+                0L,
+                0L,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null,
+                null,
+                null,
+                null,
+                invoiceAmount,
+                invoiceAmount,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                0.00,
+                null,
+                null,//incomeDto,
+                null,
+                null,
+                null,
+                null,
+                roomRates,
+                null,
+                null,
+                null,
+                false,
+                null
+        );
     }
 }

@@ -2,7 +2,10 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsoft.finamer.invoicing.domain.dto.IncomeDto;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
+import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,18 +32,29 @@ public class CreateIncomeCommand implements ICommand {
     private LocalDate dueDate;
     private Boolean reSend;
     private LocalDate reSendDate;
-    private Long invoiceId;
-
-    private IncomeDto income;
     private String employee;
-
     private List<CreateIncomeAttachmentRequest> attachments;
+    private List<NewIncomeAdjustmentRequest> adjustments;
+
+    private Long invoiceId;
+    private ManageInvoiceDto income;
     private String invoiceNo;
 
-    public CreateIncomeCommand(Status status, LocalDateTime invoiceDate, Boolean manual,
-                               UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
-                               Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus, String employee, List<CreateIncomeAttachmentRequest> attachments) {
+    public CreateIncomeCommand(Status status,
+                               LocalDateTime invoiceDate,
+                               Boolean manual,
+                               UUID agency,
+                               UUID hotel,
+                               UUID invoiceType,
+                               Double incomeAmount,
+                               Long invoiceNumber,
+                               LocalDate dueDate,
+                               Boolean reSend,
+                               LocalDate reSendDate,
+                               UUID invoiceStatus,
+                               String employee,
+                               List<CreateIncomeAttachmentRequest> attachments,
+                               List<NewIncomeAdjustmentRequest> adjustments) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -56,12 +70,24 @@ public class CreateIncomeCommand implements ICommand {
         this.reSendDate = reSendDate;
         this.employee = employee;
         this.attachments = attachments;
+        this.adjustments = adjustments;
     }
 
-    public CreateIncomeCommand(UUID id,Status status, LocalDateTime invoiceDate, Boolean manual,
-                               UUID agency, UUID hotel, UUID invoiceType, Double incomeAmount,
-                               Long invoiceNumber, LocalDate dueDate, Boolean reSend, LocalDate reSendDate,
-                               UUID invoiceStatus, String employee, List<CreateIncomeAttachmentRequest> attachments) {
+    public CreateIncomeCommand(UUID id,
+                               Status status,
+                               LocalDateTime invoiceDate,
+                               Boolean manual,
+                               UUID agency,
+                               UUID hotel,
+                               UUID invoiceType,
+                               Double incomeAmount,
+                               Long invoiceNumber,
+                               LocalDate dueDate,
+                               Boolean reSend,
+                               LocalDate reSendDate,
+                               UUID invoiceStatus,
+                               String employee,
+                               List<CreateIncomeAttachmentRequest> attachments) {
         this.id = id;
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -81,7 +107,7 @@ public class CreateIncomeCommand implements ICommand {
 
     public static CreateIncomeCommand fromRequest(CreateIncomeRequest request) {
         return new CreateIncomeCommand(
-                request.getStatus(),
+                Status.valueOf(request.getStatus()),
                 request.getInvoiceDate(),
                 request.getManual(),
                 request.getAgency(),
@@ -94,9 +120,10 @@ public class CreateIncomeCommand implements ICommand {
                 request.getReSendDate(),
                 request.getInvoiceStatus(),
                 request.getEmployee(),
-                request.getAttachments()
-        );
+                request.getAttachments(),
+                request.getAdjustments());
     }
+
 
     @Override
     public ICommandMessage getMessage() {

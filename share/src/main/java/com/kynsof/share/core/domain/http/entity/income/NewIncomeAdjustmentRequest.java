@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create;
+package com.kynsof.share.core.domain.http.entity.income;
 
 import java.time.LocalDate;
 import lombok.Getter;

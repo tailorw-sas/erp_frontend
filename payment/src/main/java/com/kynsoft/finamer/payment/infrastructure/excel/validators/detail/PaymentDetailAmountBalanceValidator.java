@@ -20,9 +20,7 @@ public class PaymentDetailAmountBalanceValidator extends ExcelListRuleValidator<
 
     private final Cache cache;
 
-    public PaymentDetailAmountBalanceValidator(ApplicationEventPublisher applicationEventPublisher,
-                                               Cache cache){
-        super(applicationEventPublisher);
+    public PaymentDetailAmountBalanceValidator(Cache cache){
         this.cache = cache;
     }
 
@@ -107,11 +105,5 @@ public class PaymentDetailAmountBalanceValidator extends ExcelListRuleValidator<
                 );
             }
         }
-    }
-
-    private List<ErrorField> getErrorListField(ErrorField error){
-        List<ErrorField> list = new ArrayList<>();
-        list.add(error);
-        return list;
     }
 }

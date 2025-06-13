@@ -2,24 +2,15 @@ package com.kynsof.share.core.application.excel.validator;
 
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.RowErrorField;
-import org.apache.poi.ss.usermodel.Row;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.*;
 
 public abstract class ExcelListRuleValidator<T> {
 
-    protected final ApplicationEventPublisher applicationEventPublisher;
-
-    protected ExcelListRuleValidator(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
+    protected ExcelListRuleValidator() {
     }
 
     public abstract void validate(List<T> obj, List<RowErrorField> errorRowList);
-
-    protected void sendErrorEvent( Object rowError){
-        applicationEventPublisher.publishEvent(rowError);
-    }
 
     public void addErrorsToRowList(List<RowErrorField> rowErrorFieldList, List<Integer> rowNumberList, ErrorField errorField) {
         rowNumberList.forEach(row -> {
@@ -45,6 +36,12 @@ public abstract class ExcelListRuleValidator<T> {
             RowErrorField newRow = new RowErrorField(rowNumber, errorFieldList);
             rowErrorFieldList.add(newRow);
         }
+    }
+
+    public List<ErrorField> getErrorListField(ErrorField error){
+        List<ErrorField> list = new ArrayList<>();
+        list.add(error);
+        return list;
     }
 }
 
