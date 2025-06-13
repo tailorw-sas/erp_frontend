@@ -1,0 +1,213 @@
+/* Report Viewer Page Styles - Override súper específico basado en HTML real */
+
+.report-viewer {
+  /* Override variables del enhanced-form específicamente para esta página */
+  &__form {
+    /* Variables específicas para report-viewer */
+    --enhanced-form-field-height: 2.5rem;
+    --enhanced-form-field-height-mobile: 2.75rem;
+    --enhanced-form-field-height-compact: 2rem;
+    --enhanced-form-spacing: 0.75rem;
+    --enhanced-form-transition: all 0.2s ease-in-out;
+    
+    /* OVERRIDE SÚPER ESPECÍFICO - Basado en HTML real */
+    
+    /* DatePicker - .p-calendar .p-inputtext */
+    :deep(.p-calendar.enhanced-form__field) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+    }
+    
+    :deep(.p-calendar .p-inputtext) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+      padding: 0 0.75rem !important;
+      line-height: 2.5rem !important;
+      box-sizing: border-box !important;
+      font-size: 0.875rem !important;
+    }
+
+    :deep(.p-calendar .p-button) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+      width: 2.5rem !important;
+    }
+
+    /* MultiSelect - .dynamic-multiselect__field .p-multiselect */
+    :deep(.dynamic-multiselect__field.p-multiselect) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+    }
+
+    :deep(.dynamic-multiselect__field .p-multiselect-label-container) {
+      height: calc(2.5rem - 2px) !important;
+      min-height: calc(2.5rem - 2px) !important;
+      padding: 0.25rem 0.5rem !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+
+    :deep(.dynamic-multiselect__field .p-multiselect-trigger) {
+      height: calc(2.5rem - 2px) !important;
+      width: 2.5rem !important;
+    }
+
+    /* Enhanced Form todos los campos PrimeVue nativos */
+    :deep(.enhanced-form__field-container .p-inputtext),
+    :deep(.enhanced-form__field-container .p-dropdown),
+    :deep(.enhanced-form__field-container .p-multiselect),
+    :deep(.enhanced-form__field-container .p-calendar),
+    :deep(.enhanced-form__field-container .p-inputnumber),
+    :deep(.enhanced-form__field-container .p-password) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+      font-size: 0.875rem !important;
+    }
+
+    /* Labels específicos para reports */
+    :deep(.enhanced-form__field-header),
+    :deep(.mb-2.font-semibold) {
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      color: #374151 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      margin-bottom: 0.25rem !important;
+      line-height: 1.2 !important;
+    }
+    
+    /* Help text más compacto */
+    :deep(.enhanced-form__help-text) {
+      font-size: 0.6875rem !important;
+      color: #6b7280 !important;
+      margin-top: 0.125rem !important;
+      line-height: 1.3 !important;
+    }
+    
+    /* Spacing entre campos más compacto */
+    :deep(.enhanced-form__field-container) {
+      margin-bottom: 0.75rem !important;
+    }
+  }
+
+  /* Dropdown Export Format fuera del enhanced-form */
+  &__parameters-content {
+    /* Dropdown Export Format específico */
+    :deep(.p-dropdown) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+    }
+
+    :deep(.p-dropdown .p-dropdown-label) {
+      height: 2.5rem !important;
+      min-height: 2.5rem !important;
+      padding: 0 0.75rem !important;
+      line-height: 2.5rem !important;
+      display: flex !important;
+      align-items: center !important;
+      font-size: 0.875rem !important;
+    }
+
+    :deep(.p-dropdown .p-dropdown-trigger) {
+      height: 2.5rem !important;
+      width: 2.5rem !important;
+    }
+  }
+
+  /* Labels para campos custom (fuera del enhanced-form) */
+  &__label {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 0.25rem !important;
+    display: block !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Botón Generate - elemento único de report-viewer */
+  &__generate-btn {
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 6px !important;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    &:disabled {
+      background: #9ca3af !important;
+      transform: none !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  /* Help text para elementos fuera del enhanced-form */
+  &__help {
+    font-size: 0.6875rem;
+    color: #6b7280;
+    line-height: 1.3;
+    margin-top: 0.125rem;
+  }
+
+  /* Mobile responsive */
+  @media screen and (max-width: 768px) {
+    &__form {
+      :deep(.p-calendar .p-inputtext),
+      :deep(.enhanced-form__field-container .p-inputtext),
+      :deep(.enhanced-form__field-container .p-dropdown),
+      :deep(.enhanced-form__field-container .p-multiselect),
+      :deep(.enhanced-form__field-container .p-calendar),
+      :deep(.dynamic-multiselect__field.p-multiselect) {
+        height: 2.75rem !important;
+        min-height: 2.75rem !important;
+      }
+
+      :deep(.p-calendar .p-inputtext) {
+        line-height: 2.75rem !important;
+      }
+
+      :deep(.dynamic-multiselect__field .p-multiselect-label-container) {
+        height: calc(2.75rem - 2px) !important;
+      }
+    }
+
+    &__parameters-content {
+      :deep(.p-dropdown) {
+        height: 2.75rem !important;
+      }
+
+      :deep(.p-dropdown .p-dropdown-label) {
+        height: 2.75rem !important;
+        line-height: 2.75rem !important;
+      }
+    }
+
+    &__generate-btn {
+      height: 2.75rem !important;
+      min-height: 2.75rem !important;
+    }
+  }
+}
+
+/* Iconos de formato - colores específicos */
+.pi-file-pdf { color: #dc2626; }
+.pi-file-excel { color: #16a34a; }
+.pi-table { color: #0369a1; }
+.pi-spin { animation: spin 1s linear infinite; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
