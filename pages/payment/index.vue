@@ -1144,14 +1144,14 @@ const applyPaymentOptionsOtherDeduction1 = ref({
 const applyPaymentPayloadOtherDeduction = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 100,
+  pageSize: 500,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction = ref<IPagination>({
   page: 0,
-  limit: 100,
+  limit: 500,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -1159,14 +1159,14 @@ const applyPaymentPaginationOtherDeduction = ref<IPagination>({
 const applyPaymentPayloadOtherDeduction1 = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 1000,
+  pageSize: 500,
   page: 0,
   sortBy: 'invoice.invoiceNumber',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPaginationOtherDeduction1 = ref<IPagination>({
   page: 0,
-  limit: 1000,
+  limit: 500,
   totalElements: 0,
   totalPages: 0,
   search: ''
@@ -3930,27 +3930,32 @@ async function parseDataTableFilterForApplyPayment(event: any) {
 }
 
 const filteredInvoices = computed(() => {
-  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/) // Dividir por espacios
+  const terms = manualFilter.value.trim().toLowerCase().split(/\s+/)
 
-  if (!terms.length) {
-    return applyPaymentListOfInvoice.value // Si no hay término de búsqueda, devolver la lista completa
+  if (!terms.length || !terms[0]) {
+    return applyPaymentListOfInvoice.value
   }
 
-  // Filtrar las filas basadas en que cada término esté presente en cualquier campo de la fila
-  return applyPaymentListOfInvoice.value.filter((inv) => {
-    return terms.some((term) => {
-      // Buscar cada término en todos los campos de la fila
-      return (
-        inv.invoiceNumberPrefix?.toLowerCase().includes(term)
-        || String(inv.invoiceId)?.toLowerCase().includes(term)
-        || String(inv.invoiceNumber)?.toLowerCase().includes(term)
-        || inv.couponNumbers?.toLowerCase().includes(term)
-        || String(inv.invoiceAmount)?.toLowerCase().includes(term)
-        || String(inv.dueAmount)?.toLowerCase().includes(term)
-        || inv.name?.toLowerCase().includes(term)
+  return applyPaymentListOfInvoice.value.filter(inv =>
+    terms.some((term) => {
+      const fields = [
+        inv.invoiceNumberPrefix,
+        inv.invoiceId,
+        inv.invoiceNumber,
+        inv.couponNumbers,
+        inv.invoiceAmount,
+        inv.dueAmount,
+        inv.agency,
+        inv.hotel,
+      ]
+
+      return fields.some(k =>
+        String(k ?? '') // convierte null/undefined o números a cadena
+          .toLowerCase()
+          .includes(term)
       )
     })
-  })
+  )
 })
 
 async function onManualSearch() {
