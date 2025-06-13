@@ -48,7 +48,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IManagePaymentTransactionTypeService transactionTypeService;
-    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IManageRoomRateService roomRateService;
 
