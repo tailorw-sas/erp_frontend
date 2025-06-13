@@ -20,6 +20,7 @@ import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBefo
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceInvoiceDateInCloseOperationRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.*;
@@ -28,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeCommand> {
 
@@ -38,15 +40,12 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IManageInvoiceService manageInvoiceService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
-
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
-
     private final IInvoiceCloseOperationService closeOperationService;
-
     private final IManageAttachmentService attachmentService;
-
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
@@ -90,14 +89,15 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         InvoiceCloseOperationDto closeOperationDto = this.getHotelCloseOperation(command.getHotel());
 
         RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService, command.getInvoiceDate().toLocalDate(), command.getHotel()));
+        RulesChecker.checkRule(new ManageInvoiceInvoiceDateInCloseOperationRule(this.closeOperationService,
+                command.getInvoiceDate().toLocalDate(), command.getHotel()));
 
         ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
         ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
         ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
         String employeeFullName = this.employeeService.getEmployeeFullName(command.getEmployee());
-
+      
         String invoiceNumber = this.setInvoiceNumber(hotelDto, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
 
         ManageInvoiceDto income = this.generateNewManageInvoice(command.getId(),
@@ -188,7 +188,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             attachmentStatusHistoryDto
                     .setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
             attachmentStatusHistoryDto.setEmployee(employeeFullName);
-            //attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());

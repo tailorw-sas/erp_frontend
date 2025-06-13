@@ -109,22 +109,6 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         repository.deleteAll(cache);
     }
 
-    @Override
-    public boolean canImportRow(BookingRow bookingRow, EImportType importType) {
-        if (!manageHotelService.existByCode(bookingRow.getManageHotelCode())) {
-            //En caso de que el hotel no exista , retornamos que se puede importar,
-            //para que los se muestren en los errores la ausencia del hotel
-            return true;
-        }
-        ManageHotelDto hotelDto = manageHotelService.findByCode(bookingRow.getManageHotelCode());
-        if (importType.equals(EImportType.VIRTUAL)) {
-            return hotelDto.isVirtual();
-        } else {
-            return !hotelDto.isVirtual();
-        }
-
-    }
-
     private void createInvoiceGroupingForVirtualHotel(String importProcessId, String employee) {
         Map<GroupByVirtualHotel, List<BookingRow>> groupedByHotelInvoiceNumber;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByImportProcessId(importProcessId);
@@ -242,11 +226,11 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
 
     @Override
     public void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean innsist) {
-        Map<GroupByCoupon, List<BookingRow>> groupedByHotelBookingNumber;
+        Map<GroupByCoupon, List<BookingRow>> groupedByCoupon;
         List<BookingImportCache> bookingImportCacheStream = repository.findAllByGenerationTypeAndImportProcessId(EGenerationType.ByCoupon.name(), importProcessId);
         Collections.sort(bookingImportCacheStream, Comparator.comparingInt(BookingImportCache::getRowNumber));
 
-        groupedByHotelBookingNumber = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
+        groupedByCoupon = bookingImportCacheStream.stream().map(BookingImportCache::toAggregate)
                 .collect(Collectors.groupingBy(bookingRow
                         -> new GroupByCoupon(
                         bookingRow.getTransactionDate(),
@@ -255,12 +239,12 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
                         bookingRow.getCoupon()
                 )));
 
-        if (!groupedByHotelBookingNumber.isEmpty()) {
+        if (!groupedByCoupon.isEmpty()) {
 
             //validando la cantidad de adultos en los booking agrupados
-            groupedByHotelBookingNumber.forEach((key, value) -> cantAdultsValid(value));
+            groupedByCoupon.forEach((key, value) -> cantAdultsValid(value));
 
-            groupedByHotelBookingNumber.forEach((key, value) -> {
+            groupedByCoupon.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
                 this.createInvoiceWithBooking(agency, hotel, value, employee, "ByCoupon", innsist);
@@ -269,7 +253,7 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insisit) {
+    public void createInvoiceGroupingByBooking(String importProcessId, String employee, boolean insist) {
         /**
          * *
          * Para el caso de la agrupacion por Booking, al tener en una agrupacion
@@ -305,14 +289,13 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
             orderedGrouped.forEach((key, value) -> {
                 ManageAgencyDto agency = agencyService.findByCode(key.getAgency());
                 ManageHotelDto hotel = manageHotelService.findByCode(key.getHotel());
-                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insisit);
+                this.createInvoiceWithBooking(agency, hotel, value, employee, "ByBooking", insist);
             });
         }
     }
 
     private void createInvoiceWithBooking(ManageAgencyDto agency, ManageHotelDto hotel, List<BookingRow> bookingRowList,
-                                          String employee, String groupType, boolean innsist) {
-        //TODO - Mejorar todo este proceso
+                                          String employee, String groupType, boolean insist) {
         ManageInvoiceStatusDto invoiceStatus = this.manageInvoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
         ManageInvoiceTypeDto invoiceTypeDto = this.iManageInvoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
         ManageInvoiceDto manageInvoiceDto = new ManageInvoiceDto();
@@ -335,11 +318,10 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         } else {
             manageInvoiceDto.setImportType(ImportType.INVOICE_BOOKING_FROM_FILE);
         }
-        if (innsist) {
+        if (insist) {
             manageInvoiceDto.setImportType(ImportType.INSIST);
         }
-        manageInvoiceDto.setInvoiceNumber(createInvoiceNumber(hotel, bookingRowList.get(0)));
-        manageInvoiceDto.setHotelInvoiceNumber(bookingRowList.get(0).getHotelInvoiceNumber() != null ? Long.valueOf(bookingRowList.get(0).getHotelInvoiceNumber()) : null);
+
         //TODO Eliminar esto y devolver el manageInvoiceDto antes de crear para garantizar transaccionalidad
         manageInvoiceDto = invoiceService.create(manageInvoiceDto);
         this.createInvoiceHistory(manageInvoiceDto, employee);
@@ -351,25 +333,16 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         }
     }
 
-    private String createInvoiceNumber(ManageHotelDto hotel, BookingRow sample) {
-        String invoiceNumber = InvoiceType.getInvoiceTypeCode(EInvoiceType.INVOICE);
-        if (hotel.isVirtual()) {
-            invoiceNumber += "-" + sample.getHotelInvoiceNumber();
-        } else {
-            if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-                invoiceNumber += "-" + hotel.getManageTradingCompanies().getCode();
-            } else {
-                invoiceNumber += "-" + hotel.getCode();
-            }
-        }
-        return invoiceNumber;
-    }
-
     private ManageBookingDto createOneBooking(List<BookingRow> bookingRowList, ManageHotelDto hotel) {
-        //TODO Mejorar este proceso (Cargar en memoria los catalogos)
-        ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan()) ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode()) : null;
-        ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType()) ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode()) : null;
-        ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType()) ? nightTypeService.findByCode(bookingRowList.get(0).getNightType()) : null;
+        ManageRatePlanDto ratePlanDto = Objects.nonNull(bookingRowList.get(0).getRatePlan())
+                ? ratePlanService.findManageRatePlanByCodeAndHotelCode(bookingRowList.get(0).getRatePlan(), hotel.getCode())
+                : null;
+        ManageRoomTypeDto roomTypeDto = Objects.nonNull(bookingRowList.get(0).getRoomType())
+                ? roomTypeService.findManageRoomTypenByCodeAndHotelCode(bookingRowList.get(0).getRoomType(), hotel.getCode())
+                : null;
+        ManageNightTypeDto nightTypeDto = Objects.nonNull(bookingRowList.get(0).getNightType())
+                ? nightTypeService.findByCode(bookingRowList.get(0).getNightType())
+                : null;
         ManageBookingDto bookingDto = bookingRowList.get(0).toAggregate();
         bookingDto.setRatePlan(ratePlanDto);
         bookingDto.setRoomType(roomTypeDto);

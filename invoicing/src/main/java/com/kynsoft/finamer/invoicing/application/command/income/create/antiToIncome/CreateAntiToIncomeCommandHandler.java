@@ -13,11 +13,14 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateAntiToIncomeCommand> {
 
@@ -28,15 +31,11 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     private final IManageInvoiceService manageInvoiceService;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
-
     private final IInvoiceStatusHistoryService invoiceStatusHistoryService;
-
-    private final IInvoiceCloseOperationService closeOperationService;
-
     private final IManageAttachmentService attachmentService;
-
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
 
@@ -61,7 +60,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
         this.invoiceStatusHistoryService = invoiceStatusHistoryService;
-        this.closeOperationService = closeOperationService;
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
@@ -119,9 +117,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         //this.manageInvoiceService.create()
 
         /*
-
         this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
-        //this.updateInvoiceStatusHistory(invoiceDto, command.getEmployee());
         if (command.getAttachments() != null) {
             List<ManageAttachmentDto> attachmentDtoList = this.attachments(command.getAttachments(), invoiceDto);
             invoiceDto.setAttachments(attachmentDtoList);
@@ -209,7 +205,6 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
-
         InvoiceStatusHistoryDto dto = new InvoiceStatusHistoryDto();
         dto.setId(UUID.randomUUID());
         dto.setInvoice(invoiceDto);

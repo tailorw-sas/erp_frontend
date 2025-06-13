@@ -24,14 +24,9 @@ import java.util.logging.Logger;
 public class ProducerReplicateManageInvoiceService {
 
     private final KafkaTemplate<String, Object> producer;
-    private final IManageBookingService manageBookingService;
-    private final IManageInvoiceService invoiceService;
 
-    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer,
-                                                 IManageBookingService manageBookingService, IManageInvoiceService invoiceService) {
+    public ProducerReplicateManageInvoiceService(KafkaTemplate<String, Object> producer) {
         this.producer = producer;
-        this.manageBookingService = manageBookingService;
-        this.invoiceService = invoiceService;
     }
 
     @Async
