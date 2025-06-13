@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAdjustmentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAdjustmentService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAdjustment;
@@ -45,6 +46,24 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
     public UUID create(ManageAdjustmentDto dto) {
         ManageAdjustment entity = new ManageAdjustment(dto);
         return repositoryCommand.saveAndFlush(entity).getId();
+    }
+
+    @Override
+    public UUID insert(ManageAdjustmentDto dto) {
+        ManageAdjustment adjustment = new ManageAdjustment(dto);
+        this.repositoryCommand.insert(adjustment);
+
+        dto.setId(adjustment.getId());
+        dto.setAdjustmentId(adjustment.getAdjustmentId());
+        return dto.getId();
+    }
+
+    @Override
+    public List<ManageAdjustmentDto> insertAll(List<ManageAdjustmentDto> dtos) {
+        for(ManageAdjustmentDto adjustmentDto : dtos){
+            this.insert(adjustmentDto);
+        }
+        return dtos;
     }
 
     @Override
@@ -121,6 +140,17 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
     @Override
     public List<ManageAdjustmentDto> findByRoomRateId(UUID roomRateId) {
         return this.repositoryQuery.findByRoomRateId(roomRateId).stream().map(ManageAdjustment::toAggregate).collect(Collectors.toList());
+    }
+
+    private void insert(ManageAdjustment adjustment){
+        this.repositoryCommand.insert(adjustment);
+    }
+
+    @Override
+    public void createAll(List<ManageAdjustment> adjustments) {
+        for (ManageAdjustment adjustment : adjustments){
+            this.insert(adjustment);
+        }
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

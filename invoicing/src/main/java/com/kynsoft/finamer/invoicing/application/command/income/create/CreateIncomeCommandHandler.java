@@ -120,22 +120,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         Instant after = Instant.now();
         System.out.println("Insert invoice - booking: " + Duration.between(before, after).toMillis() + " ms");
 
-        //TODO Luego guardar los bookings y rates con los ajustes
-        before = Instant.now();
-        if(Objects.nonNull(income.getBookings()) && !income.getBookings().isEmpty()){
-            //this.bookingService.updateAll(income.getBookings());
-            for (ManageBookingDto bookingDto : income.getBookings()){
-                if(Objects.nonNull(bookingDto.getRoomRates()) && !bookingDto.getRoomRates().isEmpty()){
-                    for (ManageRoomRateDto roomRateDto : bookingDto.getRoomRates()){
-                        this.roomRateService.create(roomRateDto);
-                    }
-                }
-            }
-        }
-        after = Instant.now();
-        System.out.println("Insert room rates - adjustments: " + Duration.between(before, after).toMillis() + " ms");
-
-
         command.setInvoiceId(income.getInvoiceId());
         command.setInvoiceNo(income.getInvoiceNumber());
         command.setIncome(income);

@@ -294,5 +294,4 @@ public class Invoice {
         }
         this.hasAttachments = (Objects.nonNull(this.attachments) && !this.attachments.isEmpty());
     }
-
 }

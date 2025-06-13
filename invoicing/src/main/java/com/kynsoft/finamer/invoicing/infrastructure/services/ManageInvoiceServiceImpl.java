@@ -22,13 +22,16 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
@@ -69,18 +72,18 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
-    private final ManageBookingWriteDataJpaRepository bookingRepositoryCommand;
+    private final IManageBookingService bookingService;
 
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
             ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
             ManageEmployeeReadDataJPARepository employeeReadDataJPARepository,
-                                    ManageBookingWriteDataJpaRepository bookingRepositoryCommand) {
+                                    IManageBookingService bookingService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
-        this.bookingRepositoryCommand = bookingRepositoryCommand;
+        this.bookingService = bookingService;
     }
 
     @Override
@@ -124,20 +127,17 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         Invoice invoice = new Invoice(dto);
         this.repositoryCommand.insert(invoice);
 
-        if(Objects.nonNull(invoice.getBookings()) && !invoice.getBookings().isEmpty()){
-            for(Booking booking : invoice.getBookings()){
-                if(booking.getInvoice() == null){
-                    booking.setInvoice(invoice);
-                }
-                this.bookingRepositoryCommand.insert(booking);
-            }
-        }
         dto.setId(invoice.getId());
         dto.setInvoiceNo(invoice.getInvoiceNo());
         dto.setInvoiceNumber(invoice.getInvoiceNumber());
         dto.setInvoiceNumberPrefix(invoice.getInvoiceNumberPrefix());
         dto.setInvoiceId(invoice.getInvoiceId());
-        dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRates).collect(Collectors.toList()));
+
+        if(Objects.nonNull(invoice.getBookings()) && !invoice.getBookings().isEmpty()){
+            this.bookingService.insertAll(invoice.getBookings());
+            dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRates).collect(Collectors.toList()));
+        }
+
         return invoice.getId();
     }
 
