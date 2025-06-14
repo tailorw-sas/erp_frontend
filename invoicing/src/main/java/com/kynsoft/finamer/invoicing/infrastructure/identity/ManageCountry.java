@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagerCountryDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
@@ -62,6 +63,7 @@ public class ManageCountry implements Serializable {
 
 
     @OneToMany(mappedBy = "country", fetch = FetchType.LAZY)
+    @JsonBackReference
     private List<ManageAgency> agencies;
 
     private String iso3;

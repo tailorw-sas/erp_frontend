@@ -23,10 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHistoryService {
@@ -48,6 +45,23 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
         AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
         return this.repositoryCommand.save(data).getId();
     }
+//    public UUID create(AttachmentStatusHistoryDto dto) {
+//        AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
+//        //return this.repositoryCommand.save(data).getId();
+//        Map<String, Object> result = this.repositoryCommand.insertAttachmentStatusHistory(data.getId(), data.getDescription(), data.getEmployee(),
+//                data.getEmployeeId(), data.getUpdatedAt(), data.getInvoice() != null ? data.getInvoice().getId() : null);
+//        if(result != null){
+//            if(result.containsKey("o_id")){
+//                data.setId((UUID)result.get("o_id"));
+//                dto.setId(data.getId());
+//            }
+//            if(result.containsKey("o_attachment_gen_id")){
+//                data.setAttachmentId((Long)result.get("o_attachment_gen_id"));
+//                dto.setAttachmentId(data.getAttachmentId());
+//            }
+//        }
+//        return data.getId();
+//    }
 
     @Override
     public void update(AttachmentStatusHistoryDto dto) {
