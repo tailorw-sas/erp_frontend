@@ -112,18 +112,18 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     public UUID insert(ManageBookingDto dto) {
-        Booking entity = new Booking(dto);
-        this.repositoryCommand.insert(entity);
+        Booking booking = new Booking(dto);
+        this.insert(booking);
 
-        dto.setId(entity.getId());
-        dto.setReservationNumber(entity.getReservationNumber());
-        dto.setBookingId(entity.getBookingId());
+        dto.setId(booking.getId());
+        dto.setReservationNumber(booking.getReservationNumber());
+        dto.setBookingId(booking.getBookingId());
 
         if(Objects.nonNull(dto.getRoomRates()) && !dto.getRoomRates().isEmpty()){
             dto.setRoomRates(this.roomRateService.insertAll(dto.getRoomRates()));
         }
 
-        return entity.getId();
+        return booking.getId();
     }
 
     @Override
@@ -293,7 +293,56 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     public void insert(Booking booking){
-        this.repositoryCommand.insert(booking);
+        //this.repositoryCommand.insert(booking);
+        Map<String, Object> results = this.repositoryCommand.insertBooking(booking.getId(),
+                booking.getAdults(),
+                booking.getBookingDate(),
+                booking.getCheckIn(),
+                booking.getCheckOut(),
+                booking.getChildren(),
+                booking.getContract(),
+                booking.getCouponNumber(),
+                booking.isDeleteInvoice(),
+                booking.getDeleted(),
+                booking.getDeletedAt(),
+                booking.getDescription(),
+                booking.getDueAmount(),
+                booking.getFirstName(),
+                booking.getFolioNumber(),
+                booking.getFullName(),
+                booking.getHotelAmount(),
+                booking.getHotelBookingNumber(),
+                booking.getHotelCreationDate(),
+                booking.getHotelInvoiceNumber(),
+                booking.getInvoiceAmount(),
+                booking.getLastName(),
+                booking.getNights(),
+                booking.getRateAdult(),
+                booking.getRateChild(),
+                booking.getRoomNumber(),
+                booking.getUpdatedAt(),
+                booking.getInvoice() != null ? booking.getInvoice().getId() : null,
+                booking.getNightType() != null ? booking.getNightType().getId() : null,
+                booking.getParent() != null ? booking.getParent().getId() : null,
+                booking.getRatePlan() != null ? booking.getRatePlan().getId() : null,
+                booking.getRoomCategory() != null ? booking.getRoomCategory().getId() : null,
+                booking.getRoomType() != null ? booking.getRoomType().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID bookingId = (UUID)results.get("o_id");
+                booking.setId(bookingId);
+            }
+            if(results.containsKey("o_reservation_number")){
+                Integer reservationNumber = (Integer) results.get("o_reservation_number");
+                booking.setReservationNumber(reservationNumber.longValue());
+            }
+            if(results.containsKey("o_bookingid")){
+                Integer bookingGenId = (Integer) results.get("o_bookingid");
+                booking.setBookingId(bookingGenId.longValue());
+            }
+        }
+
         if(booking.getRoomRates() != null && !booking.getRoomRates().isEmpty()){
             this.roomRateService.createAll(booking.getRoomRates());
         }

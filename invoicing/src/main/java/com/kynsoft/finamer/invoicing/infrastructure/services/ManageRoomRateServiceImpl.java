@@ -25,10 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class ManageRoomRateServiceImpl implements IManageRoomRateService {
@@ -90,7 +87,7 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     @Override
     public UUID insert(ManageRoomRateDto dto){
         ManageRoomRate roomRate = new ManageRoomRate(dto);
-        this.repositoryCommand.insert(roomRate);
+        this.insert(roomRate);
 
         dto.setRoomRateId(roomRate.getRoomRateId());
         dto.setId(roomRate.getId());
@@ -175,7 +172,36 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     }
 
     private void insert(ManageRoomRate roomRate){
-        this.repositoryCommand.insert(roomRate);
+        //this.repositoryCommand.insert(roomRate);
+        Map<String, Object> results = this.repositoryCommand.insertRoomRate(roomRate.getId(),
+                roomRate.getAdults(),
+                roomRate.getCheckIn(),
+                roomRate.getCheckOut(),
+                roomRate.getChildren(),
+                roomRate.isDeleteInvoice(),
+                roomRate.getDeleted(),
+                roomRate.getDeletedAt(),
+                roomRate.getHotelAmount(),
+                roomRate.getInvoiceAmount(),
+                roomRate.getNights(),
+                roomRate.getRateAdult(),
+                roomRate.getRateChild(),
+                roomRate.getRemark(),
+                roomRate.getRoomNumber(),
+                roomRate.getUpdatedAt(),
+                roomRate.getBooking() != null ? roomRate.getBooking().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID roomRateId = (UUID)results.get("o_id");
+                roomRate.setId(roomRateId);
+            }
+
+            if(results.containsKey("o_room_rate_gen_id")){
+                Integer roomRateGenId = (Integer)results.get("o_room_rate_gen_id");
+                roomRate.setRoomRateId(roomRateGenId.longValue());
+            }
+        }
 
         if(roomRate.getAdjustments() != null && !roomRate.getAdjustments().isEmpty()){
             this.adjustmentService.createAll(roomRate.getAdjustments());
