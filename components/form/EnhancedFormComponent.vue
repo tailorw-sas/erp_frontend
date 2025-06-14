@@ -770,10 +770,6 @@ const isDevelopment = computed(() => {
    ACCESSIBILITY ENHANCEMENTS
    =============================== */
 
-.enhanced-form:focus-within {
-  /* Focus state styling can be added here if needed */
-}
-
 .enhanced-form__button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 2px;

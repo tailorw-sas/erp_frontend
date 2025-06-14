@@ -46,6 +46,7 @@ interface ReportFormField {
   disabled?: boolean
   hidden?: boolean
   required?: boolean
+  defaultValue?: any
 }
 
 interface FieldValues {
@@ -77,6 +78,33 @@ interface ReportFormat {
   description: string
 }
 
+// ========== BACKEND INTERFACES - NEW ==========
+interface BackendReportParameter {
+  id: string
+  paramName: string
+  type: string // java.sql.Date, java.lang.String, etc.
+  module: string
+  service: string
+  label: string
+  componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
+  jasperReportTemplate: any // Nested object we don't need
+  reportClass: string
+  reportValidation: string
+  parameterPosition: number
+  dependentField: string
+  filterKeyValue: string
+  dataValueStatic: string
+}
+
+interface BackendReportInfo {
+  id: string
+  code: string
+  name: string
+  description?: string
+  parameters?: BackendReportParameter[]
+}
+
+// ========== FRONTEND INTERFACES - UPDATED ==========
 interface ReportParameter {
   paramName: string
   label: string
@@ -90,6 +118,8 @@ interface ReportParameter {
   debounceTimeMs?: number
   maxSelectedLabels?: number
   required?: boolean
+  defaultValue?: any
+  parameterPosition?: number
 }
 
 interface ReportInfo {
@@ -435,10 +465,19 @@ function useReportParameters() {
 }
 
 function useFieldBuilder() {
-  // ✅ NUEVA FUNCIÓN HELPER
-  function normalizeOptions(options: any[]): Array<{ label: string, value: any }> {
+  // ✅ IMPROVED: Better option normalization with support for defaultValue
+  function normalizeOptions(options: any[], defaultValue?: any): Array<{ label: string, value: any, default?: boolean }> {
     if (!options || !Array.isArray(options) || options.length === 0) {
       return []
+    }
+
+    // Handle backend localselect format: {id, name, slug, defaultValue}
+    if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
+      return options.map(opt => ({
+        label: opt.name,
+        value: opt.id,
+        default: opt.defaultValue === true
+      }))
     }
 
     // Si ya están normalizadas con 'label'
@@ -468,19 +507,64 @@ function useFieldBuilder() {
     return options.map(opt => ({ label: String(opt), value: opt }))
   }
 
+  // ✅ NEW: Map backend parameter to frontend parameter
+  function mapBackendParameter(backendParam: BackendReportParameter): ReportParameter {
+    const mappedParam: ReportParameter = {
+      paramName: backendParam.paramName,
+      label: backendParam.label,
+      componentType: backendParam.componentType,
+      required: false, // Default as requested
+      debounceTimeMs: 300, // Default as requested
+      maxSelectedLabels: 3, // Default as requested
+      parameterPosition: backendParam.parameterPosition || 0, // ✅ NEW: Preserve parameter order
+    }
+
+    // Add module/service for dynamic components
+    if (backendParam.module && backendParam.module.trim() !== '') {
+      mappedParam.module = backendParam.module.trim()
+    }
+
+    if (backendParam.service && backendParam.service.trim() !== '') {
+      mappedParam.service = backendParam.service.trim()
+    }
+
+    // Handle dependent field relationships
+    if (backendParam.dependentField && backendParam.dependentField.trim() !== '') {
+      mappedParam.dependentField = backendParam.dependentField.trim()
+    }
+
+    // Map filterKeyValue to filtersBase structure
+    if (backendParam.filterKeyValue && backendParam.filterKeyValue.trim() !== '') {
+      mappedParam.filtersBase = [{
+        key: backendParam.filterKeyValue.trim(),
+        value: null // Will be populated dynamically based on dependent field
+      }]
+    }
+    else {
+      mappedParam.filtersBase = []
+    }
+
+    // Handle static data for localselect
+    if (backendParam.componentType === 'localselect' && backendParam.dataValueStatic) {
+      mappedParam.dataValueStatic = backendParam.dataValueStatic
+    }
+
+    return mappedParam
+  }
+
   function createFieldFromParameter(param: ReportParameter): any {
     const baseProps = {
       name: param.paramName,
       type: param.componentType,
       field: param.paramName,
       label: param.label,
-      class: param.reportClass || 'col-12 md:col-6',
+      class: 'col-12 md:col-6', // Default layout
       placeholder: `Enter ${param.label}`,
       helpText: param.required ? 'This field is required' : `Optional - ${param.label}`,
       validation: param.required
         ? z.string().min(1, `${param.label} is required`)
         : z.string().optional(),
-      required: param.required
+      required: param.required || false
     }
 
     if (param.required) {
@@ -508,14 +592,20 @@ function useFieldBuilder() {
       }),
 
       localselect: () => {
-        let options: Array<{ label: string, value: any }> = []
-        try {
-          const rawData = param.dataValueStatic
-            ? JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
-            : []
+        let options: Array<{ label: string, value: any, default?: boolean }> = []
+        let defaultValue: any = null
 
-          // ✅ CAMBIO: Normalizar las opciones inmediatamente
-          options = normalizeOptions(rawData)
+        try {
+          if (param.dataValueStatic) {
+            const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
+            options = normalizeOptions(rawData)
+
+            // Find default value
+            const defaultOption = options.find(opt => opt.default === true)
+            if (defaultOption) {
+              defaultValue = defaultOption.value
+            }
+          }
         }
         catch (e) {
           Logger.error('Invalid JSON in dataValueStatic for param', param.paramName, e)
@@ -525,9 +615,10 @@ function useFieldBuilder() {
         return {
           ...FieldBuilder.select(param.paramName, param.label, options),
           ...baseProps,
-          type: 'localselect', // ✅ MANTENER este tipo
+          type: 'localselect',
           dataType: 'localselect',
-          options, // ✅ Opciones ya normalizadas
+          options,
+          defaultValue, // ✅ NEW: Support for default value
           filterable: options.length > 10,
           showClear: true
         }
@@ -557,7 +648,8 @@ function useFieldBuilder() {
 
   return {
     createFieldFromParameter,
-    normalizeOptions
+    normalizeOptions,
+    mapBackendParameter // ✅ NEW: Export the mapping function
   }
 }
 
@@ -580,7 +672,8 @@ const {
 
 const {
   createFieldFromParameter,
-  normalizeOptions
+  normalizeOptions,
+  mapBackendParameter
 } = useFieldBuilder()
 
 // ========== COMPUTED PROPERTIES ==========
@@ -613,35 +706,28 @@ async function loadReport(reportId: string) {
   try {
     loadingReport.value = true
 
-    // Simulación de carga de reporte
-    // Aquí deberías hacer la llamada real a tu API
-    const mockReport: ReportInfo = {
-      id: reportId,
-      code: `REPORT_${reportId}`,
-      name: `Report ${reportId}`,
-      description: `Description for report ${reportId}`,
-      parameters: [
-        {
-          paramName: 'startDate',
-          label: 'Start Date',
-          componentType: 'date',
-          required: true
-        },
-        {
-          paramName: 'status',
-          label: 'Status',
-          componentType: 'localselect',
-          dataValueStatic: JSON.stringify([
-            { name: 'Active', value: 'active' },
-            { name: 'Inactive', value: 'inactive' }
-          ]),
-          required: false
-        }
-      ]
+    // ✅ FIXED: Proper type casting for backend response
+    const response = await GenericService.getById<BackendReportInfo>(
+      'report',
+      'jasper-report-template/template-with-params/',
+      reportId
+    )
+
+    // ✅ NEW: Map backend response to frontend format with proper sorting
+    const mappedReport: ReportInfo = {
+      id: response.id,
+      code: response.code,
+      name: response.name,
+      description: response.description,
+      parameters: response.parameters
+        ? response.parameters
+            .map(mapBackendParameter)
+            .sort((a, b) => (a.parameterPosition || 0) - (b.parameterPosition || 0)) // ✅ Sort by parameterPosition
+        : []
     }
 
-    currentReport.value = mockReport
-    await loadReportParameters(mockReport.id, mockReport.code, mockReport)
+    currentReport.value = mappedReport
+    await loadReportParameters(mappedReport.id, mappedReport.code, mappedReport)
   }
   catch (error) {
     Logger.error('Error loading report:', error)
@@ -657,36 +743,43 @@ async function loadReport(reportId: string) {
   }
 }
 
-async function loadReportParameters(id: string, code: string, reportData?: any) {
+async function loadReportParameters(id: string, code: string, reportData?: ReportInfo) {
   if (!id) { return }
 
   try {
     showForm.value = false
 
     // Reset fields to base
-    fields.value = [
-      {
-        name: 'jasperReportCode',
-        type: 'text',
-        field: 'jasperReportCode',
-        label: 'Report Code',
-        disabled: true,
-        hidden: true,
-        class: 'col-12',
-        validation: FORM_VALIDATION_RULES.reportCode
-      }
-    ]
+    // fields.value = [
+    //   {
+    //     name: 'jasperReportCode',
+    //     type: 'text',
+    //     field: 'jasperReportCode',
+    //     label: 'Report Code',
+    //     disabled: true,
+    //     hidden: true,
+    //     class: 'col-12',
+    //     validation: FORM_VALIDATION_RULES.reportCode
+    //   }
+    // ]
 
-    // Build form fields from parameters
+    // ✅ IMPROVED: Better parameter processing with default values and proper ordering
     if (reportData?.parameters && reportData.parameters.length > 0) {
-      reportData.parameters.forEach((param: ReportParameter) => {
-        // Initialize field value
-        item.value[param.paramName] = param.componentType === 'multiselect' ? [] : ''
-
+      // Parameters are already sorted by parameterPosition in loadReport method
+      reportData.parameters.forEach((param: ReportParameter, index: number) => {
         // Create field definition
         const fieldDef = createFieldFromParameter(param)
 
-        // Add API configuration for dynamic fields
+        // ✅ NEW: Set default value if available
+        let initialValue = param.componentType === 'multiselect' ? [] : ''
+        if (fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
+          initialValue = fieldDef.defaultValue
+        }
+
+        // Initialize field value
+        item.value[param.paramName] = initialValue
+
+        // ✅ IMPROVED: Better API configuration for dynamic fields
         if (['select', 'multiselect'].includes(param.componentType) && param.module && param.service) {
           fieldDef.objApi = {
             moduleApi: param.module,
@@ -701,14 +794,31 @@ async function loadReportParameters(id: string, code: string, reportData?: any) 
         }
 
         fields.value.push(fieldDef)
+
+        Logger.log(`✅ Parameter ${index + 1} loaded:`, {
+          paramName: param.paramName,
+          position: param.parameterPosition,
+          componentType: param.componentType,
+          hasDefault: fieldDef.defaultValue !== undefined,
+          initialValue
+        })
       })
     }
 
     item.value.jasperReportCode = code || ''
+    currentReport.value = reportData || null // ✅ FIXED: Update current report
     formReload.value++
 
     await nextTick()
     showForm.value = true
+
+    Logger.log('✅ Parameters loaded successfully:', {
+      reportCode: code,
+      parametersCount: reportData?.parameters?.length || 0,
+      fieldsGenerated: fields.value.length,
+      parameterOrder: reportData?.parameters?.map(p => ({ name: p.paramName, position: p.parameterPosition })) || [],
+      currentFormValues: item.value
+    })
   }
   catch (error) {
     Logger.error('Error loading parameters:', error)
@@ -1460,831 +1570,5 @@ const isShareSupported = computed(() => {
 </template>
 
 <style scoped>
-/* Report Viewer Page Styles - Override súper específico basado en HTML real */
-
-.report-viewer {
-  /* Override variables del enhanced-form específicamente para esta página */
-  &__form {
-    /* Variables específicas para report-viewer */
-    --enhanced-form-field-height: 2.5rem;
-    --enhanced-form-field-height-mobile: 2.75rem;
-    --enhanced-form-field-height-compact: 2rem;
-    --enhanced-form-spacing: 0.75rem;
-    --enhanced-form-transition: all 0.2s ease-in-out;
-
-    /* OVERRIDE SÚPER ESPECÍFICO - Basado en HTML real */
-
-    /* DatePicker - .p-calendar .p-inputtext */
-    :deep(.p-calendar.enhanced-form__field) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-    }
-
-    :deep(.p-calendar .p-inputtext) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-      padding: 0 0.75rem !important;
-      line-height: 2.5rem !important;
-      box-sizing: border-box !important;
-      font-size: 0.875rem !important;
-    }
-
-    :deep(.p-calendar .p-button) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-      width: 2.5rem !important;
-    }
-
-    /* MultiSelect - .dynamic-multiselect__field .p-multiselect */
-    :deep(.dynamic-multiselect__field.p-multiselect) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-    }
-
-    :deep(.dynamic-multiselect__field .p-multiselect-label-container) {
-      height: calc(2.5rem - 2px) !important;
-      min-height: calc(2.5rem - 2px) !important;
-      padding: 0.25rem 0.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-    }
-
-    :deep(.dynamic-multiselect__field .p-multiselect-trigger) {
-      height: calc(2.5rem - 2px) !important;
-      width: 2.5rem !important;
-    }
-
-    /* Enhanced Form todos los campos PrimeVue nativos */
-    :deep(.enhanced-form__field-container .p-inputtext),
-    :deep(.enhanced-form__field-container .p-dropdown),
-    :deep(.enhanced-form__field-container .p-multiselect),
-    :deep(.enhanced-form__field-container .p-calendar),
-    :deep(.enhanced-form__field-container .p-inputnumber),
-    :deep(.enhanced-form__field-container .p-password) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-      font-size: 0.875rem !important;
-    }
-
-    /* Labels específicos para reports */
-    :deep(.enhanced-form__field-header),
-    :deep(.mb-2.font-semibold) {
-      font-size: 0.75rem !important;
-      font-weight: 600 !important;
-      color: #374151 !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
-      margin-bottom: 0.25rem !important;
-      line-height: 1.2 !important;
-    }
-
-    /* Help text más compacto */
-    :deep(.enhanced-form__help-text) {
-      font-size: 0.6875rem !important;
-      color: #6b7280 !important;
-      margin-top: 0.125rem !important;
-      line-height: 1.3 !important;
-    }
-
-    /* Spacing entre campos más compacto */
-    :deep(.enhanced-form__field-container) {
-      margin-bottom: 0.75rem !important;
-    }
-  }
-
-  /* Dropdown Export Format fuera del enhanced-form */
-  &__parameters-content {
-    /* Dropdown Export Format específico */
-    :deep(.p-dropdown) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-    }
-
-    :deep(.p-dropdown .p-dropdown-label) {
-      height: 2.5rem !important;
-      min-height: 2.5rem !important;
-      padding: 0 0.75rem !important;
-      line-height: 2.5rem !important;
-      display: flex !important;
-      align-items: center !important;
-      font-size: 0.875rem !important;
-    }
-
-    :deep(.p-dropdown .p-dropdown-trigger) {
-      height: 2.5rem !important;
-      width: 2.5rem !important;
-    }
-  }
-
-  /* Labels para campos custom (fuera del enhanced-form) */
-  &__label {
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    color: #374151 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    margin-bottom: 0.25rem !important;
-    display: block !important;
-    line-height: 1.2 !important;
-  }
-
-  /* Botón Generate - elemento único de report-viewer */
-  &__generate-btn {
-    height: 2.5rem !important;
-    min-height: 2.5rem !important;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 6px !important;
-
-    &:hover:not(:disabled) {
-      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    &:disabled {
-      background: #9ca3af !important;
-      transform: none !important;
-      box-shadow: none !important;
-      cursor: not-allowed !important;
-    }
-  }
-
-  /* Help text para elementos fuera del enhanced-form */
-  &__help {
-    font-size: 0.6875rem;
-    color: #6b7280;
-    line-height: 1.3;
-    margin-top: 0.125rem;
-  }
-
-  /* Mobile responsive */
-  @media screen and (max-width: 768px) {
-    &__form {
-      :deep(.p-calendar .p-inputtext),
-      :deep(.enhanced-form__field-container .p-inputtext),
-      :deep(.enhanced-form__field-container .p-dropdown),
-      :deep(.enhanced-form__field-container .p-multiselect),
-      :deep(.enhanced-form__field-container .p-calendar),
-      :deep(.dynamic-multiselect__field.p-multiselect) {
-        height: 2.75rem !important;
-        min-height: 2.75rem !important;
-      }
-
-      :deep(.p-calendar .p-inputtext) {
-        line-height: 2.75rem !important;
-      }
-
-      :deep(.dynamic-multiselect__field .p-multiselect-label-container) {
-        height: calc(2.75rem - 2px) !important;
-      }
-    }
-
-    &__parameters-content {
-      :deep(.p-dropdown) {
-        height: 2.75rem !important;
-      }
-
-      :deep(.p-dropdown .p-dropdown-label) {
-        height: 2.75rem !important;
-        line-height: 2.75rem !important;
-      }
-    }
-
-    &__generate-btn {
-      height: 2.75rem !important;
-      min-height: 2.75rem !important;
-    }
-  }
-}
-
-/* Base styles for report viewer layout */
-.report-viewer {
-  min-height: 100vh;
-  background: #f8fafc;
-  padding: 1rem;
-}
-
-.report-viewer__header {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.report-viewer__header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.report-viewer__header-info {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.report-viewer__header-icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-}
-
-.report-viewer__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0;
-}
-
-.report-viewer__subtitle {
-  color: #6b7280;
-  margin: 0.25rem 0 0 0;
-}
-
-.report-viewer__header-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: #f3f4f6;
-  border-radius: 6px;
-}
-
-.report-viewer__main {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  min-height: 70vh;
-}
-
-.report-viewer__parameters,
-.report-viewer__preview {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.report-viewer__parameters-header,
-.report-viewer__preview-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.report-viewer__parameters-content,
-.report-viewer__preview-content {
-  padding: 1.5rem;
-}
-
-.report-viewer__format-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.report-viewer__format-option {
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.report-viewer__format-option:hover {
-  border-color: #6366f1;
-}
-
-.report-viewer__format-option--selected {
-  border-color: #6366f1;
-  background: #f0f9ff;
-}
-
-.report-viewer__pdf-object {
-  width: 100%;
-  height: 60vh;
-  border: none;
-  border-radius: 4px;
-}
-
-/* Iconos de formato - colores específicos */
-.pi-file-pdf { color: #dc2626; }
-.pi-file-excel { color: #16a34a; }
-.pi-table { color: #0369a1; }
-.pi-spin { animation: spin 1s linear infinite; }
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Status cards */
-.report-viewer__status {
-  margin-bottom: 1rem;
-}
-
-.report-viewer__status-card {
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.report-viewer__status-card--loading {
-  border-left: 4px solid #3b82f6;
-}
-
-.report-viewer__status-card--success {
-  border-left: 4px solid #10b981;
-}
-
-.report-viewer__status-card--warning {
-  border-left: 4px solid #f59e0b;
-}
-
-.report-viewer__status-card--error {
-  border-left: 4px solid #ef4444;
-}
-
-.report-viewer__status-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.report-viewer__status-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.report-viewer__progress-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 120px;
-}
-
-.report-viewer__progress-bar {
-  height: 4px;
-}
-
-.report-viewer__progress-text {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-align: center;
-}
-
-.report-viewer__status-title {
-  margin: 0 0 0.25rem 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.report-viewer__status-message {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-/* Parameters panel */
-.report-viewer__parameters-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.report-viewer__parameters-header-content,
-.report-viewer__preview-header-content {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.report-viewer__parameters-icon,
-.report-viewer__preview-icon {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 4px;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-}
-
-.report-viewer__parameters-title,
-.report-viewer__preview-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__parameters-subtitle,
-.report-viewer__preview-subtitle {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.report-viewer__parameters-content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.report-viewer__loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-}
-
-.report-viewer__loading-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* Actions section */
-.report-viewer__actions {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.report-viewer__format-section {
-  margin-bottom: 1.5rem;
-}
-
-.report-viewer__format-label {
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.report-viewer__format-option-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.report-viewer__format-option-name {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__format-option-description {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1.3;
-}
-
-.report-viewer__generation-controls {
-  margin-bottom: 1.5rem;
-}
-
-.report-viewer__generate-button {
-  width: 100%;
-  margin-bottom: 0.75rem;
-}
-
-.report-viewer__generation-info {
-  text-align: center;
-}
-
-.report-viewer__quick-actions {
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.report-viewer__quick-actions-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.report-viewer__quick-actions-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-/* No parameters state */
-.report-viewer__no-parameters {
-  padding: 2rem;
-  text-align: center;
-}
-
-.report-viewer__no-parameters-content {
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.report-viewer__no-parameters-icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: #ecfdf5;
-  color: #10b981;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  font-size: 1.5rem;
-}
-
-.report-viewer__no-parameters-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__no-parameters-text {
-  margin: 0 0 1.5rem 0;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-/* Empty state */
-.report-viewer__empty {
-  padding: 3rem 2rem;
-  text-align: center;
-}
-
-.report-viewer__empty-content {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.report-viewer__empty-icon {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-  font-size: 2rem;
-}
-
-.report-viewer__empty-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__empty-text {
-  margin: 0 0 1.5rem 0;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-.report-viewer__empty-help {
-  background: #f9fafb;
-  border-radius: 6px;
-  padding: 1rem;
-}
-
-.report-viewer__help-content {
-  display: flex;
-  gap: 0.75rem;
-  text-align: left;
-}
-
-.report-viewer__help-title {
-  margin: 0 0 0.25rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.report-viewer__help-text {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-  line-height: 1.4;
-}
-
-/* Preview panel */
-.report-viewer__preview-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.report-viewer__preview-content {
-  flex: 1;
-  padding: 0;
-}
-
-.report-viewer__preview-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.report-viewer__pdf-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.report-viewer__pdf-toolbar {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.report-viewer__pdf-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.report-viewer__pdf-object {
-  flex: 1;
-  width: 100%;
-  border: none;
-  background: white;
-}
-
-.report-viewer__pdf-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 400px;
-  background: #f9fafb;
-}
-
-.report-viewer__pdf-fallback-content {
-  text-align: center;
-  padding: 2rem;
-}
-
-.report-viewer__pdf-fallback-content i {
-  font-size: 3rem;
-  color: #dc2626;
-  margin-bottom: 1rem;
-}
-
-.report-viewer__pdf-fallback-content h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__pdf-fallback-content p {
-  margin: 0 0 1.5rem 0;
-  color: #6b7280;
-}
-
-/* Preview empty state */
-.report-viewer__preview-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 400px;
-  padding: 2rem;
-}
-
-.report-viewer__preview-empty-content {
-  text-align: center;
-  max-width: 400px;
-}
-
-.report-viewer__preview-empty-icon {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-  font-size: 2rem;
-}
-
-.report-viewer__preview-empty-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.report-viewer__preview-empty-text {
-  margin: 0 0 1.5rem 0;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-.report-viewer__preview-features {
-  background: #f9fafb;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.report-viewer__preview-features-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.report-viewer__preview-features-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.report-viewer__preview-features-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.report-viewer__preview-empty-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: #eff6ff;
-  border-radius: 6px;
-  color: #1d4ed8;
-  font-size: 0.875rem;
-}
-
-/* Responsive design */
-@media screen and (max-width: 1024px) {
-  .report-viewer__main {
-    grid-template-columns: 1fr;
-  }
-
-  .report-viewer__header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .report-viewer__format-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .report-viewer__quick-actions-buttons {
-    flex-direction: column;
-  }
-}
-
-@media screen and (max-width: 640px) {
-  .report-viewer {
-    padding: 0.5rem;
-  }
-
-  .report-viewer__header {
-    padding: 1rem;
-  }
-
-  .report-viewer__parameters-content,
-  .report-viewer__preview-content {
-    padding: 1rem;
-  }
-
-  .report-viewer__empty,
-  .report-viewer__no-parameters {
-    padding: 1.5rem 1rem;
-  }
-}
+@import '@/assets/styles/pages/report-viewer.scss';
 </style>
