@@ -125,7 +125,56 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     //@Transactional
     public UUID insert(ManageInvoiceDto dto) {
         Invoice invoice = new Invoice(dto);
-        this.repositoryCommand.insert(invoice);
+        //this.repositoryCommand.insert(invoice);
+        Map<String, Object> results = this.repositoryCommand.insertInvoice(invoice.getId(),
+                invoice.getAging(),
+                invoice.getAutoRec(),
+                invoice.isCloneParent(),
+                invoice.getCredits(),
+                invoice.isDeleteInvoice(),
+                invoice.getDueAmount(),
+                invoice.getDueDate(),
+                invoice.getHasAttachments(),
+                invoice.getImportType().name(),
+                invoice.getInvoiceAmount(),
+                invoice.getInvoiceDate(),
+                invoice.getInvoiceStatus().name(),
+                invoice.getInvoiceType().name(),
+                invoice.getIsCloned(),
+                invoice.getIsManual(),
+                invoice.getOriginalAmount(),
+                invoice.getReSend(),
+                invoice.getReSendDate(),
+                invoice.getSendStatusError(),
+                invoice.getUpdatedAt(),
+                invoice.getAgency() != null ? invoice.getAgency().getId() : null,
+                invoice.getHotel() != null ? invoice.getHotel().getId() : null,
+                invoice.getManageInvoiceStatus() != null ? invoice.getManageInvoiceStatus().getId() : null,
+                invoice.getManageInvoiceType() != null ? invoice.getManageInvoiceType().getId() : null,
+                invoice.getParent() != null ? invoice.getParent().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID invoiceId = (UUID)results.get("o_id");
+                invoice.setId(invoiceId);
+            }
+            if(results.containsKey("o_invoice_no")){
+                Long invoiceNo = (Long)results.get("o_invoice_no");
+                invoice.setInvoiceNo(invoiceNo);
+            }
+            if(results.containsKey("o_invoicenumber")){
+                String invoiceNumber = (String)results.get("o_invoicenumber");
+                invoice.setInvoiceNumber(invoiceNumber);
+            }
+            if(results.containsKey("o_invoicenumberprefix")){
+                String invoiceNumberPrefix = (String)results.get("o_invoicenumberprefix");
+                invoice.setInvoiceNumberPrefix(invoiceNumberPrefix);
+            }
+            if(results.containsKey("o_invoiceid")){
+                Integer invoiceGenId = (Integer)results.get("o_invoiceid");
+                invoice.setInvoiceId(invoiceGenId.longValue());
+            }
+        }
 
         dto.setId(invoice.getId());
         dto.setInvoiceNo(invoice.getInvoiceNo());

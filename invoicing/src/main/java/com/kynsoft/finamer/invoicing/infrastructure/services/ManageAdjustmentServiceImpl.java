@@ -22,10 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,7 +48,7 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
     @Override
     public UUID insert(ManageAdjustmentDto dto) {
         ManageAdjustment adjustment = new ManageAdjustment(dto);
-        this.repositoryCommand.insert(adjustment);
+        this.insert(adjustment);
 
         dto.setId(adjustment.getId());
         dto.setAdjustmentId(adjustment.getAdjustmentId());
@@ -143,7 +140,27 @@ public class ManageAdjustmentServiceImpl implements IManageAdjustmentService {
     }
 
     private void insert(ManageAdjustment adjustment){
-        this.repositoryCommand.insert(adjustment);
+        //this.repositoryCommand.insert(adjustment);
+        Map<String, Object> result = repositoryCommand.insertAdjustment(
+                adjustment.getId(),
+                adjustment.getAmount(),
+                adjustment.getDate(),
+                adjustment.isDeleteInvoice(),
+                adjustment.getDeleted(),
+                adjustment.getDeletedAt(),
+                adjustment.getDescription(),
+                adjustment.getEmployee(),
+                adjustment.getUpdatedAt(),
+                adjustment.getPaymentTransactionType() != null ? adjustment.getPaymentTransactionType().getId() : null,
+                adjustment.getRoomRate() != null ? adjustment.getRoomRate().getId() : null,
+                adjustment.getTransaction() != null ? adjustment.getTransaction().getId() : null
+        );
+
+        // Recuperar valor OUT
+        if (result != null && result.containsKey("p_adjustment_gen_id")) {
+            Integer adjId = (Integer) result.get("p_adjustment_gen_id");
+            adjustment.setAdjustmentId(adjId != null ? adjId.longValue() : null);
+        }
     }
 
     @Override

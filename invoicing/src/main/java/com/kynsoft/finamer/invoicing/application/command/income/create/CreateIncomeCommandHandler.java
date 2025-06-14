@@ -114,8 +114,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
         this.createAdjustments(income, command.getAdjustments(), employeeFullName, closeOperationDto);
 
-        //ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
         Instant before = Instant.now();
+        //income = this.manageInvoiceService.create(income);
         this.manageInvoiceService.insert(income);
         Instant after = Instant.now();
         System.out.println("Insert invoice - booking: " + Duration.between(before, after).toMillis() + " ms");
