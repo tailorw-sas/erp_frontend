@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
@@ -12,8 +13,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,27 +22,8 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "adjustment")
-//@NamedStoredProcedureQuery(
-//        name = "pr_insert_adjustment",
-//        procedureName = "pr_insert_adjustment",
-//        parameters = {
-//                @StoredProcedureParameter(mode = ParameterMode.INOUT, name = "p_id", type = UUID.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_amount", type = Double.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_date", type = LocalDateTime.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_deleteinvoice", type = Boolean.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_deleted", type = Boolean.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_deletedat", type = LocalDateTime.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_description", type = String.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_employee", type = String.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_updatedat", type = LocalDateTime.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_manage_payment_type", type = UUID.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_manage_room_rate", type = UUID.class),
-//                @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_manage_transaction_type", type = UUID.class),
-//                @StoredProcedureParameter(mode = ParameterMode.OUT, name = "p_adjustment_gen_id", type = Integer.class) // tu OUT param
-//        }
-//)
-//@EntityListeners(AuditEntityListener.class)
-//@RemoteAudit(name = "adjustment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "adjustment",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageAdjustment {
 
     @Id
@@ -69,6 +49,7 @@ public class ManageAdjustment {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_room_rate", nullable = true)
+    @JsonBackReference
     private ManageRoomRate roomRate;
 
     @Column(nullable = true)

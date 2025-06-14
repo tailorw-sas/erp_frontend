@@ -2,6 +2,7 @@ package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
 //import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
 //import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.*;
@@ -35,6 +36,7 @@ public class InvoiceCloseOperation implements Serializable {
 
     @OneToOne(optional = false)  // Define la relación uno a uno
     @JoinColumn(name = "hotel_id", nullable = false, unique = true)  // Hace la relación obligatoria
+    @JsonBackReference
     private ManageHotel hotel;
 
     private LocalDate beginDate;

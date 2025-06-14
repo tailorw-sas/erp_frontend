@@ -1,5 +1,9 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.kynsof.audit.infrastructure.core.annotation.RemoteAudit;
+import com.kynsof.audit.infrastructure.listener.AuditEntityListener;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import jakarta.persistence.*;
@@ -24,8 +28,8 @@ import org.hibernate.generator.EventType;
 @Setter
 @Entity
 @Table(name = "room_rate")
-//@EntityListeners(AuditEntityListener.class)
-//@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
+@EntityListeners(AuditEntityListener.class)
+@RemoteAudit(name = "room_rate",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class ManageRoomRate {
 
     @Id
@@ -47,8 +51,10 @@ public class ManageRoomRate {
     private Double hotelAmount;
     private String remark;
     private Long nights;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "booking")
+    @JsonBackReference
     private Booking booking;
 
     @Column(nullable = true)
@@ -58,6 +64,7 @@ public class ManageRoomRate {
     private boolean deleteInvoice;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "roomRate")
+    @JsonManagedReference
     private List<ManageAdjustment> adjustments;
 
     @CreationTimestamp

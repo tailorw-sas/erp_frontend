@@ -72,6 +72,7 @@ public class ManageAgency {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_country_id")
+    @JsonManagedReference
     private ManageCountry country;
 
     private String status;
