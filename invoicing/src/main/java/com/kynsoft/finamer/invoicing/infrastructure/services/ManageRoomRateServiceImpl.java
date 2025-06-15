@@ -152,14 +152,16 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
 
     @Override
     public ManageRoomRateDto findById(UUID id) {
+        return this.findById(id, false);
+    }
+
+    @Override
+    public ManageRoomRateDto findById(UUID id, boolean includeAdjustments) {
         Optional<ManageRoomRate> optionalEntity = repositoryQuery.findById(id);
-
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregate();
+        if(optionalEntity.isPresent()){
+            return includeAdjustments ? optionalEntity.get().toAggregateWithAdjustments() : optionalEntity.get().toAggregate();
         }
-
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ROOM_RATE_NOT_FOUND_, new ErrorField("id", "The Room Rate not found.")));
-
     }
 
     @Override

@@ -29,6 +29,8 @@ public interface IManageRoomRateService {
 
     ManageRoomRateDto findById(UUID id);
 
+    ManageRoomRateDto findById(UUID id, boolean includeAdjustments);
+
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     List<ManageRoomRateDto> findByIds(List<UUID> ids);

@@ -63,7 +63,7 @@ public class ManageRoomRate {
     @Column(columnDefinition = "boolean DEFAULT FALSE")
     private boolean deleteInvoice;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "roomRate")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "roomRate")
     @JsonManagedReference
     private List<ManageAdjustment> adjustments;
 
@@ -121,6 +121,27 @@ public class ManageRoomRate {
                 this.remark,
                 Objects.nonNull(this.booking) ? this.booking.toAggregate() : null,
                 null,
+                this.nights,
+                this.deleteInvoice,
+                null);
+    }
+
+    public ManageRoomRateDto toAggregateWithAdjustments() {
+        return new ManageRoomRateDto(
+                this.id,
+                this.roomRateId,
+                this.checkIn,
+                this.checkOut,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                this.roomNumber,
+                this.adults,
+                this.children,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.remark,
+                Objects.nonNull(this.booking) ? this.booking.toAggregate() : null,
+                Objects.nonNull(this.adjustments) ? this.adjustments.stream().map(ManageAdjustment::toAggregate).collect(Collectors.toList()) : null,
                 this.nights,
                 this.deleteInvoice,
                 null);
