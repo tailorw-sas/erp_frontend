@@ -1,16 +1,11 @@
 package com.kynsoft.finamer.invoicing.application.command.manageAdjustment.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceTransactionTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManagePaymentTransactionTypeDto;
-import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
+import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+
+import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
@@ -20,7 +15,6 @@ import java.util.UUID;
 @Component
 public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdjustmentCommand> {
 
-    private final IManageAdjustmentService adjustmentService;
     private final IManageInvoiceTransactionTypeService transactionTypeService;
     private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
 
@@ -29,26 +23,28 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
     private final IManageInvoiceService invoiceService;
 
     private final IInvoiceCloseOperationService closeOperationService;
+    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
 
-    public CreateAdjustmentCommandHandler(IManageAdjustmentService adjustmentService,
-            IManageInvoiceTransactionTypeService transactionTypeService,
+    public CreateAdjustmentCommandHandler(IManageInvoiceTransactionTypeService transactionTypeService,
             IManageRoomRateService roomRateService,
             IManageBookingService bookingService,
             IManageInvoiceService invoiceService,
             IInvoiceCloseOperationService closeOperationService,
-            IManagePaymentTransactionTypeService paymentTransactionTypeService) {
-        this.adjustmentService = adjustmentService;
+            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                          ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.transactionTypeService = transactionTypeService;
         this.roomRateService = roomRateService;
         this.bookingService = bookingService;
         this.invoiceService = invoiceService;
         this.closeOperationService = closeOperationService;
         this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
     }
 
     @Override
     public void handle(CreateAdjustmentCommand command) {
         ManageRoomRateDto roomRateDto = roomRateService.findById(command.getRoomRate());
+        ManageBookingDto bookingDto = roomRateDto.getBooking();
 
         ManageInvoiceTransactionTypeDto transactionTypeDto = command.getTransactionType() != null
                 ? transactionTypeService.findById(command.getTransactionType())
@@ -65,7 +61,7 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
                 null,
                 command.getAmount(),
                 //command.getDate(),
-                this.date(roomRateDto.getBooking().getInvoice().getHotel().getId()),
+                this.getCloseOperationDate(roomRateDto.getBooking().getInvoice().getHotel().getId()),
                 command.getDescription(),
                 transactionTypeDto,
                 paymnetTransactionTypeDto,
@@ -81,17 +77,15 @@ public class CreateAdjustmentCommandHandler implements ICommandHandler<CreateAdj
             this.roomRateService.update(roomRateDto);
         }
 
-        bookingService.calculateInvoiceAmount(this.bookingService.findById(roomRateDto.getBooking().getId()));
-        invoiceService.calculateInvoiceAmount(this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId()));
+        this.bookingService.calculateInvoiceAmount(bookingDto);
+
+        ManageInvoiceDto invoiceDto = this.invoiceService.findById(roomRateDto.getBooking().getInvoice().getId());
+        invoiceService.calculateInvoiceAmount(invoiceDto);
+        this.producerReplicateManageInvoiceService.create(invoiceDto, null, null);
     }
 
-    private LocalDateTime date(UUID hotel) {
-        InvoiceCloseOperationDto closeOperationDto = this.closeOperationService.findActiveByHotelId(hotel);
-
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
-            return LocalDateTime.now(ZoneId.of("UTC"));
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+    private LocalDateTime getCloseOperationDate(UUID hotel) {
+        return this.closeOperationService.getCloseOperationDate(hotel);
     }
 
 }
