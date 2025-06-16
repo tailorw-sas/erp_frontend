@@ -2,19 +2,19 @@ package com.kynsoft.finamer.invoicing.infrastructure.services.kafka.consumer.inc
 
 import com.kynsof.share.core.domain.kafka.entity.*;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeAttachmentRequest;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeAttachmentRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
+import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
 import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustmentCommand;
-import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionFailed;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionSuccess;
-import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -106,13 +106,13 @@ public class ConsumerCreateIncomeTransactionService {
                 List.of(createAdjustmentRequest(objKafka)));
     }
 
-    private NewIncomeAdjustmentRequest createAdjustmentRequest(CreateIncomeTransactionKafka objectkafka) {
-        NewIncomeAdjustmentRequest newIncomeAdjustmentRequest = new NewIncomeAdjustmentRequest();
-        newIncomeAdjustmentRequest.setTransactionType(objectkafka.getTransactionTypeAdjustment());
-        newIncomeAdjustmentRequest.setDate(objectkafka.getDateAdjustment());
-        newIncomeAdjustmentRequest.setRemark(objectkafka.getRemark());
-        newIncomeAdjustmentRequest.setAmount(objectkafka.getIncomeAmount());
-        return newIncomeAdjustmentRequest;
+    private CreateIncomeAdjustment createAdjustmentRequest(CreateIncomeTransactionKafka objectkafka) {
+        CreateIncomeAdjustment incomeAdjustmentRequest = new CreateIncomeAdjustment();
+        incomeAdjustmentRequest.setTransactionType(objectkafka.getTransactionTypeAdjustment());
+        incomeAdjustmentRequest.setDate(objectkafka.getDateAdjustment().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        incomeAdjustmentRequest.setRemark(objectkafka.getRemark());
+        incomeAdjustmentRequest.setAmount(objectkafka.getIncomeAmount());
+        return incomeAdjustmentRequest;
     }
 
     private CreateIncomeTransactionSuccessKafka createIncomeTransactionSuccessKafka(UUID incomeId, UUID employeeId, UUID relatedPaymentDetail) {

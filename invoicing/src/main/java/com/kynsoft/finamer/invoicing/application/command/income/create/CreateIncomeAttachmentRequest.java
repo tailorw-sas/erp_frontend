@@ -1,4 +1,4 @@
-package com.kynsof.share.core.domain.http.entity.income;
+package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +11,13 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateAntiToIncomeAttachmentRequest {
+public class CreateIncomeAttachmentRequest {
 
+    private String filename;
     private String file;
+    private String remark;
+    private UUID type;
     private String employee;
     private UUID employeeId;
+    private UUID paymentResourceType;
 }

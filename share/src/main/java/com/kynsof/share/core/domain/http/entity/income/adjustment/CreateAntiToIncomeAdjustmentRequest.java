@@ -1,6 +1,5 @@
-package com.kynsof.share.core.domain.http.entity.income;
+package com.kynsof.share.core.domain.http.entity.income.adjustment;
 
-import java.time.LocalDate;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,10 +7,10 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class NewIncomeAdjustmentRequest {
+public class CreateAntiToIncomeAdjustmentRequest {
 
     private UUID transactionType;
     private Double amount;
-    private LocalDate date;
+    private String date;
     private String remark;
 }

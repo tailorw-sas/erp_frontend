@@ -2,9 +2,7 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommand;
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeAttachmentRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
+import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
@@ -34,7 +32,7 @@ public class CreateIncomeCommand implements ICommand {
     private LocalDate reSendDate;
     private String employee;
     private List<CreateIncomeAttachmentRequest> attachments;
-    private List<NewIncomeAdjustmentRequest> adjustments;
+    private List<CreateIncomeAdjustment> adjustments;
 
     private Long invoiceId;
     private ManageInvoiceDto income;
@@ -54,7 +52,7 @@ public class CreateIncomeCommand implements ICommand {
                                UUID invoiceStatus,
                                String employee,
                                List<CreateIncomeAttachmentRequest> attachments,
-                               List<NewIncomeAdjustmentRequest> adjustments) {
+                               List<CreateIncomeAdjustment> adjustments) {
         this.id = UUID.randomUUID();
         this.status = status;
         this.invoiceDate = invoiceDate;
@@ -104,6 +102,8 @@ public class CreateIncomeCommand implements ICommand {
         this.employee = employee;
         this.attachments = attachments;
     }
+
+
 
     public static CreateIncomeCommand fromRequest(CreateIncomeRequest request) {
         return new CreateIncomeCommand(

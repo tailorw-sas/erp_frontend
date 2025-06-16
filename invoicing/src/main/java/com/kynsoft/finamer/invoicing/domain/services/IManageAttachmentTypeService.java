@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentTypeDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,6 @@ public interface IManageAttachmentTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filter);
 
     Optional<ManageAttachmentTypeDto> findAttachInvDefault();
+
+    Map<UUID, ManageAttachmentTypeDto> getMapById(List<UUID> ids);
 }

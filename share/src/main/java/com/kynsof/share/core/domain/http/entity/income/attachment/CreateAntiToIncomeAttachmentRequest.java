@@ -1,4 +1,4 @@
-package com.kynsof.share.core.domain.http.entity.income;
+package com.kynsof.share.core.domain.http.entity.income.attachment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +11,9 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateIncomeAttachmentRequest {
+public class CreateAntiToIncomeAttachmentRequest {
 
-    private String filename;
     private String file;
-    private String remark;
-    private UUID type;
     private String employee;
     private UUID employeeId;
-    private UUID paymentResourceType;
 }

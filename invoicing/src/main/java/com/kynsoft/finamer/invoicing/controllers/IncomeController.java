@@ -1,14 +1,14 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeMessage;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeRequest;
 import com.kynsoft.finamer.invoicing.application.command.income.create.antiToIncome.CreateAntiToIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.delete.DeleteIncomeCommand;
 import com.kynsoft.finamer.invoicing.application.command.income.delete.DeleteIncomeMessage;
@@ -17,9 +17,7 @@ import com.kynsoft.finamer.invoicing.application.command.income.update.UpdateInc
 import com.kynsoft.finamer.invoicing.application.command.income.update.UpdateIncomeRequest;
 import com.kynsoft.finamer.invoicing.application.query.income.getById.FindIncomeByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.income.search.GetSearchIncomeQuery;
-import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.IncomeResponse;
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,17 +40,13 @@ public class IncomeController {
         CreateIncomeCommand createCommand = CreateIncomeCommand.fromRequest(request);
         CreateIncomeMessage response = mediator.send(createCommand);
 
-        //FindInvoiceByIdQuery query = new FindInvoiceByIdQuery(response.getId());
-        //ManageInvoiceResponse resp = mediator.send(query);
-
-//        this.mediator.send(new UpdateInvoiceCommand(response.getId(), null, null, null, null));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/anti-to-income")
-    public ResponseEntity<CreateIncomeFromPaymentMessage> createAntiToIncome(@RequestBody CreateAntiToIncomeRequest request) {
+    public ResponseEntity<CreateAntiToIncomeFromPaymentMessage> createAntiToIncome(@RequestBody CreateAntiToIncomeFromPaymentRequest request) {
         CreateAntiToIncomeCommand createCommand = CreateAntiToIncomeCommand.fromRequest(request);
-        CreateIncomeFromPaymentMessage response = mediator.send(createCommand);
+        CreateAntiToIncomeFromPaymentMessage response = mediator.send(createCommand);
         return ResponseEntity.ok(response);
     }
 

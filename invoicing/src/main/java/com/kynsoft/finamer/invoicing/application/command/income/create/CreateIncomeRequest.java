@@ -1,5 +1,6 @@
-package com.kynsof.share.core.domain.http.entity.income;
+package com.kynsoft.finamer.invoicing.application.command.income.create;
 
+import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,5 +27,5 @@ public class CreateIncomeRequest {
     private LocalDate reSendDate;
     private String employee;
     private List<CreateIncomeAttachmentRequest> attachments;
-    private List<NewIncomeAdjustmentRequest> adjustments;
+    private List<CreateIncomeAdjustment> adjustments;
 }

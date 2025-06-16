@@ -2,16 +2,11 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.attachment.CreateAntiToIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
 import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
-import com.kynsof.share.core.domain.http.entity.income.ajustment.NewIncomeAdjustmentRequest;
-import com.kynsof.share.core.domain.kafka.entity.ReplicateBookingKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentDetailsKafka;
-import com.kynsof.share.core.domain.kafka.entity.ReplicatePaymentKafka;
-import com.kynsof.share.core.domain.kafka.entity.update.UpdateBookingBalanceKafka;
+import com.kynsof.share.core.domain.http.entity.income.adjustment.AntiToIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
@@ -39,10 +34,6 @@ import com.kynsoft.finamer.payment.domain.services.IPaymentStatusHistoryService;
 import com.kynsoft.finamer.payment.infrastructure.excel.PaymentCacheFactory;
 import com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment.CreateAttachmentEvent;
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentAntiValidatorFactory;
-import com.kynsoft.finamer.payment.infrastructure.identity.Booking;
-import com.kynsoft.finamer.payment.infrastructure.identity.Invoice;
-import com.kynsoft.finamer.payment.infrastructure.identity.ManagePaymentStatus;
-import com.kynsoft.finamer.payment.infrastructure.identity.Payment;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManageBookingWriteDataJPARepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.command.ManagePaymentDetailWriteDataJPARepository;
@@ -67,7 +58,6 @@ import java.time.ZoneOffset;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -264,7 +254,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                     //this.createPaymentDetails(transactionTypeDto, depositPaymentDetail, amount, remark);
                 }
 
-                CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(getRelatedIncome(depositPaymentDetail, employeeDto, transactionTypeDto.getId(), attachment));
+                CreateAntiToIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(getRelatedIncome(depositPaymentDetail, employeeDto, transactionTypeDto.getId(), attachment));
                 //incomes.add(new DetailAndIncomeHelper(msg.getId(), newDetail.getId()));
                 //incoList.add(msg.getId());
                 this.createAdjustmentHttpService.sendCreateIncomeRequest(this.createAdjustmentRequest(depositPaymentDetail, employeeDto.getId(), UUID.fromString(request.getInvoiceTransactionTypeId()), msg.getId()));
@@ -432,13 +422,13 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 //        }
 //    }
 
-    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId, UUID transactionType, UUID income) {
-        CreateIncomeAdjustmentRequest request = new CreateIncomeAdjustmentRequest();
+    private CreateAntiToIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId, UUID transactionType, UUID income) {
+        CreateAntiToIncomeAdjustmentRequest request = new CreateAntiToIncomeAdjustmentRequest();
         request.setEmployee(employeeId.toString());
         request.setIncome(income);
         request.setStatus("ACTIVE");
 
-        NewIncomeAdjustmentRequest newIncomeAdjustmentRequest = new NewIncomeAdjustmentRequest();
+        AntiToIncomeAdjustmentRequest newIncomeAdjustmentRequest = new AntiToIncomeAdjustmentRequest();
         newIncomeAdjustmentRequest.setTransactionType(transactionType);
         newIncomeAdjustmentRequest.setDate(LocalDate.now().toString());
         newIncomeAdjustmentRequest.setRemark(paymentDetailDto.getRemark());
@@ -449,8 +439,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         return request;
     }
 
-    private CreateAntiToIncomeRequest getRelatedIncome(PaymentDetailDto paymentDetailDto, ManageEmployeeDto employeeDto, UUID status, String attachment) {
-        CreateAntiToIncomeRequest income = new CreateAntiToIncomeRequest();
+    private CreateAntiToIncomeFromPaymentRequest getRelatedIncome(PaymentDetailDto paymentDetailDto, ManageEmployeeDto employeeDto, UUID status, String attachment) {
+        CreateAntiToIncomeFromPaymentRequest income = new CreateAntiToIncomeFromPaymentRequest();
         CreateIncomeRequest incomeRequest = new CreateIncomeRequest();
         incomeRequest.setInvoiceDate(LocalDateTime.now());
         incomeRequest.setManual(Boolean.FALSE);
