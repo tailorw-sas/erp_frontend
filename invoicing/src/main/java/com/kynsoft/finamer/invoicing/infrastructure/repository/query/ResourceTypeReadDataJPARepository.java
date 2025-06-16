@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,4 +30,6 @@ public interface ResourceTypeReadDataJPARepository extends JpaRepository<ManageR
 
     @Query("SELECT r FROM ManageResourceType r WHERE r.defaults = true AND r.status = 'ACTIVE'")
     Optional<ManageResourceType> findByDefaults();
+
+    List<ManageResourceType> findByIdIn(List<UUID> ids);
 }

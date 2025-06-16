@@ -1,12 +1,11 @@
 package com.kynsoft.finamer.payment.application.command.paymentImport.detail.applyDeposit;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.attachment.CreateAntiToIncomeAttachmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
 import com.kynsof.share.core.domain.http.entity.income.CreateIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
-import com.kynsof.share.core.domain.http.entity.income.ajustment.NewIncomeAdjustmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.adjustment.AntiToIncomeAdjustmentRequest;
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsof.share.utils.ConsumerUpdate;
@@ -103,7 +102,7 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         this.paymentService.update(paymentUpdate);
         command.setPaymentResponse(paymentUpdate);
         ManageInvoiceStatusDto manageInvoiceStatusDto = statusService.findByCode(RELATE_INCOME_STATUS_CODE);
-        CreateIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(
+        CreateAntiToIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(
                 sendToCreateRelatedIncome(paymentDetails, employeeDto, command.getTransactionTypeForAdjustment(),
                         command.getAttachment()));
         this.createAdjustmentHttpService.sendCreateIncomeRequest(
@@ -119,14 +118,14 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         serviceLocator.getBean(IMediator.class).send(applyPaymentDetailCommand);
     }
 
-    private CreateIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId,
-                                                                  UUID transactionType, UUID income) {
-        CreateIncomeAdjustmentRequest request = new CreateIncomeAdjustmentRequest();
+    private CreateAntiToIncomeAdjustmentRequest createAdjustmentRequest(PaymentDetailDto paymentDetailDto, UUID employeeId,
+                                                                        UUID transactionType, UUID income) {
+        CreateAntiToIncomeAdjustmentRequest request = new CreateAntiToIncomeAdjustmentRequest();
         request.setEmployee(employeeId.toString());
         request.setIncome(income);
         request.setStatus("ACTIVE");
 
-        NewIncomeAdjustmentRequest newIncomeAdjustmentRequest = new NewIncomeAdjustmentRequest();
+        AntiToIncomeAdjustmentRequest newIncomeAdjustmentRequest = new AntiToIncomeAdjustmentRequest();
         newIncomeAdjustmentRequest.setTransactionType(transactionType);
         newIncomeAdjustmentRequest.setDate(LocalDate.now().toString());
         newIncomeAdjustmentRequest.setRemark(paymentDetailDto.getRemark());
@@ -137,10 +136,10 @@ public class CreatePaymentDetailApplyDepositFromFileCommandHandler implements IC
         return request;
     }
 
-    private CreateAntiToIncomeRequest sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,
-                                                                ManageEmployeeDto employeeDto,
-                                                                UUID status, String attachment) {
-        CreateAntiToIncomeRequest income = new CreateAntiToIncomeRequest();
+    private CreateAntiToIncomeFromPaymentRequest sendToCreateRelatedIncome(PaymentDetailDto paymentDetailDto,
+                                                                           ManageEmployeeDto employeeDto,
+                                                                           UUID status, String attachment) {
+        CreateAntiToIncomeFromPaymentRequest income = new CreateAntiToIncomeFromPaymentRequest();
         CreateIncomeRequest incomeRequest = new CreateIncomeRequest();
         incomeRequest.setInvoiceDate(LocalDateTime.now());
         incomeRequest.setManual(Boolean.FALSE);

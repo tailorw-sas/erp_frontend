@@ -2,11 +2,8 @@ package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.creat
 
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.http.entity.income.NewIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
-import com.kynsof.share.utils.ConsumerUpdate;
-import com.kynsof.share.utils.UpdateIfNotNull;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
@@ -19,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +33,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
     private final IManageInvoiceService service;
     private final IManageEmployeeService employeeService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public CreateIncomeAdjustmentCommandHandler(IManagePaymentTransactionTypeService transactionTypeService,
                                                 IInvoiceCloseOperationService closeOperationService,
@@ -83,10 +82,10 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
 
         String employeeFullName = this.employeeService.getEmployeeFullName(command.getEmployee());
 
-        for (NewIncomeAdjustmentRequest adjustment : command.getAdjustments()) {
+        for (CreateIncomeAdjustment adjustment : command.getAdjustments()) {
             // Puede ser + y -, pero no puede ser 0
             RulesChecker.checkRule(new CheckAmountNotZeroRule(adjustment.getAmount()));
-            RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(adjustment.getDate()));
+            RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(LocalDate.parse(adjustment.getDate(), formatter)));
             ManagePaymentTransactionTypeDto paymentTransactionTypeDto = adjustment
                     .getTransactionType() != null
                             ? this.transactionTypeService
@@ -96,7 +95,7 @@ public class CreateIncomeAdjustmentCommandHandler implements ICommandHandler<Cre
                     UUID.randomUUID(),
                     0L,
                     adjustment.getAmount(),
-                    invoiceDate(incomeDto.getHotel().getId(), adjustment.getDate().atStartOfDay()),
+                    invoiceDate(incomeDto.getHotel().getId(), LocalDate.parse(adjustment.getDate(), formatter).atStartOfDay()),
                     adjustment.getRemark(),
                     null,
                     paymentTransactionTypeDto,

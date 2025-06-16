@@ -9,8 +9,10 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageAttachmentResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAttachmentService;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAttachment;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageAttachmentWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageAttachmentReadDataJPARepository;
@@ -20,10 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageAttachmentServiceImpl implements IManageAttachmentService {
@@ -110,10 +110,34 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
     @Override
     public void create(List<ManageAttachmentDto> dtos) {
         List<ManageAttachment> attachments = new ArrayList<>();
+        Map<UUID, ManageAttachmentDto> attachmentDtoMap = new HashMap<>();
+
         for(ManageAttachmentDto dto : dtos){
             attachments.add(new ManageAttachment(dto));
+            attachmentDtoMap.put(dto.getId(), dto);
         }
-        this.repositoryCommand.saveAll(attachments);
+        List<ManageAttachment> createdAttachments = this.repositoryCommand.saveAll(attachments);
+
+        createdAttachments.forEach(manageAttachment -> {
+            ManageAttachmentDto attachmentDto = attachmentDtoMap.get(manageAttachment.getId());
+            attachmentDto.setAttachmentId(manageAttachment.getAttachmentId());
+        });
+    }
+
+    @Override
+    public void create(ManageInvoiceDto invoiceDto) {
+        Invoice invoice = new Invoice(invoiceDto);
+        if(invoice.getAttachments() != null && !invoice.getAttachments().isEmpty()){
+            for(ManageAttachment attachment : invoice.getAttachments()){
+                this.insert(attachment);
+            }
+            Map<UUID, ManageAttachmentDto> attachmentDtoMap = invoiceDto.getAttachments().stream().collect(Collectors.toMap(ManageAttachmentDto::getId, attachmentDto -> attachmentDto));
+
+            invoice.getAttachments().forEach(manageAttachment -> {
+                ManageAttachmentDto attachmentDto = attachmentDtoMap.get(manageAttachment.getId());
+                attachmentDto.setAttachmentId(manageAttachment.getAttachmentId());
+            });
+        }
     }
 
     @Override
@@ -136,6 +160,26 @@ public class ManageAttachmentServiceImpl implements IManageAttachmentService {
                     System.err.println("Valor inválido para el tipo Enum Status: " + filter.getValue());
                 }
             }
+        }
+    }
+
+    private void insert(ManageAttachment attachment){
+        Map<String, Object> result = this.repositoryCommand.insertInvoiceAttachment(attachment.getId(),
+                attachment.isDeleteInvoice(),
+                attachment.getDeleted(),
+                attachment.getDeletedAt(),
+                attachment.getEmployee(),
+                attachment.getEmployeeId(),
+                attachment.getFile(),
+                attachment.getFilename(),
+                attachment.getRemark(),
+                attachment.getUpdatedAt(),
+                attachment.getInvoice() != null ? attachment.getInvoice().getId() : null,
+                attachment.getPaymentResourceType() != null ? attachment.getPaymentResourceType().getId() : null,
+                attachment.getType() != null ? attachment.getType().getId() : null);
+        if(result != null){
+            if(result.containsKey("o_id")) attachment.setId((UUID)result.get("o_id"));
+            if(result.containsKey("o_attachment_gen_id")) attachment.setAttachmentId(((Integer)result.get("o_attachment_gen_id")).longValue());
         }
     }
 

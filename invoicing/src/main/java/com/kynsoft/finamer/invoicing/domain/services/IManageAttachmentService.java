@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageAttachmentDto;
 import java.util.List;
 import java.util.UUID;
 
+import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import org.springframework.data.domain.Pageable;
 
 public interface IManageAttachmentService {
@@ -26,6 +27,8 @@ public interface IManageAttachmentService {
     List<ManageAttachmentDto> findAllByInvoiceId(UUID invoiceId);
 
     void create(List<ManageAttachmentDto> dtos);
+
+    void create(ManageInvoiceDto invoiceDto);
 
     void deleteInvoice(ManageAttachmentDto dto);
 }

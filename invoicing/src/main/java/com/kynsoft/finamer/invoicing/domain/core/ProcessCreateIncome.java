@@ -6,15 +6,12 @@ import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckAmountNotZeroRule;
 import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
-import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.*;
 
 public class ProcessCreateIncome {
@@ -57,10 +54,7 @@ public class ProcessCreateIncome {
 
 
     public ManageInvoiceDto process(){
-        String invoiceNumber = this.setInvoiceNumber(hotel, InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME));
-
         ManageInvoiceDto income = this.generateNewManageInvoice(id,
-                invoiceNumber,
                 invoiceDate,
                 dueDate,
                 manual,
@@ -77,16 +71,7 @@ public class ProcessCreateIncome {
         return income;
     }
 
-    private String setInvoiceNumber(ManageHotelDto hotel, String invoiceTypeCode) {
-        if (hotel.getManageTradingCompanies() != null && hotel.getManageTradingCompanies().getIsApplyInvoice()) {
-            return invoiceTypeCode + "-" + hotel.getManageTradingCompanies().getCode();
-        } else {
-            return invoiceTypeCode + "-" + hotel.getCode();
-        }
-    }
-
     private ManageInvoiceDto generateNewManageInvoice(UUID id,
-                                                      String invoiceNumber,
                                                       LocalDateTime invoiceDate,
                                                       LocalDate invoiceDueDate,
                                                       boolean manual,
@@ -100,8 +85,8 @@ public class ProcessCreateIncome {
                 id,
                 0L,
                 0L,
-                invoiceNumber,
-                InvoiceType.getInvoiceTypeCode(EInvoiceType.INCOME) + "-" + 0L,
+                "",
+                "",
                 invoiceDate,
                 invoiceDueDate,
                 manual,
@@ -141,7 +126,7 @@ public class ProcessCreateIncome {
                         UUID.randomUUID(),
                         0L,
                         adjustment.getAmount(),
-                        invoiceDate(closeOperationDto, adjustment.getDate().atStartOfDay()),
+                        getInvoiceDate(closeOperationDto, adjustment.getDate().atStartOfDay()),
                         adjustment.getRemark(),
                         null,
                         adjustment.getTransactionType(),
@@ -169,11 +154,11 @@ public class ProcessCreateIncome {
         }
     }
 
-    private LocalDateTime invoiceDate(InvoiceCloseOperationDto closeOperationDto, LocalDateTime invoiceDate) {
+    private LocalDateTime getInvoiceDate(InvoiceCloseOperationDto closeOperationDto, LocalDateTime invoiceDate) {
         if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
             return invoiceDate;
         }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now());
     }
 
     private ManageRoomRateDto generateNewManageRoomRate(){

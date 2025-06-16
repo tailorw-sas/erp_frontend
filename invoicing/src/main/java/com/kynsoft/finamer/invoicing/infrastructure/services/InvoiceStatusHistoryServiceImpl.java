@@ -23,10 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -47,7 +44,19 @@ public class InvoiceStatusHistoryServiceImpl implements IInvoiceStatusHistorySer
     @Override
     public UUID create(InvoiceStatusHistoryDto dto) {
         InvoiceStatusHistory data = new InvoiceStatusHistory(dto);
-        return this.repositoryCommand.save(data).getId();
+        //return this.repositoryCommand.save(data).getId();
+        Map<String, Object> result = this.repositoryCommand.insertInvoiceStatusHistory(data.getId(),
+                data.getDescription(),
+                data.getEmployee(),
+                data.getInvoiceStatus().name(),
+                data.getUpdatedAt(),
+                data.getInvoice() != null ? data.getInvoice().getId() : null);
+        if(result != null){
+            if(result.containsKey("o_id")) dto.setId((UUID)result.get("o_id"));
+            if(result.containsKey("o_invoice_history_gen_id")) dto.setInvoiceHistoryId(((Integer)result.get("o_invoice_history_gen_id")).longValue());
+        }
+
+        return dto.getId();
     }
 
     @Override

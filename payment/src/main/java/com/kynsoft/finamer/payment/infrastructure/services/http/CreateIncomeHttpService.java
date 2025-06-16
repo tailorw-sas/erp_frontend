@@ -1,12 +1,10 @@
 package com.kynsoft.finamer.payment.infrastructure.services.http;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
 import com.kynsof.share.core.domain.response.ErrorField;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,9 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Slf4j
 @Service
@@ -36,15 +31,15 @@ public class CreateIncomeHttpService {
         this.restTemplate = restTemplate;
     }
 
-    public CreateIncomeFromPaymentMessage sendCreateIncomeRequest(CreateAntiToIncomeRequest request) {
+    public CreateAntiToIncomeFromPaymentMessage sendCreateIncomeRequest(CreateAntiToIncomeFromPaymentRequest request) {
         String url = serviceUrl + "/api/income/anti-to-income";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<CreateAntiToIncomeRequest> entity = new HttpEntity<>(request, headers);
+        HttpEntity<CreateAntiToIncomeFromPaymentRequest> entity = new HttpEntity<>(request, headers);
 
         try {
             // Realizar la solicitud POST
-            ResponseEntity<CreateIncomeFromPaymentMessage> response = restTemplate.postForEntity(url, entity, CreateIncomeFromPaymentMessage.class);
+            ResponseEntity<CreateAntiToIncomeFromPaymentMessage> response = restTemplate.postForEntity(url, entity, CreateAntiToIncomeFromPaymentMessage.class);
 
             if (!HttpStatus.OK.equals(response.getStatusCode())) {
                 log.error("Failed to create income. Status: {}, Response: {}", response.getStatusCode(), response);

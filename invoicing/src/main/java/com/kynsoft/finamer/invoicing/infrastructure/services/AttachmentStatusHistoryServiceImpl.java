@@ -40,28 +40,31 @@ public class AttachmentStatusHistoryServiceImpl implements IAttachmentStatusHist
         this.employeeService = employeeService;
     }
 
+//    @Override
+//    public UUID create(AttachmentStatusHistoryDto dto) {
+//        AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
+//        return this.repositoryCommand.save(data).getId();
+//    }
+
     @Override
     public UUID create(AttachmentStatusHistoryDto dto) {
         AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
-        return this.repositoryCommand.save(data).getId();
+        Map<String, Object> result = this.repositoryCommand.insertAttachmentStatusHistory(data.getId(),
+                data.getAttachmentId(),
+                data.getDescription(),
+                data.getEmployee(),
+                data.getEmployeeId(),
+                data.getUpdatedAt(),
+                data.getInvoice() != null ? data.getInvoice().getId() : null
+        );
+        if(result != null){
+            if(result.containsKey("o_id")){
+                data.setId((UUID)result.get("o_id"));
+                dto.setId(data.getId());
+            }
+        }
+        return data.getId();
     }
-//    public UUID create(AttachmentStatusHistoryDto dto) {
-//        AttachmentStatusHistory data = new AttachmentStatusHistory(dto);
-//        //return this.repositoryCommand.save(data).getId();
-//        Map<String, Object> result = this.repositoryCommand.insertAttachmentStatusHistory(data.getId(), data.getDescription(), data.getEmployee(),
-//                data.getEmployeeId(), data.getUpdatedAt(), data.getInvoice() != null ? data.getInvoice().getId() : null);
-//        if(result != null){
-//            if(result.containsKey("o_id")){
-//                data.setId((UUID)result.get("o_id"));
-//                dto.setId(data.getId());
-//            }
-//            if(result.containsKey("o_attachment_gen_id")){
-//                data.setAttachmentId((Long)result.get("o_attachment_gen_id"));
-//                dto.setAttachmentId(data.getAttachmentId());
-//            }
-//        }
-//        return data.getId();
-//    }
 
     @Override
     public void update(AttachmentStatusHistoryDto dto) {
