@@ -268,8 +268,3 @@ onMounted(() => {
     </MultiSelect>
   </div>
 </template>
-
-<style scoped>
-/* Solo importar los estilos custom, PrimeFlex ya está cargado globalmente */
-@import '@/assets/styles/components/dynamic-multiselect.scss';
-</style>

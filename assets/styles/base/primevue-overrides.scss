@@ -1,618 +1,376 @@
 /* ===================================================================
-   PRIMEVUE GLOBAL OVERRIDES
+   PRIMEVUE GLOBAL OVERRIDES - REPORT VIEWER
+   Este archivo debe importarse en main.js o como CSS global
    =================================================================== */
 
-// ===============================
-// BUTTON OVERRIDES
-// ===============================
+/* ===============================
+   CALENDAR STYLING (DATE PICKER)
+   =============================== */
 
-.p-button {
-  font-family: inherit;
-  font-weight: $font-weight-semibold;
-  border-radius: $border-radius;
-  transition: $transition;
-
-  &:focus {
-    @include focus-ring;
+   .p-calendar {
+    width: 100% !important;
   }
-
-  &.p-button-sm {
-    height: $field-height-compact;
-    font-size: $font-size-small;
+  
+  .p-calendar .p-inputtext {
+    height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    padding: 0 1rem !important;
+    font-size: 1rem !important;
+    color: #374151 !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
   }
-
-  &.p-button-lg {
-    height: $field-height-large;
-    font-size: $font-size-lg;
+  
+  .p-calendar .p-inputtext:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
   }
-}
-
-// ===============================
-// DIALOG OVERRIDES
-// ===============================
-
-.p-dialog {
-  border-radius: $border-radius-xl;
-  box-shadow: $shadow-xl;
-
-  .p-dialog-header {
-    background: $gray-50;
-    border-bottom: 1px solid $gray-200;
-    border-radius: $border-radius-xl $border-radius-xl 0 0;
+  
+  .p-calendar .p-datepicker-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: 2px solid #e5e7eb !important;
+    border-left: none !important;
+    border-radius: 0 12px 12px 0 !important;
+    color: #6b7280 !important;
+    height: 2.75rem !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
   }
-
-  .p-dialog-content {
-    padding: $spacing-xl;
+  
+  .p-calendar .p-datepicker-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+    transform: scale(1.02) !important;
   }
-
-  .p-dialog-footer {
-    background: $gray-50;
-    border-top: 1px solid $gray-200;
-    border-radius: 0 0 $border-radius-xl $border-radius-xl;
-    padding: $spacing-lg $spacing-xl;
+  
+  /* DatePicker Panel */
+  .p-datepicker {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 8px !important;
   }
-}
-
-// ===============================
-// TOAST OVERRIDES
-// ===============================
-
-.p-toast {
-  .p-toast-message {
-    border-radius: $border-radius-lg;
-    box-shadow: $shadow-lg;
-    margin-bottom: $spacing-md;
-
-    &.p-toast-message-success {
-      background: $success-light;
-      border: 1px solid $success-color;
-      color: $success-color;
+  
+  .p-datepicker .p-datepicker-header {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 1rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-title {
+    color: #1f2937 !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-prev,
+  .p-datepicker .p-datepicker-next {
+    color: #6b7280 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-datepicker .p-datepicker-prev:hover,
+  .p-datepicker .p-datepicker-next:hover {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-weekheader {
+    background: #f9fafb !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-weekheader th {
+    color: #6b7280 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar td {
+    padding: 2px !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day:hover {
+    background: #dbeafe !important;
+    color: #3b82f6 !important;
+    transform: scale(1.05) !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-selected {
+    background: #3b82f6 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-today {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    font-weight: 700 !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-today:hover {
+    background: #fed7aa !important;
+    color: #ea580c !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-other-month {
+    color: #d1d5db !important;
+  }
+  
+  /* ===============================
+     DROPDOWN STYLING
+     =============================== */
+  
+  .p-dropdown {
+    height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown:not(.p-disabled):hover {
+    border-color: #d1d5db !important;
+  }
+  
+  .p-dropdown:not(.p-disabled).p-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .p-dropdown .p-dropdown-label {
+    padding: 0 1rem !important;
+    color: #374151 !important;
+    font-size: 1rem !important;
+    height: calc(2.75rem - 4px) !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .p-dropdown .p-dropdown-label.p-placeholder {
+    color: #9ca3af !important;
+  }
+  
+  .p-dropdown .p-dropdown-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: none !important;
+    border-radius: 0 10px 10px 0 !important;
+    color: #6b7280 !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown .p-dropdown-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+  }
+  
+  .p-dropdown .p-dropdown-clear-icon {
+    right: 3rem !important;
+    color: #6b7280 !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown .p-dropdown-clear-icon:hover {
+    color: #374151 !important;
+    background: #f3f4f6 !important;
+    border-radius: 50% !important;
+  }
+  
+  /* Dropdown Panel */
+  .p-dropdown-panel {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 4px !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-items {
+    padding: 0.5rem 0 !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item {
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+    font-size: 1rem !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item:hover {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item.p-highlight {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-empty-message {
+    padding: 1.5rem !important;
+    text-align: center !important;
+    color: #9ca3af !important;
+    font-style: italic !important;
+  }
+  
+  /* ===============================
+     MULTISELECT STYLING
+     =============================== */
+  
+  .p-multiselect {
+    min-height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-multiselect:not(.p-disabled):hover {
+    border-color: #d1d5db !important;
+  }
+  
+  .p-multiselect:not(.p-disabled).p-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .p-multiselect .p-multiselect-label-container {
+    padding: 0.5rem 1rem !important;
+    min-height: calc(2.75rem - 4px) !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .p-multiselect .p-multiselect-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: none !important;
+    border-radius: 0 10px 10px 0 !important;
+    color: #6b7280 !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-multiselect .p-multiselect-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+  }
+  
+  /* MultiSelect Panel */
+  .p-multiselect-panel {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 4px !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-items {
+    padding: 0.5rem 0 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item {
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item:hover {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item.p-highlight {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  /* ===============================
+     ENHANCED VISUAL EFFECTS
+     =============================== */
+  
+  /* Pulse animation for loading states */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
     }
-
-    &.p-toast-message-error {
-      background: $error-light;
-      border: 1px solid $error-color;
-      color: $error-color;
-    }
-
-    &.p-toast-message-warn {
-      background: $warning-light;
-      border: 1px solid $warning-color;
-      color: $warning-color;
-    }
-
-    &.p-toast-message-info {
-      background: $primary-light;
-      border: 1px solid $primary-color;
-      color: $primary-color;
-    }
-  }
-}
-
-// ===============================
-// DATATABLE OVERRIDES
-// ===============================
-
-.p-datatable {
-  border-radius: $border-radius-lg;
-  overflow: hidden;
-
-  .p-datatable-header {
-    background: $gray-50;
-    border-bottom: 1px solid $gray-200;
-    padding: $spacing-lg;
-  }
-
-  .p-datatable-thead > tr > th {
-    background: $gray-100;
-    color: $gray-700;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-small;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    padding: $spacing-md $spacing-lg;
-  }
-
-  .p-datatable-tbody > tr > td {
-    padding: $spacing-md $spacing-lg;
-    border-bottom: 1px solid $gray-200;
-  }
-
-  .p-datatable-tbody > tr:hover {
-    background: $gray-50;
-  }
-}
-
-// ===============================
-// DROPDOWN PANEL OVERRIDES
-// ===============================
-
-.p-dropdown-panel {
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-lg;
-  border: 1px solid $gray-200;
-  margin-top: $spacing-xs;
-
-  .p-dropdown-items {
-    .p-dropdown-item {
-      padding: $spacing-sm $spacing-md;
-      transition: $transition-fast;
-
-      &:hover {
-        background: $gray-50;
-      }
-
-      &.p-highlight {
-        background: $primary-light;
-        color: $primary-color;
-      }
-    }
-  }
-
-  .p-dropdown-filter-container {
-    padding: $spacing-sm;
-    border-bottom: 1px solid $gray-200;
-
-    .p-dropdown-filter {
-      @include field-base;
-      width: 100%;
-      height: $field-height-compact;
-    }
-  }
-}
-
-// ===============================
-// MULTISELECT PANEL OVERRIDES
-// ===============================
-
-.p-multiselect-panel {
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-lg;
-  border: 1px solid $gray-200;
-  margin-top: $spacing-xs;
-
-  .p-multiselect-header {
-    padding: $spacing-sm $spacing-md;
-    border-bottom: 1px solid $gray-200;
-    background: $gray-50;
-
-    .p-multiselect-filter-container {
-      .p-multiselect-filter {
-        @include field-base;
-        height: $field-height-compact;
-      }
-    }
-  }
-
-  .p-multiselect-items {
-    .p-multiselect-item {
-      padding: $spacing-sm $spacing-md;
-      transition: $transition-fast;
-
-      &:hover {
-        background: $gray-50;
-      }
-
-      &.p-highlight {
-        background: $primary-light;
-        color: $primary-color;
-      }
-    }
-  }
-}
-
-// ===============================
-// CALENDAR OVERRIDES
-// ===============================
-
-.p-datepicker {
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-lg;
-  border: 1px solid $gray-200;
-
-  .p-datepicker-header {
-    background: $gray-50;
-    border-bottom: 1px solid $gray-200;
-    padding: $spacing-md;
-  }
-
-  .p-datepicker-calendar {
-    td {
-      padding: $spacing-xs;
-
-      &.p-datepicker-today > span {
-        background: $primary-light;
-        color: $primary-color;
-        border-radius: $border-radius-sm;
-      }
-
-      &:not(.p-datepicker-other-month) > span:hover {
-        background: $gray-100;
-        border-radius: $border-radius-sm;
-      }
-
-      &.p-highlight > span {
-        background: $primary-color;
-        color: white;
-        border-radius: $border-radius-sm;
-      }
-    }
-  }
-}
-
-// ===============================
-// PROGRESS BAR OVERRIDES
-// ===============================
-
-.p-progressbar {
-  border-radius: $border-radius;
-  background: $gray-200;
-  overflow: hidden;
-
-  .p-progressbar-value {
-    background: linear-gradient(90deg, $primary-color 0%, #4338ca 100%);
-    transition: width 0.6s ease;
-  }
-
-  &.p-progressbar-determinate .p-progressbar-value {
-    border-radius: $border-radius;
-  }
-}
-
-// ===============================
-// SPINNER OVERRIDES
-// ===============================
-
-.p-progress-spinner {
-  .p-progress-spinner-circle {
-    stroke: $primary-color;
-  }
-}
-
-// ===============================
-// TAG OVERRIDES
-// ===============================
-
-.p-tag {
-  border-radius: $border-radius-sm;
-  font-size: $font-size-tiny;
-  font-weight: $font-weight-medium;
-  padding: 0.25rem $spacing-sm;
-
-  &.p-tag-success {
-    background: $success-light;
-    color: $success-color;
-  }
-
-  &.p-tag-info {
-    background: $primary-light;
-    color: $primary-color;
-  }
-
-  &.p-tag-warning {
-    background: $warning-light;
-    color: $warning-color;
-  }
-
-  &.p-tag-danger {
-    background: $error-light;
-    color: $error-color;
-  }
-}
-
-// ===============================
-// BADGE OVERRIDES
-// ===============================
-
-.p-badge {
-  border-radius: $border-radius-sm;
-  font-size: $font-size-tiny;
-  font-weight: $font-weight-medium;
-  padding: 0.25rem $spacing-sm;
-
-  &.p-badge-success {
-    background: $success-color;
-  }
-
-  &.p-badge-info {
-    background: $primary-color;
-  }
-
-  &.p-badge-warning {
-    background: $warning-color;
-  }
-
-  &.p-badge-danger {
-    background: $error-color;
-  }
-
-  &.p-badge-secondary {
-    background: $gray-500;
-  }
-}
-
-// ===============================
-// DIVIDER OVERRIDES
-// ===============================
-
-.p-divider {
-  &.p-divider-horizontal {
-    margin: $spacing-lg 0;
-    
-    &::before {
-      border-top: 1px solid $gray-200;
+    50% {
+      opacity: 0.7;
     }
   }
-
-  &.p-divider-vertical {
-    margin: 0 $spacing-lg;
-    
-    &::before {
-      border-left: 1px solid $gray-200;
+  
+  .p-component.p-disabled {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+  
+  /* Smooth focus ring animation */
+  @keyframes focusRing {
+    0% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
   }
-}
-
-// ===============================
-// CARD OVERRIDES
-// ===============================
-
-.p-card {
-  @include card-base;
-
-  .p-card-header {
-    padding: $spacing-xl $spacing-xl $spacing-lg;
+  
+  .p-dropdown:not(.p-disabled).p-focus,
+  .p-multiselect:not(.p-disabled).p-focus,
+  .p-calendar .p-inputtext:focus {
+    animation: focusRing 0.3s ease-out;
   }
-
-  .p-card-body {
-    padding: 0 $spacing-xl;
+  
+  /* Better hover effects */
+  .p-dropdown:hover,
+  .p-multiselect:hover,
+  .p-calendar:hover {
+    transform: translateY(-1px) !important;
+    transition: all 0.2s ease !important;
   }
-
-  .p-card-content {
-    padding: 0;
-  }
-
-  .p-card-footer {
-    padding: $spacing-lg $spacing-xl $spacing-xl;
-  }
-
-  .p-card-title {
-    font-size: $font-size-2xl;
-    font-weight: $font-weight-semibold;
-    color: $gray-900;
-    margin-bottom: $spacing-sm;
-  }
-
-  .p-card-subtitle {
-    font-size: $font-size-small;
-    color: $gray-600;
-    margin-bottom: $spacing-lg;
-  }
-}
-
-// ===============================
-// PANEL OVERRIDES
-// ===============================
-
-.p-panel {
-  border-radius: $border-radius-lg;
-  border: 1px solid $gray-200;
-
-  .p-panel-header {
-    background: $gray-50;
-    border-bottom: 1px solid $gray-200;
-    padding: $spacing-lg;
-    border-radius: $border-radius-lg $border-radius-lg 0 0;
-  }
-
-  .p-panel-content {
-    padding: $spacing-lg;
-  }
-}
-
-// ===============================
-// TOOLTIP OVERRIDES
-// ===============================
-
-.p-tooltip {
-  .p-tooltip-text {
-    background: $gray-800;
-    color: white;
-    border-radius: $border-radius;
-    font-size: $font-size-small;
-    padding: $spacing-sm $spacing-md;
-    box-shadow: $shadow-md;
-  }
-
-  &.p-tooltip-top .p-tooltip-arrow {
-    border-top-color: $gray-800;
-  }
-
-  &.p-tooltip-bottom .p-tooltip-arrow {
-    border-bottom-color: $gray-800;
-  }
-
-  &.p-tooltip-left .p-tooltip-arrow {
-    border-left-color: $gray-800;
-  }
-
-  &.p-tooltip-right .p-tooltip-arrow {
-    border-right-color: $gray-800;
-  }
-}
-
-// ===============================
-// SKELETON OVERRIDES
-// ===============================
-
-.p-skeleton {
-  background: linear-gradient(
-    90deg,
-    $gray-200 25%,
-    $gray-100 50%,
-    $gray-200 75%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: $border-radius;
-}
-
-// ===============================
-// CONFIRM POPUP OVERRIDES
-// ===============================
-
-.p-confirm-popup {
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-xl;
-  border: 1px solid $gray-200;
-
-  .p-confirm-popup-content {
-    padding: $spacing-lg;
-  }
-
-  .p-confirm-popup-footer {
-    padding: $spacing-md $spacing-lg;
-    background: $gray-50;
-    border-top: 1px solid $gray-200;
-    display: flex;
-    gap: $spacing-sm;
-    justify-content: flex-end;
-  }
-}
-
-// ===============================
-// FILE UPLOAD OVERRIDES
-// ===============================
-
-.p-fileupload {
-  border-radius: $border-radius-lg;
-  border: 1px solid $gray-200;
-
-  .p-fileupload-buttonbar {
-    background: $gray-50;
-    border-bottom: 1px solid $gray-200;
-    padding: $spacing-lg;
-    border-radius: $border-radius-lg $border-radius-lg 0 0;
-  }
-
-  .p-fileupload-content {
-    padding: $spacing-lg;
-  }
-
-  &.p-fileupload-advanced .p-fileupload-content {
-    border: 2px dashed $gray-300;
-    border-radius: $border-radius;
-    transition: $transition;
-
-    &:hover {
-      border-color: $primary-color;
-      background: $gray-50;
-    }
-  }
-}
-
-// ===============================
-// INPUT NUMBER OVERRIDES
-// ===============================
-
-.p-inputnumber {
-  .p-inputnumber-buttons-stacked {
-    .p-inputnumber-button {
-      background: $gray-50;
-      border: 1px solid $gray-200;
-      color: $gray-500;
-
-      &:hover {
-        background: $gray-100;
-        color: $gray-600;
-      }
-    }
-
-    .p-inputnumber-button-up {
-      border-radius: 0 $border-radius 0 0;
-      border-bottom: none;
-    }
-
-    .p-inputnumber-button-down {
-      border-radius: 0 0 $border-radius 0;
-    }
-  }
-
-  .p-inputnumber-buttons-horizontal {
-    .p-inputnumber-button {
-      background: $gray-50;
-      border: 1px solid $gray-200;
-      color: $gray-500;
-
-      &:hover {
-        background: $gray-100;
-        color: $gray-600;
-      }
-    }
-
-    .p-inputnumber-button-up {
-      border-radius: 0 $border-radius $border-radius 0;
-      border-left: none;
-    }
-
-    .p-inputnumber-button-down {
-      border-radius: $border-radius 0 0 $border-radius;
-      border-right: none;
-    }
-  }
-}
-
-// ===============================
-// PASSWORD OVERRIDES
-// ===============================
-
-.p-password {
-  .p-password-panel {
-    border-radius: $border-radius-md;
-    box-shadow: $shadow-lg;
-    border: 1px solid $gray-200;
-    padding: $spacing-md;
-    margin-top: $spacing-xs;
-  }
-
-  .p-password-meter {
-    border-radius: $border-radius-sm;
-    overflow: hidden;
-    margin-bottom: $spacing-sm;
-  }
-}
-
-// ===============================
-// RESPONSIVE OVERRIDES
-// ===============================
-
-@media (max-width: $breakpoint-md) {
-  .p-dialog {
-    width: 95vw !important;
-    margin: 0 auto;
-  }
-
+  
+  /* Enhanced shadows on focus */
+  .p-datepicker,
   .p-dropdown-panel,
   .p-multiselect-panel {
-    max-height: 60vh;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05)) !important;
   }
-}
-
-// ===============================
-// DARK MODE OVERRIDES
-// ===============================
-
-@media (prefers-color-scheme: dark) {
-  .p-component {
-    --surface-ground: #{$gray-900};
-    --surface-section: #{$gray-800};
-    --surface-card: #{$gray-800};
-    --surface-overlay: #{$gray-700};
-    --surface-border: #{$gray-600};
-    --surface-hover: #{$gray-700};
-    --text-color: #{$gray-100};
-    --text-color-secondary: #{$gray-300};
-    --primary-color: #{$primary-color};
-    --primary-color-text: #ffffff;
+  
+  /* Mobile responsive improvements */
+  @media (max-width: 768px) {
+    .p-calendar .p-inputtext,
+    .p-dropdown,
+    .p-multiselect {
+      height: 3rem !important;
+      font-size: 16px !important; /* Prevent zoom on iOS */
+    }
+    
+    .p-calendar .p-datepicker-trigger,
+    .p-dropdown .p-dropdown-trigger,
+    .p-multiselect .p-multiselect-trigger {
+      width: 3rem !important;
+    }
+    
+    .p-datepicker .p-datepicker-calendar .p-datepicker-day {
+      width: 40px !important;
+      height: 40px !important;
+    }
   }
-}

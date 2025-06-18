@@ -20,6 +20,7 @@ import { FormFieldBuilder as FieldBuilder } from '~/utils/formFieldBuilder'
 import CustomAutoCompleteComponent from '~/components/fields/CustomAutoCompleteComponent.vue'
 import CustomMultiSelectComponent from '~/components/fields/CustomMultiSelectComponent.vue'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
+import LocalSelectField from '~/components/fields/LocalSelectField.vue'
 
 // ========== TYPES & INTERFACES ==========
 interface ReportFormField {
@@ -466,7 +467,7 @@ function useReportParameters() {
 
 function useFieldBuilder() {
   // ✅ IMPROVED: Better option normalization with support for defaultValue
-  function normalizeOptions(options: any[], defaultValue?: any): Array<{ label: string, value: any, default?: boolean }> {
+  function normalizeOptions(options: any[], defaultValue?: any): Array<{ name: string, value: any, id?: string, description?: string, defaultValue?: boolean }> {
     if (!options || !Array.isArray(options) || options.length === 0) {
       return []
     }
@@ -474,37 +475,64 @@ function useFieldBuilder() {
     // Handle backend localselect format: {id, name, slug, defaultValue}
     if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
       return options.map(opt => ({
-        label: opt.name,
+        name: opt.name,
         value: opt.id,
-        default: opt.defaultValue === true
+        id: opt.id,
+        description: opt.description || opt.slug,
+        defaultValue: opt.defaultValue === true
       }))
     }
 
-    // Si ya están normalizadas con 'label'
-    if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
-      return options
+    // Si ya están normalizadas con 'name'
+    if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
+      return options.map(opt => ({
+        name: opt.name,
+        value: opt.value,
+        id: opt.id || opt.value,
+        description: opt.description,
+        defaultValue: opt.defaultValue === true
+      }))
     }
 
-    // Si tienen 'name' en lugar de 'label'
-    if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
-      return options.map(opt => ({ label: opt.name, value: opt.value }))
+    // Si tienen 'label' en lugar de 'name'
+    if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
+      return options.map(opt => ({
+        name: opt.label,
+        value: opt.value,
+        id: opt.id || opt.value,
+        description: opt.description,
+        defaultValue: opt.defaultValue === true
+      }))
     }
 
     // Si son strings
     if (options.every(opt => typeof opt === 'string')) {
-      return options.map(opt => ({ label: opt, value: opt }))
+      return options.map(opt => ({
+        name: opt,
+        value: opt,
+        id: opt,
+        defaultValue: false
+      }))
     }
 
     // Si son objetos mixtos
     if (options.every(opt => opt && typeof opt === 'object')) {
       return options.map((opt, index) => ({
-        label: opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`,
-        value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt
+        name: opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`,
+        value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
+        id: (opt.id || opt.value || index).toString(),
+        description: opt.description || opt.slug,
+        defaultValue: opt.defaultValue === true
       }))
     }
 
     // Fallback
-    return options.map(opt => ({ label: String(opt), value: opt }))
+    return options.map((opt, index) => ({
+      name: String(opt),
+      value: opt,
+      id: String(index),
+      defaultValue: false
+    }))
   }
 
   // ✅ NEW: Map backend parameter to frontend parameter
@@ -559,12 +587,14 @@ function useFieldBuilder() {
       field: param.paramName,
       label: param.label,
       class: 'col-12 md:col-6', // Default layout
-      placeholder: `Enter ${param.label}`,
+      placeholder: `Select ${param.label}`,
       helpText: param.required ? 'This field is required' : `Optional - ${param.label}`,
       validation: param.required
         ? z.string().min(1, `${param.label} is required`)
         : z.string().optional(),
-      required: param.required || false
+      required: param.required || false,
+      showClear: true,
+      filterable: true
     }
 
     if (param.required) {
@@ -577,22 +607,18 @@ function useFieldBuilder() {
         ...baseProps,
         dataType: 'multiselect',
         multiple: true,
-        filterable: true,
         maxSelectedLabels: param.maxSelectedLabels || 3,
-        selectionLimit: 50,
-        showClear: true
+        selectionLimit: 50
       }),
 
       select: () => ({
         ...FieldBuilder.select(param.paramName, param.label, []),
         ...baseProps,
-        dataType: 'select',
-        filterable: true,
-        showClear: true
+        dataType: 'select'
       }),
 
       localselect: () => {
-        let options: Array<{ label: string, value: any, default?: boolean }> = []
+        let options: Array<{ name: string, value: any, id?: string, description?: string, defaultValue?: boolean }> = []
         let defaultValue: any = null
 
         try {
@@ -600,8 +626,8 @@ function useFieldBuilder() {
             const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
             options = normalizeOptions(rawData)
 
-            // Find default value
-            const defaultOption = options.find(opt => opt.default === true)
+            // ✅ IMPROVED: Find default value with better logic
+            const defaultOption = options.find(opt => opt.defaultValue === true)
             if (defaultOption) {
               defaultValue = defaultOption.value
             }
@@ -617,10 +643,14 @@ function useFieldBuilder() {
           ...baseProps,
           type: 'localselect',
           dataType: 'localselect',
-          options,
-          defaultValue, // ✅ NEW: Support for default value
-          filterable: options.length > 10,
-          showClear: true
+          options, // ✅ Compatible with LocalSelectField
+          defaultValue,
+          filterable: options.length > 5, // Only filter if many options
+          showClear: true,
+          // ✅ NUEVO: Additional props for LocalSelectField
+          config: {
+            showDebugInfo: false // Set to true for development
+          }
         }
       },
 
@@ -649,7 +679,7 @@ function useFieldBuilder() {
   return {
     createFieldFromParameter,
     normalizeOptions,
-    mapBackendParameter // ✅ NEW: Export the mapping function
+    mapBackendParameter
   }
 }
 
@@ -749,20 +779,6 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
   try {
     showForm.value = false
 
-    // Reset fields to base
-    // fields.value = [
-    //   {
-    //     name: 'jasperReportCode',
-    //     type: 'text',
-    //     field: 'jasperReportCode',
-    //     label: 'Report Code',
-    //     disabled: true,
-    //     hidden: true,
-    //     class: 'col-12',
-    //     validation: FORM_VALIDATION_RULES.reportCode
-    //   }
-    // ]
-
     // ✅ IMPROVED: Better parameter processing with default values and proper ordering
     if (reportData?.parameters && reportData.parameters.length > 0) {
       // Parameters are already sorted by parameterPosition in loadReport method
@@ -772,7 +788,10 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 
         // ✅ NEW: Set default value if available
         let initialValue = param.componentType === 'multiselect' ? [] : ''
-        if (fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
+        if (param.componentType === 'localselect' && fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
+          initialValue = fieldDef.defaultValue
+        }
+        else if (fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
           initialValue = fieldDef.defaultValue
         }
 
@@ -800,7 +819,8 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
           position: param.parameterPosition,
           componentType: param.componentType,
           hasDefault: fieldDef.defaultValue !== undefined,
-          initialValue
+          initialValue,
+          optionsCount: fieldDef.options?.length || 0
         })
       })
     }
@@ -812,7 +832,7 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
     await nextTick()
     showForm.value = true
 
-    Logger.log('✅ Parameters loaded successfully:', {
+    Logger.log('✅ Parameters loaded successfully', {
       reportCode: code,
       parametersCount: reportData?.parameters?.length || 0,
       fieldsGenerated: fields.value.length,
@@ -1198,19 +1218,23 @@ const isShareSupported = computed(() => {
               >
                 <!-- Local Select (static options) -->
                 <div v-if="fieldItem.dataType === 'localselect'" class="w-full">
-                  <Dropdown
-                    :id="`local-select-${fieldItem.field}`"
-                    :model-value="data[fieldItem.field]"
-                    :options="normalizeOptions(fieldItem.options || [])"
-                    option-label="label"
-                    option-value="value"
-                    placeholder="Select an option"
-                    class="w-full"
-                    :class="{ 'p-invalid': errors && errors.length > 0 }"
-                    :filter="(fieldItem.options || []).length > 10"
-                    show-clear
+                  <LocalSelectField
+                    :field="{
+                      name: fieldItem.field,
+                      label: fieldItem.label,
+                      type: fieldItem.type,
+                      placeholder: fieldItem.placeholder || `Select ${fieldItem.label}`,
+                      showClear: fieldItem.showClear !== false,
+                      filterable: fieldItem.filterable !== false,
+                      required: fieldItem.required || false,
+                      helpText: fieldItem.helpText,
+                      options: fieldItem.options || [],
+                    }"
+                    :value="data[fieldItem.field]"
+                    :error="errors && errors.length > 0 ? errors.map(e => ({ message: e })) : []"
                     :disabled="isGenerating"
-                    @update:model-value="onUpdate(fieldItem.field, $event)"
+                    :config="{ showDebugInfo: process.env.NODE_ENV === 'development' }"
+                    @update:value="onUpdate(fieldItem.field, $event)"
                   />
                 </div>
 
@@ -1571,4 +1595,5 @@ const isShareSupported = computed(() => {
 
 <style scoped>
 @import '@/assets/styles/pages/report-viewer.scss';
+  /* @import '@/assets/styles/main.scss'; */
 </style>

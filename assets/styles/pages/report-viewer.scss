@@ -178,6 +178,36 @@ $panel-border: $gray-200;
   font-family: inherit;
   
   // ===============================
+  // CSS VARIABLES FOR ENHANCED FORMS
+  // ===============================
+  
+  --enhanced-form-field-height: #{$report-viewer-field-height};
+  --enhanced-form-field-height-mobile: #{$report-viewer-field-height-mobile};
+  --enhanced-form-field-height-compact: 2.25rem;
+  --enhanced-form-font-size: #{$font-size-base};
+  --enhanced-form-font-size-compact: #{$font-size-small};
+  --enhanced-form-border-radius: #{$border-radius-lg};
+  --enhanced-form-border-radius-small: #{$border-radius};
+  --enhanced-form-border-width: 2px;
+  --enhanced-form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --enhanced-form-transition-fast: all 0.15s ease;
+  --enhanced-form-shadow: #{$shadow-sm};
+  --enhanced-form-shadow-lg: #{$shadow-lg};
+  --enhanced-form-focus-border: #{$primary-color};
+  --enhanced-form-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --enhanced-form-error-border: #{$error-color};
+  --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
+  --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  --enhanced-form-chip-height: 1.75rem;
+  --enhanced-form-chip-height-compact: 1.5rem;
+  --enhanced-form-chip-font-size: #{$font-size-small};
+  --enhanced-form-chip-font-size-compact: #{$font-size-tiny};
+  --enhanced-form-chip-border-radius: #{$border-radius};
+  --enhanced-form-chip-bg: #{$primary-light};
+  --enhanced-form-chip-color: #{$primary-color};
+  --enhanced-form-dropdown-z: 1000;
+  
+  // ===============================
   // HEADER SECTION (ENHANCED)
   // ===============================
   
@@ -998,87 +1028,205 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // PRIMEVUE COMPONENT OVERRIDES (ENHANCED)
+  // 🎯 ENHANCED FORM COMPONENTS (SIGUIENDO EL PATRÓN DEL MULTISELECT)
   // ===============================
   
-  // Enhanced Form Overrides
+  // Enhanced Form Overrides using CSS Variables approach
   &__parameters-content {
-    // Global form styling
-    :deep(.enhanced-form) {
-      .grid {
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    }
-    
-    // Field containers with enhanced styling
-    :deep(.enhanced-form__field-container) {
+    // ✅ FIELD CONTAINER STYLING - INCREASED WIDTH
+    :deep(.col-12) {
       margin-bottom: $spacing-lg !important;
       padding: 0 !important;
+      width: 100% !important;
+    }
+    
+    // ✅ FIELD SIZING - MORE WIDTH FOR BETTER VISUAL BALANCE
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect),
+    :deep(.p-calendar),
+    :deep(.p-inputnumber),
+    :deep(.p-password) {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important; // Permitir que se encoja si es necesario
+      box-sizing: border-box !important; // Incluir padding y border en el ancho
+    }
+    
+    // ✅ CALENDAR/DATE FIELD STYLING - INTEGRATED DESIGN WITH BETTER WIDTH
+    :deep(.p-calendar) {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      // 🎯 CLAVE: Usar exactamente la misma variable que dropdowns y multiselect
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+      position: relative !important;;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      background: white !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow: hidden !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
       
-      // Field labels with professional styling
-      .enhanced-form__field-header,
-      .mb-2.font-semibold {
-        font-size: $font-size-small !important;
-        font-weight: $font-weight-bold !important;
-        color: $gray-700 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        margin-bottom: $spacing-sm !important;
-        line-height: 1.2 !important;
-        display: block !important;
+      // 🎯 CRÍTICO: Forzar que todos los elementos internos respeten la altura
+      .p-component {
+        height: 100% !important;
       }
-      
-      // Help text styling
-      .enhanced-form__help-text {
-        font-size: $font-size-small !important;
-        color: $gray-500 !important;
-        margin-top: $spacing-xs !important;
-        line-height: 1.4 !important;
-      }
-      
-      // All form inputs with enhanced styling
-      .p-inputtext,
-      .p-dropdown,
-      .p-multiselect,
-      .p-calendar,
-      .p-inputnumber,
-      .p-password {
-        height: $report-viewer-field-height !important;
-        min-height: $report-viewer-field-height !important;
-        font-size: $font-size-base !important;
+
+      // 🎯 CRÍTICO: El wrapper interno también debe ser 100%
+      .p-calendar-w-btn {
         width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        align-items: center !important;
+      }
+      
+      .p-inputtext {
+        // 🎯 CLAVE: Altura completa igual que el contenedor
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        border: none !important;
+        border-radius: 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        background: transparent !important;
+        color: $gray-700 !important;
+        padding: 0 1rem !important;
+        flex: 1 !important;
+        outline: none !important;
+        box-shadow: none !important;        
+        // 🎯 NUEVO: Evitar problemas de line-height que afectan altura
+        line-height: normal !important;
+        vertical-align: middle !important;
         box-sizing: border-box !important;
-        border: 2px solid $gray-200 !important;
-        border-radius: $border-radius-lg !important;
-        transition: $transition !important;
-        box-shadow: $shadow-sm !important;
         
         &:focus {
-          border-color: $primary-color !important;
-          box-shadow: $shadow-focus !important;
+          border: none !important;
+          box-shadow: none !important;
           outline: none !important;
         }
         
-        &:hover:not(:focus) {
-          border-color: $gray-300 !important;
+        &:hover {
+          border: none !important;
+          box-shadow: none !important;
+        }
+        
+        &::placeholder {
+          color: $gray-400 !important;
+        }
+      }
+      
+      .p-datepicker-trigger {
+        // 🎯 CLAVE: Altura completa igual que el contenedor
+        height: 100% !important;
+        width: var(--enhanced-form-field-height) !important;
+        min-width: var(--enhanced-form-field-height) !important;
+        max-width: var(--enhanced-form-field-height) !important;
+        box-sizing: border-box !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: $primary-color !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        
+        &:hover {
+          background: rgba($primary-color, 0.05) !important;
+          color: $primary-hover !important;
+          
+          .p-icon {
+            transform: scale(1.1) !important;
+          }
+        }
+        
+        .p-icon {
+          color: inherit !important;
+          transition: var(--enhanced-form-transition) !important;
+          font-size: 1.1rem !important;
+        }
+      }
+      
+      // 🎯 ESTADOS HOVER Y FOCUS - IGUALES A OTROS CAMPOS
+      &:hover:not(.p-calendar-disabled) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      &:focus-within,
+      &.p-calendar-opened {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        
+        .p-datepicker-trigger {
+          background: rgba($primary-color, 0.1) !important;
+          color: $primary-hover !important;
+          
+          .p-icon {
+            transform: rotate(180deg) !important;
+          }
+        }
+      }
+      
+      // 🎯 ESTADOS DE ERROR - IGUALES A OTROS CAMPOS
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        
+        &:focus-within {
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+      
+      // 🎯 ESTADO DISABLED - IGUAL A OTROS CAMPOS
+      &.p-calendar-disabled {
+        background: $gray-100 !important;
+        border-color: $gray-200 !important;
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+        
+        .p-inputtext {
+          color: $gray-400 !important;
+          cursor: not-allowed !important;
+        }
+        
+        .p-datepicker-trigger {
+          color: $gray-400 !important;
+          cursor: not-allowed !important;
         }
       }
     }
     
-    // Dropdown specific enhancements
+    // ✅ DROPDOWN STYLING
     :deep(.p-dropdown) {
-      height: $report-viewer-field-height !important;
-      min-height: $report-viewer-field-height !important;
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
       
       .p-dropdown-label {
-        height: calc(#{$report-viewer-field-height} - 4px) !important;
-        min-height: calc(#{$report-viewer-field-height} - 4px) !important;
-        padding: 0 $spacing-md !important;
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0 1rem !important;
         line-height: normal !important;
-        @extend .flex, .align-items-center;
-        font-size: $font-size-base !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: var(--enhanced-form-font-size) !important;
         color: $gray-700 !important;
+        background: transparent !important;
         
         &.p-placeholder {
           color: $gray-400 !important;
@@ -1086,71 +1234,452 @@ $panel-border: $gray-200;
       }
       
       .p-dropdown-trigger {
-        height: calc(#{$report-viewer-field-height} - 4px) !important;
-        width: $report-viewer-field-height !important;
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border: none !important;
         border-left: 1px solid $gray-200 !important;
+        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         
-        .p-dropdown-trigger-icon {
-          color: $gray-500 !important;
+        &:hover {
+          background: $gray-50 !important;
+          
+          .p-icon {
+            color: $primary-hover !important;
+            transform: scale(1.1) !important;
+          }
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+          transition: var(--enhanced-form-transition) !important;
+        }
+      }
+      
+      .p-dropdown-clear-icon {
+        position: absolute !important;
+        right: calc(var(--enhanced-form-field-height) + 8px) !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: $gray-500 !important;
+        cursor: pointer !important;
+        padding: 0.25rem !important;
+        border-radius: 50% !important;
+        transition: var(--enhanced-form-transition) !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        z-index: 3 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        &:hover {
+          color: $gray-700 !important;
+          background: $gray-100 !important;
         }
       }
       
       &:not(.p-disabled):hover {
         border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
       }
       
       &:not(.p-disabled).p-focus {
-        border-color: $primary-color !important;
-        box-shadow: $shadow-focus !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+      }
+      
+      // Estados de validación
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        
+        &:focus,
+        &:focus-within {
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
       }
     }
     
-    // MultiSelect specific enhancements
+    // ✅ MULTISELECT STYLING (ya funciona pero asegurar variables)
     :deep(.p-multiselect) {
-      height: $report-viewer-field-height !important;
-      min-height: $report-viewer-field-height !important;
+      min-height: var(--enhanced-form-field-height) !important;
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
       
       .p-multiselect-label-container {
-        height: calc(#{$report-viewer-field-height} - 4px) !important;
-        min-height: calc(#{$report-viewer-field-height} - 4px) !important;
-        padding: $spacing-xs $spacing-md !important;
-        @extend .flex, .align-items-center;
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0.375rem 0.625rem !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
       }
       
       .p-multiselect-trigger {
-        height: calc(#{$report-viewer-field-height} - 4px) !important;
-        width: $report-viewer-field-height !important;
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border: none !important;
         border-left: 1px solid $gray-200 !important;
+        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        &:hover {
+          background: $gray-50 !important;
+          
+          .p-icon {
+            color: $primary-hover !important;
+            transform: scale(1.1) !important;
+          }
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+          transition: var(--enhanced-form-transition) !important;
+        }
       }
     }
     
-    // Calendar specific enhancements
-    :deep(.p-calendar) {
-      .p-inputtext {
-        height: $report-viewer-field-height !important;
-        min-height: $report-viewer-field-height !important;
-        padding: 0 $spacing-md !important;
-        line-height: normal !important;
-        box-sizing: border-box !important;
+    // ✅ PANELS STYLING (Dropdown y MultiSelect)
+    :deep(.p-dropdown-panel),
+    :deep(.p-multiselect-panel) {
+      border-radius: var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      box-shadow: var(--enhanced-form-shadow-lg) !important;
+      margin-top: 0.125rem !important;
+      background: white !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+    }
+    
+    :deep(.p-dropdown-items),
+    :deep(.p-multiselect-items) {
+      padding: 0.5rem 0 !important;
+    }
+    
+    :deep(.p-dropdown-item),
+    :deep(.p-multiselect-item) {
+      padding: 0.625rem 1rem !important;
+      transition: var(--enhanced-form-transition-fast) !important;
+      color: $gray-700 !important;
+      font-size: var(--enhanced-form-font-size) !important;
+      border-radius: 0 !important;
+      margin: 0.125rem 0.5rem !important;
+      
+      &:hover {
+        background: $gray-100 !important;
+        color: $gray-900 !important;
+        transform: translateX(2px) !important;
       }
       
-      .p-datepicker-trigger {
-        height: $report-viewer-field-height !important;
-        min-height: $report-viewer-field-height !important;
-        width: $report-viewer-field-height !important;
-        border-left: 1px solid $gray-200 !important;
+      &.p-highlight {
+        background: $primary-color !important;
+        color: white !important;
+        font-weight: 500 !important;
       }
     }
     
-    // Input wrapper fixes
-    :deep(.p-inputwrapper) {
-      width: 100% !important;
+    :deep(.p-dropdown-empty-message),
+    :deep(.p-multiselect-empty-message) {
+      padding: 1.5rem !important;
+      text-align: center !important;
+      color: $gray-500 !important;
+      font-style: italic !important;
+      font-size: var(--enhanced-form-font-size) !important;
     }
     
-    // Grid column fixes
+    // ✅ DATEPICKER PANEL STYLING
+    :deep(.p-datepicker) {
+      border-radius: var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      box-shadow: var(--enhanced-form-shadow-lg) !important;
+      margin-top: 0.125rem !important;
+      background: white !important;
+      overflow: hidden !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+      
+      .p-datepicker-header {
+        background: $gray-50 !important;
+        border-bottom: 1px solid $gray-200 !important;
+        padding: 1rem !important;
+        
+        .p-datepicker-title {
+          color: $gray-800 !important;
+          font-weight: 600 !important;
+          font-size: var(--enhanced-form-font-size) !important;
+        }
+        
+        .p-datepicker-prev,
+        .p-datepicker-next {
+          color: $gray-600 !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: var(--enhanced-form-border-radius-small) !important;
+          transition: var(--enhanced-form-transition) !important;
+          
+          &:hover {
+            background: $gray-100 !important;
+            color: $gray-800 !important;
+          }
+        }
+      }
+      
+      .p-datepicker-calendar {
+        .p-datepicker-weekheader {
+          background: $gray-50 !important;
+          
+          th {
+            color: $gray-600 !important;
+            font-weight: 600 !important;
+            font-size: var(--enhanced-form-chip-font-size) !important;
+            padding: 0.75rem 0.5rem !important;
+          }
+        }
+        
+        td {
+          padding: 2px !important;
+          
+          .p-datepicker-day {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: var(--enhanced-form-border-radius-small) !important;
+            transition: var(--enhanced-form-transition) !important;
+            color: $gray-700 !important;
+            font-weight: 500 !important;
+            font-size: var(--enhanced-form-chip-font-size) !important;
+            
+            &:hover {
+              background: $primary-light !important;
+              color: $primary-color !important;
+              transform: scale(1.05) !important;
+            }
+            
+            &.p-datepicker-day-selected {
+              background: $primary-color !important;
+              color: white !important;
+              font-weight: 700 !important;
+              box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
+            }
+            
+            &.p-datepicker-day-other-month {
+              color: $gray-400 !important;
+            }
+            
+            &.p-datepicker-day-today {
+              background: $warning-light !important;
+              color: $warning-color !important;
+              font-weight: 700 !important;
+              
+              &:hover {
+                background: $warning-color !important;
+                color: white !important;
+              }
+            }
+          }
+        }
+      }
+      
+      .p-datepicker-buttonbar {
+        background: $gray-50 !important;
+        border-top: 1px solid $gray-200 !important;
+        padding: 1rem !important;
+        
+        .p-button {
+          height: 32px !important;
+          padding: 0 1rem !important;
+          font-size: var(--enhanced-form-chip-font-size) !important;
+          border-radius: var(--enhanced-form-border-radius-small) !important;
+          font-weight: 500 !important;
+        }
+      }
+    }
+
+    // ✅ CONTENEDORES DE CAMPO - ANCHURA CONSISTENTE
+    :deep(.form-field),
+    :deep(.enhanced-form__field),
+    :deep(.field-container) {
+      width: 100% !important;
+      max-width: none !important;
+      box-sizing: border-box !important;
+    }
+  
+    // ✅ WRAPPER ESPECÍFICO PARA DATE FIELDS
+    :deep(.date-field__wrapper) {
+      width: 100% !important;
+      max-width: none !important;
+      display: block !important; // O flex si es necesario
+      box-sizing: border-box !important;
+      position: relative !important;
+
+      // Botón clear del wrapper DateField
+      .date-field__clear-quick {
+        position: absolute !important;
+        top: 50% !important;
+        right: calc(var(--enhanced-form-field-height) + 8px) !important;
+        transform: translateY(-50%) !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        border: none !important;
+        background: transparent !important;
+        color: $gray-500 !important;
+        cursor: pointer !important;
+        border-radius: 50% !important;
+        transition: var(--enhanced-form-transition) !important;
+        z-index: 3 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        &:hover {
+          color: $error-color !important;
+          background: rgba($error-color, 0.1) !important;
+          transform: translateY(-50%) scale(1.1) !important;
+        }
+        
+        .pi {
+          font-size: 0.8rem !important;
+        }
+      }
+    }
+  
+    // 🎯 GRID SYSTEM OVERRIDE - ASEGURAR ANCHURA COMPLETA
+    :deep(.grid) {
+      margin: 0 !important;
+      row-gap: 1.5rem !important; // Aumentado para mejor respiración visual
+    }
+
     :deep(.col-12) {
+      margin-bottom: 0 !important; // Usar solo row-gap del grid
       padding: 0 !important;
-      margin-bottom: $spacing-lg !important;
+    }
+
+    // ✅ MEJORA 2: LABELS MÁS PROFESIONALES
+    :deep(.form-field__label) {
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin-bottom: 0.75rem !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+    }
+    
+    // ✅ MEJORA 3: INDICADOR DE CAMPO REQUERIDO
+    :deep(.form-field--required .form-field__label::after) {
+      content: ' *' !important;
+      color: $error-color !important;
+      font-weight: bold !important;
+      margin-left: 0.125rem !important;
+    }
+
+    // ✅ MEJORA 4: ESTADOS DE HOVER MEJORADOS
+    :deep(.p-dropdown:hover:not(.p-disabled)),
+    :deep(.p-multiselect:hover:not(.p-disabled)),
+    :deep(.p-calendar:hover:not(.p-calendar-disabled)) {
+      border-color: $gray-300 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    // ✅ MEJORA 5: ESTADOS DE FOCUS MEJORADOS
+    :deep(.p-dropdown:focus-within),
+    :deep(.p-multiselect:focus-within),
+    :deep(.p-calendar:focus-within) {
+      transform: translateY(-1px) !important;
+      box-shadow: var(--enhanced-form-focus-shadow), 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    // ✅ MEJORA 6: CHIPS MEJORADOS EN MULTISELECT
+    :deep(.p-multiselect-token) {
+      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
+      border: 1px solid rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+      border-radius: 1rem !important;
+      padding: 0.25rem 0.75rem !important;
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      height: auto !important;
+      min-height: 1.5rem !important;
+      animation: chip-appear 0.2s ease-out !important;
+      
+      .p-multiselect-token-label {
+        color: inherit !important;
+        font-weight: inherit !important;
+      }
+      
+      .p-multiselect-token-icon {
+        margin-left: 0.5rem !important;
+        color: $primary-color !important;
+        font-size: 0.7rem !important;
+        transition: all 0.2s ease !important;
+        border-radius: 50% !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        &:hover {
+          color: white !important;
+          background: $error-color !important;
+          transform: scale(1.1) !important;
+        }
+      }
+    }
+
+    // ✅ MEJORA 7: FEEDBACK VISUAL CUANDO CAMPO ESTÁ LLENO
+    :deep(.p-dropdown.p-inputwrapper-filled),
+    :deep(.p-multiselect.p-inputwrapper-filled),
+    :deep(.p-calendar.p-inputwrapper-filled) {
+      position: relative;
+      
+      &::after {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 3px !important;
+        height: 100% !important;
+        background: $success-color !important;
+        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
+        z-index: 1 !important;
+      }
+    }
+    
+    // ✅ MEJORA 8: PLACEHOLDERS MÁS CLAROS
+    :deep(.p-dropdown-label.p-placeholder),
+    :deep(.p-multiselect-label.p-placeholder),
+    :deep(.p-calendar .p-inputtext::placeholder) {
+      color: $gray-400 !important;
+      font-style: italic !important;
+    }
+    
+    // ✅ MEJORA 9: TRANSICIONES SUAVES
+    :deep(.p-dropdown),
+    :deep(.p-multiselect),
+    :deep(.p-calendar),
+    :deep(.p-multiselect-token) {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+  
+    // ✅ FORM FIELD CONTAINERS - ANCHURA COMPLETA
+    :deep(.form-field__input-container),
+    :deep(.form-field__input-wrapper) {
+      width: 100% !important;
+      max-width: none !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
     }
   }
   
@@ -1173,78 +1702,127 @@ $panel-border: $gray-200;
   // ===============================
   
   @media (max-width: $breakpoint-lg) {
-    padding: $spacing-md;
-    
-    &__main {
-      grid-template-columns: 1fr;
-      gap: $spacing-lg;
-    }
-    
-    &__header {
-      padding: $spacing-lg;
+    .report-viewer {
+      padding: $spacing-md;
       
-      &-content {
+      // ✅ LAYOUT PRINCIPAL - De tu código existente
+      &__main {
+        grid-template-columns: 1fr;
+        gap: $spacing-lg;
+      }
+      
+      &__header {
+        padding: $spacing-lg;
+        
+        &-content {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: $spacing-md;
+        }
+      }
+      
+      &__format-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      &__quick-actions-buttons {
         flex-direction: column;
-        align-items: flex-start;
-        gap: $spacing-md;
       }
-    }
-    
-    &__format-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    &__quick-actions-buttons {
-      flex-direction: column;
-    }
-    
-    // Mobile field heights
-    &__parameters-content {
-      :deep(.enhanced-form__field-container) {
-        .p-inputtext,
-        .p-dropdown,
-        .p-multiselect,
-        .p-calendar,
-        .p-inputnumber,
-        .p-password {
-          height: $report-viewer-field-height-mobile !important;
-          min-height: $report-viewer-field-height-mobile !important;
+      
+      // ✅ ALTURAS DE CAMPO - Combinando ambos enfoques
+      // Variable global para tablet
+      --enhanced-form-field-height: 3rem; // Aumentado para tablet
+      
+      &__generate-btn {
+        height: 3rem !important; // Usar la nueva variable
+        min-height: 3rem !important;
+      }
+      
+      // ✅ MEJORAS DE CAMPOS - De las nuevas mejoras
+      &__parameters-content {
+        :deep(.grid) {
+          row-gap: 1.75rem !important;
         }
         
-        .p-dropdown .p-dropdown-label {
-          height: calc(#{$report-viewer-field-height-mobile} - 4px) !important;
-          min-height: calc(#{$report-viewer-field-height-mobile} - 4px) !important;
-        }
-        
-        .p-multiselect .p-multiselect-label-container {
-          height: calc(#{$report-viewer-field-height-mobile} - 4px) !important;
-          min-height: calc(#{$report-viewer-field-height-mobile} - 4px) !important;
+        // Asegurar que todos los campos usen la nueva altura
+        :deep(.p-calendar),
+        :deep(.p-dropdown),
+        :deep(.p-multiselect) {
+          height: var(--enhanced-form-field-height) !important;
+          min-height: var(--enhanced-form-field-height) !important;
         }
       }
-    }
-    
-    &__generate-btn {
-      height: $report-viewer-field-height-mobile !important;
-      min-height: $report-viewer-field-height-mobile !important;
     }
   }
   
   @media (max-width: $breakpoint-md) {
-    padding: $spacing-sm;
-    
-    &__empty,
-    &__no-parameters {
-      padding: $spacing-xl $spacing-lg;
-    }
-    
-    &__title {
-      font-size: $font-size-2xl;
-    }
-    
-    &__header {
-      &-icon {
-        width: 3rem;
-        height: 3rem;
+    .report-viewer {
+      padding: $spacing-sm;
+      
+      // ✅ ESTADOS VACÍOS - De tu código existente
+      &__empty,
+      &__no-parameters {
+        padding: $spacing-xl $spacing-lg;
+      }
+      
+      &__title {
+        font-size: $font-size-2xl;
+      }
+      
+      &__header {
+        &-icon {
+          width: 3rem;
+          height: 3rem;
+        }
+      }
+      
+      // ✅ ALTURAS MÓVIL - Más grandes para touch
+      --enhanced-form-field-height: 3.25rem; // Aún más grande para móvil
+      
+      &__generate-btn {
+        height: 3.25rem !important;
+        min-height: 3.25rem !important;
+        font-size: 1.1rem !important; // Texto más grande
+      }
+      
+      // ✅ MEJORAS MÓVIL - De las nuevas mejoras
+      &__parameters-content {
+        :deep(.grid) {
+          row-gap: 2rem !important; // Más espacio en móvil
+        }
+        
+        // Labels más grandes en móvil
+        :deep(.form-field__label) {
+          font-size: 1rem !important;
+          margin-bottom: 1rem !important;
+        }
+        
+        // Chips más grandes en móvil
+        :deep(.p-multiselect-token) {
+          padding: 0.375rem 1rem !important;
+          font-size: 0.9rem !important;
+          min-height: 2rem !important;
+          
+          .p-multiselect-token-icon {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            margin-left: 0.75rem !important;
+          }
+        }
+        
+        // Asegurar que todos los campos usen la altura móvil
+        :deep(.p-calendar),
+        :deep(.p-dropdown),
+        :deep(.p-multiselect) {
+          height: var(--enhanced-form-field-height) !important;
+          min-height: var(--enhanced-form-field-height) !important;
+        }
+      }
+      
+      // ✅ FORMATO GRID - Forzar columna única en móvil
+      &__format-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
       }
     }
   }
@@ -1296,4 +1874,70 @@ $panel-border: $gray-200;
 .report-viewer__parameters,
 .report-viewer__preview {
   animation: fadeInUp 0.5s ease-out;
+}
+
+.report-viewer__generate-btn {
+  // Efecto de brillo al hover
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: left 0.5s ease !important;
+  }
+  
+  &:hover:not(:disabled)::before {
+    left: 100% !important;
+  }
+  
+  // Efecto de pulsación
+  &:active {
+    transform: translateY(1px) !important;
+  }
+}
+
+// Pulse animation para estados loading
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes chip-appear {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes field-focus {
+  0% { 
+    transform: translateY(0) scale(1); 
+  }
+  50% { 
+    transform: translateY(-1px) scale(1.001); 
+  }
+  100% { 
+    transform: translateY(-1px) scale(1); 
+  }
+}
+
+// Aplicar animación sutil al hacer focus
+.report-viewer__parameters-content {
+  :deep(.form-field:focus-within) {
+    animation: field-focus 0.3s ease-out !important;
+  }
 }
