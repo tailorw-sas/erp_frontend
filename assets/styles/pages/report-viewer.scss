@@ -1028,11 +1028,63 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // 🎯 ENHANCED FORM COMPONENTS (SIGUIENDO EL PATRÓN DEL MULTISELECT)
+  // 🎯 CLEAR BUTTONS PERFECTAMENTE HOMOLOGADOS
   // ===============================
   
-  // Enhanced Form Overrides using CSS Variables approach
   &__parameters-content {
+    // ✅ CLEAR BUTTON UNIVERSAL - ESTILO EXACTAMENTE IDÉNTICO PARA TODOS
+    :deep(.p-calendar .p-calendar-clear-icon),
+    :deep(.date-field__clear-quick),
+    :deep(.p-dropdown .p-dropdown-clear-icon),
+    :deep(.local-select-field .p-dropdown .p-dropdown-clear-icon),
+    :deep(.p-multiselect .p-multiselect-clear-icon),
+    :deep(.p-autocomplete .p-autocomplete-clear-icon) {
+      position: absolute !important;
+      top: 50% !important;
+      right: calc(var(--enhanced-form-field-height) + 8px) !important;
+      transform: translateY(-50%) !important;
+      width: 1.25rem !important;
+      height: 1.25rem !important;
+      color: $gray-500 !important;
+      cursor: pointer !important;
+      border-radius: 50% !important;
+      transition: var(--enhanced-form-transition) !important;
+      z-index: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      
+      &:hover {
+        color: $error-color !important;
+        background: rgba($error-color, 0.1) !important;
+        transform: translateY(-50%) scale(1.1) !important;
+      }
+      
+      &:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba($error-color, 0.3) !important;
+      }
+      
+      // ✅ ÍCONO PERFECTAMENTE HOMOLOGADO
+      .p-icon,
+      .pi {
+        font-size: 1rem !important;
+        color: inherit !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        font-weight: 400 !important; // ✅ PESO ESPECÍFICO
+        font-family: 'primeicons' !important; // ✅ FORZAR MISMA FAMILIA
+        vertical-align: baseline !important;
+        text-rendering: auto !important;
+        -webkit-font-smoothing: antialiased !important;
+      }
+    }
     // ✅ FIELD CONTAINER STYLING - INCREASED WIDTH
     :deep(.col-12) {
       margin-bottom: $spacing-lg !important;
@@ -1051,6 +1103,193 @@ $panel-border: $gray-200;
       max-width: none !important;
       min-width: 0 !important; // Permitir que se encoja si es necesario
       box-sizing: border-box !important; // Incluir padding y border en el ancho
+    }
+    
+    // ✅ LOCAL SELECT FIELD - ESTILO COMPLETO
+    :deep(.local-select-field) {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin-bottom: $spacing-lg;
+      
+      // ✅ LABEL DEL LOCAL SELECT
+      .field-label {
+        font-weight: 600 !important;
+        color: $gray-800 !important;
+        margin-bottom: 0.75rem !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.4 !important;
+        cursor: pointer !important;
+        display: block !important;
+        
+        // ✅ INDICADOR DE CAMPO REQUERIDO
+        &.required::after {
+          content: ' *' !important;
+          color: $error-color !important;
+          font-weight: bold !important;
+          margin-left: 0.125rem !important;
+        }
+      }
+      
+      // ✅ DROPDOWN ESPECÍFICO PARA LOCAL SELECT
+      .p-dropdown {
+        width: 100% !important;
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+        background: white !important;
+        border: var(--enhanced-form-border-width) solid $gray-200 !important;
+        border-radius: var(--enhanced-form-border-radius) !important;
+        transition: var(--enhanced-form-transition) !important;
+        box-shadow: var(--enhanced-form-shadow) !important;
+        position: relative !important;
+        
+        // ✅ LABEL/VALOR DEL DROPDOWN
+        .p-dropdown-label {
+          height: calc(var(--enhanced-form-field-height) - 4px) !important;
+          min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
+          padding: 0 1rem !important;
+          padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important; // Espacio para clear + trigger
+          line-height: normal !important;
+          display: flex !important;
+          align-items: center !important;
+          font-size: var(--enhanced-form-font-size) !important;
+          color: $gray-700 !important;
+          background: transparent !important;
+          
+          &.p-placeholder {
+            color: $gray-400 !important;
+            font-style: italic !important;
+          }
+        }
+        
+        // ✅ BOTÓN TRIGGER (FLECHA)
+        .p-dropdown-trigger {
+          height: calc(var(--enhanced-form-field-height) - 4px) !important;
+          width: var(--enhanced-form-field-height) !important;
+          background: transparent !important;
+          border: none !important;
+          border-left: 1px solid $gray-200 !important;
+          border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
+          transition: var(--enhanced-form-transition) !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          
+          &:hover {
+            background: $gray-50 !important;
+            
+            .p-icon {
+              color: $primary-hover !important;
+              transform: scale(1.1) !important;
+            }
+          }
+          
+          .p-icon {
+            color: $primary-color !important;
+            transition: var(--enhanced-form-transition) !important;
+            font-size: 1rem !important;
+          }
+        }
+        
+        // ✅ CLEAR BUTTON HOMOLOGADO CON DATEFIELD - ESTILO IDÉNTICO
+        .p-dropdown-clear-icon {
+          position: absolute !important;
+          top: 50% !important;
+          right: calc(var(--enhanced-form-field-height) + 8px) !important;
+          transform: translateY(-50%) !important;
+          width: 1.25rem !important; // ✅ MISMO TAMAÑO QUE DATEFIELD
+          height: 1.25rem !important;
+          color: $gray-500 !important; // ✅ MISMO COLOR INICIAL
+          cursor: pointer !important;
+          border-radius: 50% !important; // ✅ MISMO BORDER RADIUS
+          transition: var(--enhanced-form-transition) !important; // ✅ MISMA TRANSICIÓN
+          z-index: 2 !important; // ✅ MISMO Z-INDEX
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: transparent !important; // ✅ MISMO BACKGROUND
+          border: none !important;
+          padding: 0 !important; // ✅ ELIMINAR PADDING EXTRA
+          margin: 0 !important; // ✅ ELIMINAR MARGIN EXTRA
+          
+          &:hover {
+            color: $error-color !important; // ✅ MISMO COLOR HOVER
+            background: rgba($error-color, 0.1) !important; // ✅ MISMO BACKGROUND HOVER
+            transform: translateY(-50%) scale(1.1) !important; // ✅ MISMO EFECTO SCALE
+          }
+          
+          .p-icon {
+            font-size: 0.8rem !important; // ✅ MISMO TAMAÑO DE ÍCONO QUE DATEFIELD
+            color: inherit !important;
+            margin: 0 !important; // ✅ ELIMINAR MARGINS
+            padding: 0 !important; // ✅ ELIMINAR PADDING
+            line-height: 1 !important; // ✅ LÍNEA UNIFORME
+          }
+        }
+        
+        // ✅ ESTADOS HOVER Y FOCUS
+        &:hover:not(.p-disabled) {
+          border-color: $gray-300 !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        &:focus-within,
+        &.p-focus {
+          border-color: var(--enhanced-form-focus-border) !important;
+          box-shadow: var(--enhanced-form-focus-shadow) !important;
+          transform: translateY(-1px) !important;
+        }
+        
+        // ✅ ESTADO DE ERROR
+        &.p-invalid {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow) !important;
+          
+          &:focus,
+          &:focus-within {
+            box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+          }
+        }
+        
+        // ✅ ESTADO DISABLED
+        &.p-disabled {
+          background: $gray-100 !important;
+          border-color: $gray-200 !important;
+          opacity: 0.6 !important;
+          cursor: not-allowed !important;
+          
+          .p-dropdown-label {
+            color: $gray-400 !important;
+          }
+        }
+      }
+      
+      // ✅ MENSAJES DE ERROR
+      .field-error-messages {
+        margin-top: 0.25rem !important;
+      }
+      
+      .field-error-message {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 0.25rem !important;
+        color: $error-color !important;
+        font-size: 0.75rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+        
+        .pi {
+          flex-shrink: 0 !important;
+          margin-top: 0.125rem !important;
+          font-size: 0.7rem !important;
+        }
+      }
     }
     
     // ✅ CALENDAR/DATE FIELD STYLING - INTEGRATED DESIGN WITH BETTER WIDTH
@@ -1260,27 +1499,6 @@ $panel-border: $gray-200;
         }
       }
       
-      .p-dropdown-clear-icon {
-        position: absolute !important;
-        right: calc(var(--enhanced-form-field-height) + 8px) !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        color: $gray-500 !important;
-        cursor: pointer !important;
-        padding: 0.25rem !important;
-        border-radius: 50% !important;
-        transition: var(--enhanced-form-transition) !important;
-        width: 1.25rem !important;
-        height: 1.25rem !important;
-        z-index: 3 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        
-        &:hover {
-          color: $gray-700 !important;
-          background: $gray-100 !important;
-        }
       }
       
       &:not(.p-disabled):hover {
@@ -1305,7 +1523,7 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ MULTISELECT STYLING (ya funciona pero asegurar variables)
+    // ✅ MULTISELECT STYLING CON CLEAR BUTTON HOMOLOGADO
     :deep(.p-multiselect) {
       min-height: var(--enhanced-form-field-height) !important;
       background: white !important;
@@ -1318,6 +1536,7 @@ $panel-border: $gray-200;
         height: calc(var(--enhanced-form-field-height) - 4px) !important;
         min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
         padding: 0.375rem 0.625rem !important;
+        padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important; // Espacio para clear + trigger
         display: flex !important;
         align-items: center !important;
         flex-wrap: wrap !important;
@@ -1348,6 +1567,40 @@ $panel-border: $gray-200;
         .p-icon {
           color: $primary-color !important;
           transition: var(--enhanced-form-transition) !important;
+        }
+      }
+      
+      // ✅ MULTISELECT CLEAR BUTTON - HOMOLOGADO CON DATEFIELD
+      .p-multiselect-clear-icon {
+        position: absolute !important;
+        top: 50% !important;
+        right: calc(var(--enhanced-form-field-height) + 8px) !important;
+        transform: translateY(-50%) !important;
+        width: 1.25rem !important; // ✅ MISMO TAMAÑO QUE DATEFIELD
+        height: 1.25rem !important;
+        color: $gray-500 !important; // ✅ MISMO COLOR INICIAL
+        cursor: pointer !important;
+        border-radius: 50% !important; // ✅ MISMO BORDER RADIUS
+        transition: var(--enhanced-form-transition) !important; // ✅ MISMA TRANSICIÓN
+        z-index: 2 !important; // ✅ MISMO Z-INDEX
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important; // ✅ MISMO BACKGROUND
+        border: none !important;
+        padding: 0 !important; // ✅ ELIMINAR PADDING EXTRA
+        
+        &:hover {
+          color: $error-color !important; // ✅ MISMO COLOR HOVER
+          background: rgba($error-color, 0.1) !important; // ✅ MISMO BACKGROUND HOVER
+          transform: translateY(-50%) scale(1.1) !important; // ✅ MISMO EFECTO SCALE
+        }
+        
+        .p-icon {
+          font-size: 1rem !important; // ✅ AUMENTADO para mejor proporción
+          color: inherit !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
       }
     }
@@ -1399,7 +1652,29 @@ $panel-border: $gray-200;
       font-size: var(--enhanced-form-font-size) !important;
     }
     
-    // ✅ DATEPICKER PANEL STYLING
+    // ✅ DROPDOWN PANEL (LISTA DE OPCIONES) - ESPECÍFICO PARA LOCAL SELECT
+    :deep(.p-dropdown-panel) {
+      // ✅ FILTRO EN DROPDOWN (si hay muchas opciones)
+      .p-dropdown-filter-container {
+        padding: 0.5rem !important;
+        border-bottom: 1px solid $gray-200 !important;
+        
+        .p-dropdown-filter {
+          width: 100% !important;
+          padding: 0.5rem !important;
+          border: 1px solid $gray-200 !important;
+          border-radius: var(--enhanced-form-border-radius-small) !important;
+          font-size: 0.875rem !important;
+          
+          &:focus {
+            border-color: $primary-color !important;
+            box-shadow: 0 0 0 1px $primary-color !important;
+            outline: none !important;
+          }
+        }
+      }
+    }
+    
     :deep(.p-datepicker) {
       border-radius: var(--enhanced-form-border-radius) !important;
       border: var(--enhanced-form-border-width) solid $gray-200 !important;
@@ -1505,7 +1780,6 @@ $panel-border: $gray-200;
       }
     }
 
-    // ✅ CONTENEDORES DE CAMPO - ANCHURA CONSISTENTE
     :deep(.form-field),
     :deep(.enhanced-form__field),
     :deep(.field-container) {
@@ -1514,7 +1788,6 @@ $panel-border: $gray-200;
       box-sizing: border-box !important;
     }
   
-    // ✅ WRAPPER ESPECÍFICO PARA DATE FIELDS
     :deep(.date-field__wrapper) {
       width: 100% !important;
       max-width: none !important;
@@ -1548,12 +1821,11 @@ $panel-border: $gray-200;
         }
         
         .pi {
-          font-size: 0.8rem !important;
+          font-size: 1rem !important; // ✅ HOMOLOGADO
         }
       }
     }
-  
-    // 🎯 GRID SYSTEM OVERRIDE - ASEGURAR ANCHURA COMPLETA
+
     :deep(.grid) {
       margin: 0 !important;
       row-gap: 1.5rem !important; // Aumentado para mejor respiración visual
@@ -1564,7 +1836,6 @@ $panel-border: $gray-200;
       padding: 0 !important;
     }
 
-    // ✅ MEJORA 2: LABELS MÁS PROFESIONALES
     :deep(.form-field__label) {
       font-weight: 600 !important;
       color: $gray-800 !important;
@@ -1574,7 +1845,6 @@ $panel-border: $gray-200;
       line-height: 1.4 !important;
     }
     
-    // ✅ MEJORA 3: INDICADOR DE CAMPO REQUERIDO
     :deep(.form-field--required .form-field__label::after) {
       content: ' *' !important;
       color: $error-color !important;
@@ -1582,7 +1852,6 @@ $panel-border: $gray-200;
       margin-left: 0.125rem !important;
     }
 
-    // ✅ MEJORA 4: ESTADOS DE HOVER MEJORADOS
     :deep(.p-dropdown:hover:not(.p-disabled)),
     :deep(.p-multiselect:hover:not(.p-disabled)),
     :deep(.p-calendar:hover:not(.p-calendar-disabled)) {
@@ -1591,7 +1860,6 @@ $panel-border: $gray-200;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     }
     
-    // ✅ MEJORA 5: ESTADOS DE FOCUS MEJORADOS
     :deep(.p-dropdown:focus-within),
     :deep(.p-multiselect:focus-within),
     :deep(.p-calendar:focus-within) {
@@ -1599,7 +1867,6 @@ $panel-border: $gray-200;
       box-shadow: var(--enhanced-form-focus-shadow), 0 4px 12px rgba(59, 130, 246, 0.15) !important;
     }
 
-    // ✅ MEJORA 6: CHIPS MEJORADOS EN MULTISELECT
     :deep(.p-multiselect-token) {
       background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
       border: 1px solid rgba($primary-color, 0.2) !important;
@@ -1637,7 +1904,6 @@ $panel-border: $gray-200;
       }
     }
 
-    // ✅ MEJORA 7: FEEDBACK VISUAL CUANDO CAMPO ESTÁ LLENO
     :deep(.p-dropdown.p-inputwrapper-filled),
     :deep(.p-multiselect.p-inputwrapper-filled),
     :deep(.p-calendar.p-inputwrapper-filled) {
@@ -1656,7 +1922,6 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ MEJORA 8: PLACEHOLDERS MÁS CLAROS
     :deep(.p-dropdown-label.p-placeholder),
     :deep(.p-multiselect-label.p-placeholder),
     :deep(.p-calendar .p-inputtext::placeholder) {
@@ -1664,7 +1929,6 @@ $panel-border: $gray-200;
       font-style: italic !important;
     }
     
-    // ✅ MEJORA 9: TRANSICIONES SUAVES
     :deep(.p-dropdown),
     :deep(.p-multiselect),
     :deep(.p-calendar),
@@ -1672,7 +1936,6 @@ $panel-border: $gray-200;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
   
-    // ✅ FORM FIELD CONTAINERS - ANCHURA COMPLETA
     :deep(.form-field__input-container),
     :deep(.form-field__input-wrapper) {
       width: 100% !important;
@@ -1681,7 +1944,7 @@ $panel-border: $gray-200;
       align-items: stretch !important;
       box-sizing: border-box !important;
     }
-  }
+  
   
   // Progress bar styling
   :deep(.p-progressbar) {
@@ -1797,6 +2060,12 @@ $panel-border: $gray-200;
           margin-bottom: 1rem !important;
         }
         
+        // LOCAL SELECT - Labels más grandes en móvil
+        :deep(.local-select-field .field-label) {
+          font-size: 1rem !important;
+          margin-bottom: 1rem !important;
+        }
+        
         // Chips más grandes en móvil
         :deep(.p-multiselect-token) {
           padding: 0.375rem 1rem !important;
@@ -1807,6 +2076,19 @@ $panel-border: $gray-200;
             width: 1.25rem !important;
             height: 1.25rem !important;
             margin-left: 0.75rem !important;
+          }
+        }
+        
+        // Clear buttons más grandes en móvil
+        :deep(.p-dropdown-clear-icon),
+        :deep(.date-field__clear-quick) {
+          width: 1.5rem !important;
+          height: 1.5rem !important;
+          right: calc(var(--enhanced-form-field-height) + 10px) !important;
+          
+          .p-icon,
+          .pi {
+            font-size: 0.9rem !important;
           }
         }
         
@@ -1826,7 +2108,7 @@ $panel-border: $gray-200;
       }
     }
   }
-}
+
 
 // ===============================
 // UTILITY CLASSES & ICONS (ENHANCED)
@@ -1940,4 +2222,5 @@ $panel-border: $gray-200;
   :deep(.form-field:focus-within) {
     animation: field-focus 0.3s ease-out !important;
   }
+}
 }
