@@ -22,4 +22,6 @@ public interface IManageInvoiceTypeService {
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
+    ManageInvoiceTypeDto findByCode(String code);
+
 }

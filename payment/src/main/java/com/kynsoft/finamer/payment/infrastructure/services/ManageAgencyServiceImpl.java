@@ -20,10 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageAgencyServiceImpl implements IManageAgencyService {
@@ -90,6 +88,15 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
                 .orElseThrow(()->new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND,
                         new ErrorField("code", DomainErrorMessage.MANAGE_AGENCY_TYPE_NOT_FOUND.getReasonPhrase()))));
 
+    }
+
+    @Override
+    public Map<UUID, ManageAgencyDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The Agency ID list must not be null");
+        }
+
+        return this.findByIds(ids).stream().collect(Collectors.toMap(ManageAgencyDto::getId, manageAgencyDto -> manageAgencyDto));
     }
 
     @Override

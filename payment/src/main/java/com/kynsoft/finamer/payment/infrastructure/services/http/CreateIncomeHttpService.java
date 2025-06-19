@@ -23,7 +23,6 @@ public class CreateIncomeHttpService {
 
     private final RestTemplate restTemplate;
 
-//    @Value("${booking.invoice.service:http://localhost:9199}")
     @Value("${booking.invoice.service:http://invoicing.finamer.svc.cluster.local:9909}")
     private String serviceUrl;
 

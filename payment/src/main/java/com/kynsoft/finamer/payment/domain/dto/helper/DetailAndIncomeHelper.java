@@ -14,6 +14,6 @@ import java.util.UUID;
 @Setter
 public class DetailAndIncomeHelper implements Serializable {
 
+    private Long paymentDetailId;
     private UUID incomeId;
-    private UUID paymentDetailId;
 }

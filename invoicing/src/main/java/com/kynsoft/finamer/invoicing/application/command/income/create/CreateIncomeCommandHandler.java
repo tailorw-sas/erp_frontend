@@ -3,11 +3,7 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.exception.BusinessException;
-import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
-import com.kynsof.share.core.domain.exception.GlobalBusinessException;
-import com.kynsof.share.core.domain.response.ErrorField;
-import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
 import com.kynsoft.finamer.invoicing.domain.core.IncomeAdjustment;
 import com.kynsoft.finamer.invoicing.domain.core.ProcessCreateIncome;
@@ -45,12 +41,9 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
     private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
-
     private final IManagePaymentTransactionTypeService transactionTypeService;
 
-    private final IManageRoomRateService roomRateService;
-
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public CreateIncomeCommandHandler(IManageAgencyService agencyService,
                                       IManageHotelService hotelService,
@@ -65,8 +58,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
                                       IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                       IManageEmployeeService employeeService,
                                       IManagePaymentTransactionTypeService transactionTypeService,
-                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService,
-                                      IManageRoomRateService roomRateService) {
+                                      ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -81,7 +73,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         this.employeeService = employeeService;
         this.transactionTypeService = transactionTypeService;
         this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
-        this.roomRateService = roomRateService;
     }
 
     @Override
@@ -96,11 +87,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
         ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
         ManageInvoiceStatusDto invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-
-        Instant before = Instant.now();
         String employeeFullName = this.employeeService.getEmployeeFullName(command.getEmployee());
-        Instant after = Instant.now();
-        System.out.println("Get employee full name: " + Duration.between(before, after).toMillis() + " ms");
 
         List<IncomeAdjustment> incomeAdjustments = this.getIncomeAdjustmentList(command.getAdjustments());
 
@@ -124,11 +111,8 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             this.createAttachment(command.getAttachments(), income);
         }
 
-        before = Instant.now();
         //income = this.manageInvoiceService.create(income);
         this.manageInvoiceService.insert(income);
-        after = Instant.now();
-        System.out.println("Insert invoice - booking: " + Duration.between(before, after).toMillis() + " ms");
 
         this.updateInvoiceStatusHistory(income, employeeFullName);
         this.attachmentService.create(income);
@@ -168,11 +152,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         dto.setDescription("The income data was inserted.");
         dto.setEmployee(employee);
         dto.setInvoiceStatus(invoiceDto.getStatus());
-
-        Instant before = Instant.now();
         this.invoiceStatusHistoryService.create(dto);
-        Instant after = Instant.now();
-        System.out.println("updateInvoiceStatusHistory: " + Duration.between(before, after).toMillis()+ " ms");
     }
 
     private void updateAttachmentStatusHistory(ManageInvoiceDto invoice, List<ManageAttachmentDto> attachments, String employeeFullName) {
@@ -188,7 +168,7 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
         }
     }
 
-    private List<ManageAttachmentDto> createAttachment(List<CreateIncomeAttachmentRequest> attachments, ManageInvoiceDto invoiceDto) {
+    private void createAttachment(List<CreateIncomeAttachmentRequest> attachments, ManageInvoiceDto invoiceDto) {
         Set<UUID> attachmentTypeIdSet = new HashSet<>();
         Set<UUID> resourceTypeIdSet = new HashSet<>();
         for(CreateIncomeAttachmentRequest attachmentRequest : attachments){
@@ -234,14 +214,6 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
             throw new BusinessException(DomainErrorMessage.INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT,
                     DomainErrorMessage.INVOICE_ATTACHMENT_TYPE_CHECK_DEFAULT.getReasonPhrase());
         }
-        return attachmentDtos;
-    }
-
-    private LocalDateTime invoiceDate(InvoiceCloseOperationDto closeOperationDto, LocalDateTime invoiceDate) {
-        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate(), invoiceDate.toLocalDate())) {
-            return invoiceDate;
-        }
-        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now(ZoneId.of("UTC")));
     }
 
     private InvoiceCloseOperationDto getHotelCloseOperation(UUID hotel){
@@ -264,13 +236,5 @@ public class CreateIncomeCommandHandler implements ICommandHandler<CreateIncomeC
 
     private Map<UUID, ResourceTypeDto> getResourceTypeMap(List<UUID> resourceTypeIds){
                 return this.resourceTypeService.getMapById(resourceTypeIds);
-    }
-
-    private ManagePaymentTransactionTypeDto getPaymentTransactionTypeFromMap(Map<UUID, ManagePaymentTransactionTypeDto> transactionTypeDtoMap, UUID transactionTypeId){
-        if(transactionTypeDtoMap.containsKey(transactionTypeId)){
-            return transactionTypeDtoMap.get(transactionTypeId);
-        }
-
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_PAYMENT_TRANSACTION_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 }

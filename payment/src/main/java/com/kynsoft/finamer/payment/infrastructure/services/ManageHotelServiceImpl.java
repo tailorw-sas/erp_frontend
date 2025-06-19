@@ -9,6 +9,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.payment.application.query.objectResponse.ManageHotelResponse;
 import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
+import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IManageHotelService;
 import com.kynsoft.finamer.payment.infrastructure.identity.ManageHotel;
@@ -20,10 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageHotelServiceImpl implements IManageHotelService {
@@ -69,6 +68,14 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     @Override
     public List<ManageHotelDto> findByIds(List<UUID> ids) {
         return repositoryQuery.findAllById(ids).stream().map(ManageHotel::toAggregate).toList();
+    }
+
+    @Override
+    public Map<UUID, ManageHotelDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The Hotel ID list must not be null");
+        }
+        return this.findByIds(ids).stream().collect(Collectors.toMap(ManageHotelDto::getId, manageHotelDto -> manageHotelDto));
     }
 
     @Override
