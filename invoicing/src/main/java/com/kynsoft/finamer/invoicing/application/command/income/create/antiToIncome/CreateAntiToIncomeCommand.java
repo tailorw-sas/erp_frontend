@@ -120,7 +120,7 @@ public class CreateAntiToIncomeCommand implements ICommand {
         return new BookingHttp(
                 bookingDto.getId(),
                 bookingDto.getBookingId(),
-                bookingDto.getReservationNumber().toString(),
+                bookingDto.getHotelBookingNumber(),
                 bookingDto.getCheckIn().format(formatter),
                 bookingDto.getCheckOut().format(formatter),
                 bookingDto.getFullName(),
