@@ -16,6 +16,8 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class CreateAntiToIncomeCommand implements ICommand {
 
     private List<CreateIncomeCommand> createIncomeCommands;
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public CreateAntiToIncomeCommand(List<CreateIncomeCommand> createIncomeCommands) {
         this.createIncomeCommands = createIncomeCommands;
@@ -36,17 +39,18 @@ public class CreateAntiToIncomeCommand implements ICommand {
         List<CreateIncomeCommand> commands = request.getCreateIncomeRequests().stream()
                 .map(createAntiToIncomeRequest -> {
                     return new CreateIncomeCommand(
+                            createAntiToIncomeRequest.getId(),
                             Status.valueOf(createAntiToIncomeRequest.getStatus()),
-                            createAntiToIncomeRequest.getInvoiceDate(),
+                            LocalDateTime.parse(createAntiToIncomeRequest.getInvoiceDate(), dateTimeFormatter),
                             createAntiToIncomeRequest.getManual(),
                             createAntiToIncomeRequest.getAgency(),
                             createAntiToIncomeRequest.getHotel(),
                             createAntiToIncomeRequest.getInvoiceType(),
                             createAntiToIncomeRequest.getIncomeAmount(),
                             createAntiToIncomeRequest.getInvoiceNumber(),
-                            createAntiToIncomeRequest.getDueDate(),
+                            LocalDate.parse(createAntiToIncomeRequest.getDueDate(), formatter),
                             createAntiToIncomeRequest.getReSend(),
-                            createAntiToIncomeRequest.getReSendDate(),
+                            LocalDate.parse(createAntiToIncomeRequest.getReSendDate(), formatter),
                             createAntiToIncomeRequest.getInvoiceStatus(),
                             createAntiToIncomeRequest.getEmployee(),
                             createAntiToIncomeRequest.getAttachments().stream().map(antiToIncomeAttachmentRequest -> {
@@ -116,7 +120,7 @@ public class CreateAntiToIncomeCommand implements ICommand {
         return new BookingHttp(
                 bookingDto.getId(),
                 bookingDto.getBookingId(),
-                bookingDto.getReservationNumber().toString(),//TODO Validar, capaz no es este campo
+                bookingDto.getReservationNumber().toString(),
                 bookingDto.getCheckIn().format(formatter),
                 bookingDto.getCheckOut().format(formatter),
                 bookingDto.getFullName(),
