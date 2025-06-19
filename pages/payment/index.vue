@@ -570,13 +570,13 @@ function mapFunctionForBankAccount(data: DataListItemForBankAccount): ListItemFo
 const columns: IColumn[] = [
   {
     field: 'icon',
-    header: '',
+    header: 'Att',
     width: '20px', // Establece un tamaño fijo para la columna del icono
     minWidth: '20px', // Evita que se haga más pequeña
     maxWidth: '30px', // Evita que se haga más grande
     type: 'slot-icon',
     icon: 'pi pi-paperclip',
-    sortable: false,
+    sortable: true,
     showFilter: false,
     hidden: false
   },
@@ -1463,7 +1463,6 @@ async function getList() {
       if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = String(iterator.status)
       }
-      console.log('iterator', iterator)
       if (Object.prototype.hasOwnProperty.call(iterator, 'attachmentStatus')) {
         if (iterator.attachmentStatus?.code === 'PAT') {
           color = listColor.ATTACHMENT_WITHOUT_ERROR
@@ -1671,6 +1670,9 @@ function onSortField(event: any) {
   if (event) {
     if (event.sortField === 'paymentStatus') {
       event.sortField = 'paymentStatus.name'
+    }
+    if (event.sortField === 'icon') {
+      event.sortField = 'attachmentStatus.code'
     }
     if (event.sortField === 'paymentSource') {
       event.sortField = 'paymentSource.name'
