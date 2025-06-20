@@ -234,6 +234,7 @@ function openDropdown(): void {
 
 // Función para cargar datos iniciales
 async function loadInitialData(): Promise<void> {
+  console.error('Error inicializando')
   if (props.loadOnOpen) {
     await performSearch(props.initialQuery)
   }

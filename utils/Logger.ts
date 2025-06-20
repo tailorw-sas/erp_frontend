@@ -1,5 +1,9 @@
+/* eslint-disable no-console */
+type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'none'
+
 class Logger {
   private static instance: Logger
+  private logLevel: LogLevel = 'log'
 
   private constructor() {}
 
@@ -10,36 +14,55 @@ class Logger {
     return Logger.instance
   }
 
-  private isDev(): boolean {
-    return process.env.NODE_ENV !== 'production'
+  setLevel(level: LogLevel): void {
+    this.logLevel = level
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    const levels: LogLevel[] = ['log', 'info', 'warn', 'error', 'none']
+    return levels.indexOf(level) >= levels.indexOf(this.logLevel)
   }
 
   log(...args: any[]): void {
-    if (this.isDev()) console.log('%c[LOG]', 'color: #1976D2; font-weight: bold;', ...args)
+    if (process.client && this.shouldLog('log')) {
+      console.log('%c[LOG]', 'color: #1976D2; font-weight: bold;', ...args)
+    }
   }
 
   info(...args: any[]): void {
-    if (this.isDev()) console.info('%c[INFO]', 'color: #2E7D32; font-weight: bold;', ...args)
+    if (process.client && this.shouldLog('info')) {
+      console.info('%c[INFO]', 'color: #2E7D32; font-weight: bold;', ...args)
+    }
   }
 
   warn(...args: any[]): void {
-    console.warn('%c[WARN]', 'color: #F9A825; font-weight: bold;', ...args)
+    if (process.client && this.shouldLog('warn')) {
+      console.warn('%c[WARN]', 'color: #F9A825; font-weight: bold;', ...args)
+    }
   }
 
   error(...args: any[]): void {
-    console.error('%c[ERROR]', 'color: #C62828; font-weight: bold;', ...args)
+    if (process.client && this.shouldLog('error')) {
+      console.error('%c[ERROR]', 'color: #C62828; font-weight: bold;', ...args)
+    }
   }
 
   table(data: any): void {
-    if (this.isDev()) console.table(data)
+    if (process.client && this.shouldLog('log')) {
+      console.table(data)
+    }
   }
 
   group(label: string): void {
-    if (this.isDev()) console.group(label)
+    if (process.client && this.shouldLog('log')) {
+      console.group(label)
+    }
   }
 
   groupEnd(): void {
-    if (this.isDev()) console.groupEnd()
+    if (process.client && this.shouldLog('log')) {
+      console.groupEnd()
+    }
   }
 }
 

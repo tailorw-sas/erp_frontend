@@ -1,6 +1,7 @@
 // services/generic-service.ts
 import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { PaginatedResponse, SearchResponse } from '~/types'
+import Logger from '~/utils/Logger'
 
 // ========== INTERFACES ==========
 interface RequestOptions {
@@ -117,6 +118,7 @@ export class GenericService {
     id2?: string,
     options?: RequestOptions
   ): Promise<T> {
+    Logger.log('[GenericService] getById called with:', { moduleApi, uriApi, id, subController, id2 })
     const url = this.buildUrl(moduleApi, uriApi, id, subController, id2)
     return this.makeRequest<T>(url, 'GET', undefined, options)
   }

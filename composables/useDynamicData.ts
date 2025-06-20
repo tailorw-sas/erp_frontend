@@ -48,6 +48,7 @@ export function useDynamicData() {
   const toast = useToast()
   const config = useRuntimeConfig()
   const USE_INDEXEDDB_CACHE = config.public?.useIndexedDb ?? true
+  console.error('Use Dynamic Data')
 
   async function loadDynamicData(query: string, moduleApi: string, uriApi: string, filter: IFilter[] = [], ttlMs?: number) {
     const cacheKey = `${moduleApi}_${uriApi}`

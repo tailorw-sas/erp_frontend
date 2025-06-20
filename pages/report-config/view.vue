@@ -13,7 +13,6 @@ import Divider from 'primevue/divider'
 import Skeleton from 'primevue/skeleton'
 import Toast from 'primevue/toast'
 import ConfirmPopup from 'primevue/confirmpopup'
-import type { LocationQueryValue } from 'vue-router'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
 import { FormFieldBuilder as FieldBuilder } from '~/utils/formFieldBuilder'
@@ -738,16 +737,14 @@ async function loadReport(reportId: string) {
   if (!reportId) { return }
 
   try {
+    Logger.log('Detected load report:', reportId)
     loadingReport.value = true
-
-    // ✅ FIXED: Proper type casting for backend response
     const response = await GenericService.getById<BackendReportInfo>(
       'report',
       'jasper-report-template/template-with-params/',
       reportId
     )
 
-    // ✅ NEW: Map backend response to frontend format with proper sorting
     const mappedReport: ReportInfo = {
       id: response.id,
       code: response.code,
@@ -756,7 +753,7 @@ async function loadReport(reportId: string) {
       parameters: response.parameters
         ? response.parameters
             .map(mapBackendParameter)
-            .sort((a, b) => (a.parameterPosition || 0) - (b.parameterPosition || 0)) // ✅ Sort by parameterPosition
+            .sort((a, b) => (a.parameterPosition || 0) - (b.parameterPosition || 0))
         : []
     }
 
@@ -764,7 +761,7 @@ async function loadReport(reportId: string) {
     await loadReportParameters(mappedReport.id, mappedReport.code, mappedReport)
   }
   catch (error) {
-    Logger.error('Error loading report:', error)
+    console.error('Error loading report:', error)
     toast.add({
       severity: 'error',
       summary: 'Load Failed',
@@ -1026,6 +1023,7 @@ function zoomOut() {
 
 // ========== WATCHERS ==========
 watch(() => route.query.reportId, (newReportId) => {
+  Logger.log('Detected reportId change:', newReportId)
   if (newReportId && typeof newReportId === 'string') {
     loadReport(newReportId)
   }
