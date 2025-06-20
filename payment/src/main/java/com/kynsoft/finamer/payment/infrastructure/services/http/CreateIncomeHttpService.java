@@ -37,7 +37,6 @@ public class CreateIncomeHttpService {
         HttpEntity<CreateAntiToIncomeFromPaymentRequest> entity = new HttpEntity<>(request, headers);
 
         try {
-            // Realizar la solicitud POST
             ResponseEntity<CreateAntiToIncomeFromPaymentMessage> response = restTemplate.postForEntity(url, entity, CreateAntiToIncomeFromPaymentMessage.class);
 
             if (!HttpStatus.OK.equals(response.getStatusCode())) {
