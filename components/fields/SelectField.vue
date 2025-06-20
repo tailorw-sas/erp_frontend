@@ -49,7 +49,7 @@ const props = withDefaults(defineProps<SelectFieldProps>(), {
   emptyMessage: 'No options available',
   maxSelectedLabels: 3,
   display: 'chip',
-  scrollHeight: '200px',
+  // scrollHeight: '200px',
   autoOptionFocus: true,
   autoFilterFocus: true,
   filterMatchMode: 'contains',

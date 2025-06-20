@@ -1,29 +1,29 @@
 /* ===================================================================
    REPORT VIEWER - PROFESSIONAL COMPONENT STYLES
    Compatible with PrimeVue + PrimeFlex + Design System
+   Enhanced with unified component styling and behaviors
    =================================================================== */
 
 // ===============================
 // IMPORTS & COMPONENT VARIABLES
 // ===============================
 
-// Import global variables (correct path for your structure)
 @import '../../../node_modules/primeflex/primeflex.scss';
 @import '../variables';
 
 // Component-specific variables
 $report-viewer-grid-gap: $spacing-xl;
 $report-viewer-panel-radius: $border-radius-xl;
-$report-viewer-field-height: 2.75rem; // Increased for better UX
+$report-viewer-field-height: 2.75rem;
 $report-viewer-field-height-mobile: 3rem;
 
-// Status colors using defined variables
+// Status colors
 $status-loading: #3b82f6;
 $status-success: $success-color;
 $status-warning: $warning-color;
 $status-error: $error-color;
 
-// Panel specific colors
+// Panel colors
 $panel-header-bg: $gray-50;
 $panel-border: $gray-200;
 
@@ -46,8 +46,8 @@ $panel-border: $gray-200;
   @include card-base;
   display: flex;
   flex-direction: column;
-  min-height: 75vh; // Increased height
-  overflow: hidden; // Clean edges
+  min-height: 75vh;
+  overflow: hidden;
   
   &__header {
     padding: $spacing-lg $spacing-xl;
@@ -73,7 +73,6 @@ $panel-border: $gray-200;
     overflow-y: auto;
     background: white;
     
-    // Custom scrollbar
     &::-webkit-scrollbar {
       width: 6px;
     }
@@ -198,17 +197,10 @@ $panel-border: $gray-200;
   --enhanced-form-error-border: #{$error-color};
   --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
   --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  --enhanced-form-chip-height: 1.75rem;
-  --enhanced-form-chip-height-compact: 1.5rem;
-  --enhanced-form-chip-font-size: #{$font-size-small};
-  --enhanced-form-chip-font-size-compact: #{$font-size-tiny};
-  --enhanced-form-chip-border-radius: #{$border-radius};
-  --enhanced-form-chip-bg: #{$primary-light};
-  --enhanced-form-chip-color: #{$primary-color};
   --enhanced-form-dropdown-z: 1000;
   
   // ===============================
-  // HEADER SECTION (ENHANCED)
+  // HEADER SECTION
   // ===============================
   
   &__header {
@@ -319,7 +311,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // STATUS SECTION (ENHANCED)
+  // STATUS SECTION
   // ===============================
   
   &__status {
@@ -382,12 +374,12 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // MAIN LAYOUT GRID (ENHANCED)
+  // MAIN LAYOUT GRID
   // ===============================
   
   &__main {
     display: grid;
-    grid-template-columns: 420px 1fr; // Fixed left panel width for consistency
+    grid-template-columns: 420px 1fr;
     gap: $spacing-xl;
     align-items: start;
     min-height: 75vh;
@@ -399,7 +391,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // PARAMETERS PANEL (ENHANCED)
+  // PARAMETERS PANEL
   // ===============================
   
   &__parameters {
@@ -412,21 +404,21 @@ $panel-border: $gray-200;
     }
     
     &-header {
-      padding: $spacing-xl $spacing-xl !important; // Increased padding
-      min-height: 80px !important; // Fixed minimum height
-      display: flex !important; // Make the header itself flex
-      align-items: center !important; // Center items vertically
-      justify-content: space-between !important; // Space between content and actions
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
       
       &-content {
         @extend .flex, .align-items-center;
-        gap: $spacing-lg; // Increased gap
-        flex: 1; // Take remaining space
+        gap: $spacing-lg;
+        flex: 1;
       }
       
       &-actions {
-        flex-shrink: 0; // Don't shrink the button
-        margin-left: $spacing-md; // Add some space from content
+        flex-shrink: 0;
+        margin-left: $spacing-md;
         
         .p-button {
           width: 40px !important;
@@ -441,28 +433,28 @@ $panel-border: $gray-200;
     }
     
     &-icon {
-      width: 3rem !important; // Increased size
+      width: 3rem !important;
       height: 3rem !important;
       border-radius: $border-radius-lg;
       background: linear-gradient(135deg, $primary-color, $primary-hover);
       @extend .flex, .align-items-center, .justify-content-center;
       color: white;
-      font-size: $font-size-lg !important; // Increased icon size
+      font-size: $font-size-lg !important;
       box-shadow: 0 3px 12px rgba(71, 85, 105, 0.25);
-      flex-shrink: 0; // Prevent shrinking
+      flex-shrink: 0;
     }
     
     &-title {
       margin: 0;
-      font-size: $font-size-xl !important; // Ensured size
+      font-size: $font-size-xl !important;
       font-weight: $font-weight-bold;
       color: $gray-900;
       line-height: 1.3;
     }
     
     &-subtitle {
-      margin: $spacing-xs 0 0 0; // Added top margin
-      font-size: $font-size-base !important; // Increased from small
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
       color: $gray-600;
       line-height: 1.4;
     }
@@ -472,12 +464,11 @@ $panel-border: $gray-200;
       overflow-y: auto;
       padding: $spacing-xl !important;
       
-      // Override any PrimeFlex grid margins
       .grid {
         margin: 0 !important;
+        row-gap: 1.5rem !important;
       }
       
-      // Enhanced field spacing
       > * {
         margin-bottom: $spacing-lg;
         
@@ -489,7 +480,905 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // LOADING STATE (ENHANCED)
+  // 📝 LOCAL SELECT FIELD STYLES
+  // ===============================
+  
+  .local-select-field {
+    width: 100%;
+    animation: fadeInUp 0.3s ease-out;
+    
+    .form-field__label {
+      display: block;
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin-bottom: 0.75rem !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+      
+      &.form-field--required::after {
+        content: ' *' !important;
+        color: $error-color !important;
+        font-weight: bold !important;
+        margin-left: 0.125rem !important;
+      }
+    }
+    
+    .form-field__input-wrapper {
+      width: 100% !important;
+      position: relative !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+    }
+    
+    .form-field__error-messages {
+      margin-top: 0.5rem !important;
+      
+      .form-field__error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.375rem !important;
+        color: $error-color !important;
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+        
+        .pi {
+          font-size: 0.875rem !important;
+          flex-shrink: 0 !important;
+        }
+      }
+    }
+    
+    .dropdown-option {
+      display: flex !important;
+      align-items: center !important;
+      width: 100% !important;
+      padding: 0.25rem 0 !important;
+      transition: var(--enhanced-form-transition-fast) !important;
+      
+      &:hover {
+        background: $gray-100 !important;
+        transform: translateX(2px) !important;
+      }
+    }
+    
+    .dropdown-selected {
+      display: flex !important;
+      align-items: center !important;
+      width: 100% !important;
+      font-weight: 500 !important;
+      color: $gray-800 !important;
+    }
+    
+    .dropdown-placeholder {
+      color: $gray-400 !important;
+      font-style: italic !important;
+      font-weight: 400 !important;
+    }
+  }
+  
+  // ===============================
+  // 📅 DATE FIELD STYLES
+  // ===============================
+  
+  .date-field__wrapper {
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    animation: fadeInUp 0.3s ease-out;
+    
+    &--error {
+      .date-field__calendar {
+        border-color: $error-color !important;
+        box-shadow: 0 0 0 1px $error-color !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+      }
+    }
+    
+    &--loading {
+      opacity: 0.7 !important;
+      pointer-events: none !important;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+    }
+  }
+  
+  .date-field__calendar {
+    width: 100% !important;
+    
+    &--inline {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: $border-radius-lg !important;
+      overflow: hidden;
+    }
+    
+    &--mobile {
+      font-size: 1.1rem !important;
+      
+      .p-calendar-w-btn .p-inputtext {
+        font-size: 1rem !important;
+      }
+    }
+  }
+  
+  .date-field__header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-bottom: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__today-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    background: $primary-color !important;
+    color: white !important;
+    border: none !important;
+    border-radius: $border-radius !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
+    
+    &:hover {
+      background: $primary-hover !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 8px rgba($primary-color, 0.4) !important;
+    }
+    
+    &:focus {
+      outline: 2px solid rgba($primary-color, 0.3) !important;
+      outline-offset: 1px !important;
+    }
+    
+    &:active {
+      transform: translateY(0) !important;
+    }
+  }
+  
+  .date-field__footer {
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-top: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__selected-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    color: $success-color !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    
+    .pi {
+      color: inherit !important;
+      animation: pulse 2s infinite !important;
+    }
+  }
+  
+  .date-field__date-cell {
+    &--weekend {
+      color: $error-color !important;
+      font-weight: 600 !important;
+      background: rgba($error-color, 0.1) !important;
+      border-radius: 50% !important;
+    }
+  }
+  
+  // ===============================
+  // 🎯 ENHANCED FORM FIELDS - UNIVERSAL STYLES
+  // ===============================
+  
+  &__parameters-content {
+    
+    // ✅ UNIVERSAL CLEAR BUTTON - HOMOLOGADO PARA TODOS LOS COMPONENTES
+    :deep(.p-calendar .p-calendar-clear-icon),
+    :deep(.p-dropdown .p-dropdown-clear-icon),
+    :deep(.p-multiselect .p-multiselect-clear-icon),
+    :deep(.p-autocomplete .p-autocomplete-clear-icon),
+    :deep(.p-inputtext-clear-icon) {
+      position: absolute !important;
+      top: 50% !important;
+      right: calc(var(--enhanced-form-field-height) + 8px) !important;
+      transform: translateY(-50%) !important;
+      width: 1.25rem !important;
+      height: 1.25rem !important;
+      color: $gray-500 !important;
+      cursor: pointer !important;
+      border-radius: 50% !important;
+      transition: var(--enhanced-form-transition) !important;
+      z-index: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      
+      &:hover {
+        color: $error-color !important;
+        background: rgba($error-color, 0.1) !important;
+        transform: translateY(-50%) scale(1.1) !important;
+        box-shadow: 0 2px 8px rgba($error-color, 0.2) !important;
+      }
+      
+      &:focus {
+        outline: 2px solid rgba($error-color, 0.3) !important;
+        outline-offset: 1px !important;
+      }
+      
+      &:active {
+        transform: translateY(-50%) scale(0.95) !important;
+      }
+      
+      .p-icon,
+      .pi {
+        font-size: 1rem !important;
+        color: inherit !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        font-weight: 400 !important;
+        font-family: 'primeicons' !important;
+        vertical-align: baseline !important;
+        text-rendering: auto !important;
+        -webkit-font-smoothing: antialiased !important;
+      }
+    }
+    
+    // ✅ CONTAINER STYLING
+    :deep(.col-12) {
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+    
+    // ✅ UNIVERSAL FIELD SIZING
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect),
+    :deep(.p-calendar),
+    :deep(.p-inputnumber),
+    :deep(.p-password),
+    :deep(.p-autocomplete) {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+    
+    // ✅ CALENDAR/DATE FIELD STYLING - FOCUS CORREGIDO
+    :deep(.p-calendar) {
+      width: 100% !important;
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+      position: relative !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      background: white !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow: hidden !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      
+      .p-component {
+        height: 100% !important;
+      }
+
+      .p-calendar-w-btn {
+        width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        align-items: center !important;
+      }
+      
+      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
+      .p-inputtext,
+      .p-datepicker-trigger {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-inputtext {
+        width: 100% !important;
+        height: 100% !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        background: transparent !important;
+        color: $gray-700 !important;
+        padding: 0 1rem !important;
+        flex: 1 !important;
+        line-height: normal !important;
+        
+        &::placeholder {
+          color: $gray-400 !important;
+          font-style: italic !important;
+        }
+      }
+      
+      .p-datepicker-trigger {
+        height: 100% !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: $primary-color !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: rgba($primary-color, 0.05) !important;
+          color: $primary-hover !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: rgba($primary-color, 0.1) !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: inherit !important;
+          font-size: 1.1rem !important;
+        }
+      }
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-calendar-disabled):not(.p-calendar-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &:focus-within:not(.p-calendar-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-calendar-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus-within {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ DROPDOWN STYLING - FOCUS CORREGIDO
+    :deep(.p-dropdown) {
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      overflow: hidden !important;
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-disabled):not(.p-dropdown-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &.p-focus:not(.p-dropdown-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-dropdown-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
+      .p-dropdown-label,
+      .p-dropdown-trigger,
+      .p-inputtext {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-dropdown-label {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0 1rem !important;
+        line-height: normal !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        color: $gray-700 !important;
+        background: transparent !important;
+        
+        &.p-placeholder {
+          color: $gray-400 !important;
+          font-style: italic !important;
+        }
+      }
+      
+      .p-dropdown-trigger {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: $gray-50 !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: $gray-100 !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+          transition: transform 0.2s ease !important;
+        }
+      }
+      
+      &.p-dropdown-opened .p-dropdown-trigger .p-icon {
+        transform: rotate(180deg) !important;
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus,
+        &.p-focus {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ MULTISELECT STYLING - FOCUS CORREGIDO
+    :deep(.p-multiselect) {
+      min-height: var(--enhanced-form-field-height) !important;
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      overflow: hidden !important;
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-disabled):not(.p-multiselect-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &.p-focus:not(.p-multiselect-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-multiselect-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ ELIMINAR BORDES INTERNOS
+      .p-multiselect-label-container,
+      .p-multiselect-trigger {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-multiselect-label-container {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0.375rem 0.625rem !important;
+        padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+      }
+      
+      .p-multiselect-trigger {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: $gray-50 !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: $gray-100 !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+        }
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus,
+        &.p-focus {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ PANELS STYLING - SIN DOBLE BORDE
+    :deep(.p-dropdown-panel),
+    :deep(.p-multiselect-panel) {
+      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
+      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
+      box-shadow: var(--enhanced-form-shadow-lg) !important;
+      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      background: white !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+      animation: slideDown 0.2s ease-out !important;
+      overflow: hidden !important;
+      
+      // ✅ CONECTAR VISUALMENTE CON EL DROPDOWN
+      &::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--enhanced-form-focus-border);
+        z-index: 1;
+      }
+    }
+    
+    :deep(.p-dropdown-items),
+    :deep(.p-multiselect-items) {
+      padding: 0.5rem 0 !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+      
+      &::-webkit-scrollbar {
+        width: 4px !important;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: $gray-100 !important;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: $gray-300 !important;
+        border-radius: 2px !important;
+      }
+    }
+    
+    :deep(.p-dropdown-item),
+    :deep(.p-multiselect-item) {
+      padding: 0.625rem 1rem !important;
+      transition: var(--enhanced-form-transition-fast) !important;
+      color: $gray-700 !important;
+      font-size: var(--enhanced-form-font-size) !important;
+      margin: 0.125rem 0.5rem !important;
+      border-radius: $border-radius !important;
+      border: none !important; // ✅ SIN BORDES EN ITEMS
+      
+      &:hover {
+        background: $gray-100 !important;
+        color: $gray-900 !important;
+        transform: translateX(2px) !important;
+      }
+      
+      &.p-highlight {
+        background: $primary-color !important;
+        color: white !important;
+        font-weight: 500 !important;
+        box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
+      }
+      
+      &:focus {
+        outline: 2px solid rgba($primary-color, 0.3) !important;
+        outline-offset: -2px !important;
+        background: $primary-light !important;
+      }
+    }
+    
+    // ✅ DATE PICKER PANEL - SIN DOBLE BORDE
+    :deep(.p-datepicker) {
+      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
+      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
+      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      background: white !important;
+      overflow: hidden !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+      animation: slideDown 0.2s ease-out !important;
+      
+      // ✅ CONECTAR VISUALMENTE CON EL CALENDAR
+      &::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--enhanced-form-focus-border);
+        z-index: 1;
+      }
+      
+      .p-datepicker-header {
+        background: $gray-50 !important;
+        border-bottom: 1px solid $gray-200 !important;
+        padding: 1rem !important;
+        
+        .p-datepicker-title {
+          color: $gray-800 !important;
+          font-weight: 600 !important;
+          font-size: 1.1rem !important;
+        }
+        
+        .p-datepicker-prev,
+        .p-datepicker-next {
+          color: $gray-600 !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: var(--enhanced-form-border-radius-small) !important;
+          transition: var(--enhanced-form-transition) !important;
+          
+          &:hover {
+            background: $gray-100 !important;
+            color: $gray-800 !important;
+            transform: scale(1.1) !important;
+          }
+          
+          &:focus {
+            outline: 2px solid rgba($primary-color, 0.3) !important;
+            outline-offset: 1px !important;
+          }
+        }
+      }
+      
+      .p-datepicker-calendar {
+        .p-datepicker-weekheader {
+          background: $gray-50 !important;
+          
+          th {
+            color: $gray-600 !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 0.5rem !important;
+            font-size: 0.9rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+          }
+        }
+        
+        td {
+          padding: 2px !important;
+          
+          .p-datepicker-day {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: var(--enhanced-form-border-radius-small) !important;
+            color: $gray-700 !important;
+            font-weight: 500 !important;
+            transition: var(--enhanced-form-transition) !important;
+            
+            &:hover {
+              background: $primary-light !important;
+              color: $primary-color !important;
+              transform: scale(1.05) !important;
+              box-shadow: 0 2px 4px rgba($primary-color, 0.2) !important;
+            }
+            
+            &:focus {
+              outline: 2px solid rgba($primary-color, 0.3) !important;
+              outline-offset: 1px !important;
+            }
+            
+            &.p-datepicker-day-selected {
+              background: $primary-color !important;
+              color: white !important;
+              font-weight: 700 !important;
+              box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
+              transform: scale(1.05) !important;
+            }
+            
+            &.p-datepicker-day-today {
+              background: $warning-light !important;
+              color: $warning-color !important;
+              font-weight: 700 !important;
+              border: 2px solid $warning-color !important;
+            }
+            
+            &.p-datepicker-day-other-month {
+              opacity: 0.5 !important;
+            }
+          }
+        }
+      }
+    }
+    
+    // ✅ MULTISELECT TOKENS
+    :deep(.p-multiselect-token) {
+      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
+      border: 1px solid rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+      border-radius: 1rem !important;
+      padding: 0.25rem 0.75rem !important;
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      height: auto !important;
+      min-height: 1.5rem !important;
+      animation: chip-appear 0.2s ease-out !important;
+      transition: var(--enhanced-form-transition) !important;
+      
+      &:hover {
+        background: linear-gradient(135deg, $primary-color, $primary-hover) !important;
+        color: white !important;
+        transform: scale(1.05) !important;
+      }
+      
+      .p-multiselect-token-icon {
+        margin-left: 0.5rem !important;
+        color: $primary-color !important;
+        border-radius: 50% !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          color: white !important;
+          background: $error-color !important;
+          transform: scale(1.1) !important;
+        }
+      }
+    }
+    
+    // ✅ UNIVERSAL FORM LABELS
+    :deep(.form-field__label) {
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin-bottom: 0.75rem !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+    }
+    
+    :deep(.form-field--required .form-field__label::after) {
+      content: ' *' !important;
+      color: $error-color !important;
+      font-weight: bold !important;
+      margin-left: 0.125rem !important;
+    }
+    
+    // ✅ WRAPPER CONTAINERS
+    :deep(.date-field__wrapper) {
+      width: 100% !important;
+      position: relative !important;
+      display: block !important;
+      box-sizing: border-box !important;
+    }
+    
+    :deep(.form-field__input-container),
+    :deep(.form-field__input-wrapper) {
+      width: 100% !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+    }
+    
+    // ✅ FOCUS STATES
+    :deep(.form-field:focus-within) {
+      animation: field-focus 0.3s ease-out !important;
+    }
+  }
+  
+  // ===============================
+  // LOADING STATE
   // ===============================
   
   &__loading {
@@ -512,7 +1401,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // ACTIONS SECTION (ENHANCED)
+  // ACTIONS SECTION
   // ===============================
   
   &__actions {
@@ -646,17 +1535,16 @@ $panel-border: $gray-200;
       }
     }
     
+    &:active {
+      transform: translateY(1px) !important;
+    }
+    
     &:disabled {
       background: linear-gradient(135deg, $gray-400, $gray-500) !important;
       transform: none !important;
       box-shadow: $shadow-sm !important;
       cursor: not-allowed !important;
       opacity: 0.7;
-    }
-    
-    @media (max-width: $breakpoint-md) {
-      height: $report-viewer-field-height-mobile !important;
-      min-height: $report-viewer-field-height-mobile !important;
     }
   }
   
@@ -682,12 +1570,17 @@ $panel-border: $gray-200;
       .p-button {
         flex: 1;
         justify-content: center;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          transform: translateY(-1px) !important;
+        }
       }
     }
   }
   
   // ===============================
-  // EMPTY STATES (ENHANCED)
+  // EMPTY STATES
   // ===============================
   
   &__no-parameters {
@@ -805,7 +1698,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // PREVIEW PANEL (ENHANCED)
+  // PREVIEW PANEL
   // ===============================
   
   &__preview {
@@ -818,12 +1711,12 @@ $panel-border: $gray-200;
     }
     
     &-header {
-      padding: $spacing-xl $spacing-xl !important; // Increased padding
-      min-height: 80px !important; // Fixed minimum height
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
       
       &-content {
         @extend .flex, .align-items-center;
-        gap: $spacing-lg; // Increased gap
+        gap: $spacing-lg;
         width: 100%;
       }
       
@@ -835,37 +1728,42 @@ $panel-border: $gray-200;
         .p-button {
           height: 36px !important;
           min-height: 36px !important;
+          transition: var(--enhanced-form-transition) !important;
           
           &.p-button-sm {
             padding: 0 $spacing-md !important;
+          }
+          
+          &:hover {
+            transform: translateY(-1px) !important;
           }
         }
       }
     }
     
     &-icon {
-      width: 3rem !important; // Increased size
+      width: 3rem !important;
       height: 3rem !important;
       border-radius: $border-radius-lg;
       background: linear-gradient(135deg, $gray-600, $gray-700);
       @extend .flex, .align-items-center, .justify-content-center;
       color: white;
-      font-size: $font-size-lg !important; // Increased icon size
+      font-size: $font-size-lg !important;
       box-shadow: 0 3px 12px rgba(100, 116, 139, 0.25);
-      flex-shrink: 0; // Prevent shrinking
+      flex-shrink: 0;
     }
     
     &-title {
       margin: 0;
-      font-size: $font-size-xl !important; // Ensured size
+      font-size: $font-size-xl !important;
       font-weight: $font-weight-bold;
       color: $gray-900;
       line-height: 1.3;
     }
     
     &-subtitle {
-      margin: $spacing-xs 0 0 0; // Added top margin
-      font-size: $font-size-base !important; // Increased from small
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
       color: $gray-600;
       line-height: 1.4;
     }
@@ -964,7 +1862,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // PDF VIEWER (ENHANCED)
+  // PDF VIEWER
   // ===============================
   
   &__pdf {
@@ -1028,1093 +1926,202 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // 🎯 CLEAR BUTTONS PERFECTAMENTE HOMOLOGADOS
-  // ===============================
-  
-  &__parameters-content {
-    // ✅ CLEAR BUTTON UNIVERSAL - ESTILO EXACTAMENTE IDÉNTICO PARA TODOS
-    :deep(.p-calendar .p-calendar-clear-icon),
-    :deep(.date-field__clear-quick),
-    :deep(.p-dropdown .p-dropdown-clear-icon),
-    :deep(.local-select-field .p-dropdown .p-dropdown-clear-icon),
-    :deep(.p-multiselect .p-multiselect-clear-icon),
-    :deep(.p-autocomplete .p-autocomplete-clear-icon) {
-      position: absolute !important;
-      top: 50% !important;
-      right: calc(var(--enhanced-form-field-height) + 8px) !important;
-      transform: translateY(-50%) !important;
-      width: 1.25rem !important;
-      height: 1.25rem !important;
-      color: $gray-500 !important;
-      cursor: pointer !important;
-      border-radius: 50% !important;
-      transition: var(--enhanced-form-transition) !important;
-      z-index: 2 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      box-shadow: none !important;
-      
-      &:hover {
-        color: $error-color !important;
-        background: rgba($error-color, 0.1) !important;
-        transform: translateY(-50%) scale(1.1) !important;
-      }
-      
-      &:focus {
-        outline: none !important;
-        box-shadow: 0 0 0 2px rgba($error-color, 0.3) !important;
-      }
-      
-      // ✅ ÍCONO PERFECTAMENTE HOMOLOGADO
-      .p-icon,
-      .pi {
-        font-size: 1rem !important;
-        color: inherit !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1 !important;
-        font-weight: 400 !important; // ✅ PESO ESPECÍFICO
-        font-family: 'primeicons' !important; // ✅ FORZAR MISMA FAMILIA
-        vertical-align: baseline !important;
-        text-rendering: auto !important;
-        -webkit-font-smoothing: antialiased !important;
-      }
-    }
-    // ✅ FIELD CONTAINER STYLING - INCREASED WIDTH
-    :deep(.col-12) {
-      margin-bottom: $spacing-lg !important;
-      padding: 0 !important;
-      width: 100% !important;
-    }
-    
-    // ✅ FIELD SIZING - MORE WIDTH FOR BETTER VISUAL BALANCE
-    :deep(.p-inputtext),
-    :deep(.p-dropdown),
-    :deep(.p-multiselect),
-    :deep(.p-calendar),
-    :deep(.p-inputnumber),
-    :deep(.p-password) {
-      width: 100% !important;
-      max-width: none !important;
-      min-width: 0 !important; // Permitir que se encoja si es necesario
-      box-sizing: border-box !important; // Incluir padding y border en el ancho
-    }
-    
-    // ✅ LOCAL SELECT FIELD - ESTILO COMPLETO
-    :deep(.local-select-field) {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      margin-bottom: $spacing-lg;
-      
-      // ✅ LABEL DEL LOCAL SELECT
-      .field-label {
-        font-weight: 600 !important;
-        color: $gray-800 !important;
-        margin-bottom: 0.75rem !important;
-        font-size: 0.9rem !important;
-        letter-spacing: 0.02em !important;
-        line-height: 1.4 !important;
-        cursor: pointer !important;
-        display: block !important;
-        
-        // ✅ INDICADOR DE CAMPO REQUERIDO
-        &.required::after {
-          content: ' *' !important;
-          color: $error-color !important;
-          font-weight: bold !important;
-          margin-left: 0.125rem !important;
-        }
-      }
-      
-      // ✅ DROPDOWN ESPECÍFICO PARA LOCAL SELECT
-      .p-dropdown {
-        width: 100% !important;
-        height: var(--enhanced-form-field-height) !important;
-        min-height: var(--enhanced-form-field-height) !important;
-        background: white !important;
-        border: var(--enhanced-form-border-width) solid $gray-200 !important;
-        border-radius: var(--enhanced-form-border-radius) !important;
-        transition: var(--enhanced-form-transition) !important;
-        box-shadow: var(--enhanced-form-shadow) !important;
-        position: relative !important;
-        
-        // ✅ LABEL/VALOR DEL DROPDOWN
-        .p-dropdown-label {
-          height: calc(var(--enhanced-form-field-height) - 4px) !important;
-          min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
-          padding: 0 1rem !important;
-          padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important; // Espacio para clear + trigger
-          line-height: normal !important;
-          display: flex !important;
-          align-items: center !important;
-          font-size: var(--enhanced-form-font-size) !important;
-          color: $gray-700 !important;
-          background: transparent !important;
-          
-          &.p-placeholder {
-            color: $gray-400 !important;
-            font-style: italic !important;
-          }
-        }
-        
-        // ✅ BOTÓN TRIGGER (FLECHA)
-        .p-dropdown-trigger {
-          height: calc(var(--enhanced-form-field-height) - 4px) !important;
-          width: var(--enhanced-form-field-height) !important;
-          background: transparent !important;
-          border: none !important;
-          border-left: 1px solid $gray-200 !important;
-          border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
-          transition: var(--enhanced-form-transition) !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          
-          &:hover {
-            background: $gray-50 !important;
-            
-            .p-icon {
-              color: $primary-hover !important;
-              transform: scale(1.1) !important;
-            }
-          }
-          
-          .p-icon {
-            color: $primary-color !important;
-            transition: var(--enhanced-form-transition) !important;
-            font-size: 1rem !important;
-          }
-        }
-        
-        // ✅ CLEAR BUTTON HOMOLOGADO CON DATEFIELD - ESTILO IDÉNTICO
-        .p-dropdown-clear-icon {
-          position: absolute !important;
-          top: 50% !important;
-          right: calc(var(--enhanced-form-field-height) + 8px) !important;
-          transform: translateY(-50%) !important;
-          width: 1.25rem !important; // ✅ MISMO TAMAÑO QUE DATEFIELD
-          height: 1.25rem !important;
-          color: $gray-500 !important; // ✅ MISMO COLOR INICIAL
-          cursor: pointer !important;
-          border-radius: 50% !important; // ✅ MISMO BORDER RADIUS
-          transition: var(--enhanced-form-transition) !important; // ✅ MISMA TRANSICIÓN
-          z-index: 2 !important; // ✅ MISMO Z-INDEX
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          background: transparent !important; // ✅ MISMO BACKGROUND
-          border: none !important;
-          padding: 0 !important; // ✅ ELIMINAR PADDING EXTRA
-          margin: 0 !important; // ✅ ELIMINAR MARGIN EXTRA
-          
-          &:hover {
-            color: $error-color !important; // ✅ MISMO COLOR HOVER
-            background: rgba($error-color, 0.1) !important; // ✅ MISMO BACKGROUND HOVER
-            transform: translateY(-50%) scale(1.1) !important; // ✅ MISMO EFECTO SCALE
-          }
-          
-          .p-icon {
-            font-size: 0.8rem !important; // ✅ MISMO TAMAÑO DE ÍCONO QUE DATEFIELD
-            color: inherit !important;
-            margin: 0 !important; // ✅ ELIMINAR MARGINS
-            padding: 0 !important; // ✅ ELIMINAR PADDING
-            line-height: 1 !important; // ✅ LÍNEA UNIFORME
-          }
-        }
-        
-        // ✅ ESTADOS HOVER Y FOCUS
-        &:hover:not(.p-disabled) {
-          border-color: $gray-300 !important;
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        &:focus-within,
-        &.p-focus {
-          border-color: var(--enhanced-form-focus-border) !important;
-          box-shadow: var(--enhanced-form-focus-shadow) !important;
-          transform: translateY(-1px) !important;
-        }
-        
-        // ✅ ESTADO DE ERROR
-        &.p-invalid {
-          border-color: var(--enhanced-form-error-border) !important;
-          box-shadow: var(--enhanced-form-error-shadow) !important;
-          
-          &:focus,
-          &:focus-within {
-            box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-          }
-        }
-        
-        // ✅ ESTADO DISABLED
-        &.p-disabled {
-          background: $gray-100 !important;
-          border-color: $gray-200 !important;
-          opacity: 0.6 !important;
-          cursor: not-allowed !important;
-          
-          .p-dropdown-label {
-            color: $gray-400 !important;
-          }
-        }
-      }
-      
-      // ✅ MENSAJES DE ERROR
-      .field-error-messages {
-        margin-top: 0.25rem !important;
-      }
-      
-      .field-error-message {
-        display: flex !important;
-        align-items: flex-start !important;
-        gap: 0.25rem !important;
-        color: $error-color !important;
-        font-size: 0.75rem !important;
-        line-height: 1.4 !important;
-        margin-bottom: 0.25rem !important;
-        
-        &:last-child {
-          margin-bottom: 0 !important;
-        }
-        
-        .pi {
-          flex-shrink: 0 !important;
-          margin-top: 0.125rem !important;
-          font-size: 0.7rem !important;
-        }
-      }
-    }
-    
-    // ✅ CALENDAR/DATE FIELD STYLING - INTEGRATED DESIGN WITH BETTER WIDTH
-    :deep(.p-calendar) {
-      width: 100% !important;
-      max-width: none !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
-      // 🎯 CLAVE: Usar exactamente la misma variable que dropdowns y multiselect
-      height: var(--enhanced-form-field-height) !important;
-      min-height: var(--enhanced-form-field-height) !important;
-      position: relative !important;;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      background: white !important;
-      display: flex !important;
-      align-items: center !important;
-      overflow: hidden !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      
-      // 🎯 CRÍTICO: Forzar que todos los elementos internos respeten la altura
-      .p-component {
-        height: 100% !important;
-      }
-
-      // 🎯 CRÍTICO: El wrapper interno también debe ser 100%
-      .p-calendar-w-btn {
-        width: 100% !important;
-        max-width: none !important;
-        display: flex !important;
-        align-items: center !important;
-      }
-      
-      .p-inputtext {
-        // 🎯 CLAVE: Altura completa igual que el contenedor
-        width: 100% !important;
-        max-width: none !important;
-        min-width: 0 !important;
-        height: 100% !important;
-        min-height: 100% !important;
-        font-size: var(--enhanced-form-font-size) !important;
-        border: none !important;
-        border-radius: 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        background: transparent !important;
-        color: $gray-700 !important;
-        padding: 0 1rem !important;
-        flex: 1 !important;
-        outline: none !important;
-        box-shadow: none !important;        
-        // 🎯 NUEVO: Evitar problemas de line-height que afectan altura
-        line-height: normal !important;
-        vertical-align: middle !important;
-        box-sizing: border-box !important;
-        
-        &:focus {
-          border: none !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
-        
-        &:hover {
-          border: none !important;
-          box-shadow: none !important;
-        }
-        
-        &::placeholder {
-          color: $gray-400 !important;
-        }
-      }
-      
-      .p-datepicker-trigger {
-        // 🎯 CLAVE: Altura completa igual que el contenedor
-        height: 100% !important;
-        width: var(--enhanced-form-field-height) !important;
-        min-width: var(--enhanced-form-field-height) !important;
-        max-width: var(--enhanced-form-field-height) !important;
-        box-sizing: border-box !important;
-        background: transparent !important;
-        border: none !important;
-        border-radius: 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: $primary-color !important;
-        cursor: pointer !important;
-        flex-shrink: 0 !important;
-        
-        &:hover {
-          background: rgba($primary-color, 0.05) !important;
-          color: $primary-hover !important;
-          
-          .p-icon {
-            transform: scale(1.1) !important;
-          }
-        }
-        
-        .p-icon {
-          color: inherit !important;
-          transition: var(--enhanced-form-transition) !important;
-          font-size: 1.1rem !important;
-        }
-      }
-      
-      // 🎯 ESTADOS HOVER Y FOCUS - IGUALES A OTROS CAMPOS
-      &:hover:not(.p-calendar-disabled) {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &:focus-within,
-      &.p-calendar-opened {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        
-        .p-datepicker-trigger {
-          background: rgba($primary-color, 0.1) !important;
-          color: $primary-hover !important;
-          
-          .p-icon {
-            transform: rotate(180deg) !important;
-          }
-        }
-      }
-      
-      // 🎯 ESTADOS DE ERROR - IGUALES A OTROS CAMPOS
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        
-        &:focus-within {
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-      
-      // 🎯 ESTADO DISABLED - IGUAL A OTROS CAMPOS
-      &.p-calendar-disabled {
-        background: $gray-100 !important;
-        border-color: $gray-200 !important;
-        opacity: 0.6 !important;
-        cursor: not-allowed !important;
-        
-        .p-inputtext {
-          color: $gray-400 !important;
-          cursor: not-allowed !important;
-        }
-        
-        .p-datepicker-trigger {
-          color: $gray-400 !important;
-          cursor: not-allowed !important;
-        }
-      }
-    }
-    
-    // ✅ DROPDOWN STYLING
-    :deep(.p-dropdown) {
-      height: var(--enhanced-form-field-height) !important;
-      min-height: var(--enhanced-form-field-height) !important;
-      background: white !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      
-      .p-dropdown-label {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        padding: 0 1rem !important;
-        line-height: normal !important;
-        display: flex !important;
-        align-items: center !important;
-        font-size: var(--enhanced-form-font-size) !important;
-        color: $gray-700 !important;
-        background: transparent !important;
-        
-        &.p-placeholder {
-          color: $gray-400 !important;
-        }
-      }
-      
-      .p-dropdown-trigger {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border: none !important;
-        border-left: 1px solid $gray-200 !important;
-        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        
-        &:hover {
-          background: $gray-50 !important;
-          
-          .p-icon {
-            color: $primary-hover !important;
-            transform: scale(1.1) !important;
-          }
-        }
-        
-        .p-icon {
-          color: $primary-color !important;
-          transition: var(--enhanced-form-transition) !important;
-        }
-      }
-      
-      }
-      
-      &:not(.p-disabled):hover {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &:not(.p-disabled).p-focus {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-      }
-      
-      // Estados de validación
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        
-        &:focus,
-        &:focus-within {
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-    }
-    
-    // ✅ MULTISELECT STYLING CON CLEAR BUTTON HOMOLOGADO
-    :deep(.p-multiselect) {
-      min-height: var(--enhanced-form-field-height) !important;
-      background: white !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      
-      .p-multiselect-label-container {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        padding: 0.375rem 0.625rem !important;
-        padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important; // Espacio para clear + trigger
-        display: flex !important;
-        align-items: center !important;
-        flex-wrap: wrap !important;
-        gap: 0.25rem !important;
-      }
-      
-      .p-multiselect-trigger {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border: none !important;
-        border-left: 1px solid $gray-200 !important;
-        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        
-        &:hover {
-          background: $gray-50 !important;
-          
-          .p-icon {
-            color: $primary-hover !important;
-            transform: scale(1.1) !important;
-          }
-        }
-        
-        .p-icon {
-          color: $primary-color !important;
-          transition: var(--enhanced-form-transition) !important;
-        }
-      }
-      
-      // ✅ MULTISELECT CLEAR BUTTON - HOMOLOGADO CON DATEFIELD
-      .p-multiselect-clear-icon {
-        position: absolute !important;
-        top: 50% !important;
-        right: calc(var(--enhanced-form-field-height) + 8px) !important;
-        transform: translateY(-50%) !important;
-        width: 1.25rem !important; // ✅ MISMO TAMAÑO QUE DATEFIELD
-        height: 1.25rem !important;
-        color: $gray-500 !important; // ✅ MISMO COLOR INICIAL
-        cursor: pointer !important;
-        border-radius: 50% !important; // ✅ MISMO BORDER RADIUS
-        transition: var(--enhanced-form-transition) !important; // ✅ MISMA TRANSICIÓN
-        z-index: 2 !important; // ✅ MISMO Z-INDEX
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: transparent !important; // ✅ MISMO BACKGROUND
-        border: none !important;
-        padding: 0 !important; // ✅ ELIMINAR PADDING EXTRA
-        
-        &:hover {
-          color: $error-color !important; // ✅ MISMO COLOR HOVER
-          background: rgba($error-color, 0.1) !important; // ✅ MISMO BACKGROUND HOVER
-          transform: translateY(-50%) scale(1.1) !important; // ✅ MISMO EFECTO SCALE
-        }
-        
-        .p-icon {
-          font-size: 1rem !important; // ✅ AUMENTADO para mejor proporción
-          color: inherit !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-      }
-    }
-    
-    // ✅ PANELS STYLING (Dropdown y MultiSelect)
-    :deep(.p-dropdown-panel),
-    :deep(.p-multiselect-panel) {
-      border-radius: var(--enhanced-form-border-radius) !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      box-shadow: var(--enhanced-form-shadow-lg) !important;
-      margin-top: 0.125rem !important;
-      background: white !important;
-      z-index: var(--enhanced-form-dropdown-z) !important;
-    }
-    
-    :deep(.p-dropdown-items),
-    :deep(.p-multiselect-items) {
-      padding: 0.5rem 0 !important;
-    }
-    
-    :deep(.p-dropdown-item),
-    :deep(.p-multiselect-item) {
-      padding: 0.625rem 1rem !important;
-      transition: var(--enhanced-form-transition-fast) !important;
-      color: $gray-700 !important;
-      font-size: var(--enhanced-form-font-size) !important;
-      border-radius: 0 !important;
-      margin: 0.125rem 0.5rem !important;
-      
-      &:hover {
-        background: $gray-100 !important;
-        color: $gray-900 !important;
-        transform: translateX(2px) !important;
-      }
-      
-      &.p-highlight {
-        background: $primary-color !important;
-        color: white !important;
-        font-weight: 500 !important;
-      }
-    }
-    
-    :deep(.p-dropdown-empty-message),
-    :deep(.p-multiselect-empty-message) {
-      padding: 1.5rem !important;
-      text-align: center !important;
-      color: $gray-500 !important;
-      font-style: italic !important;
-      font-size: var(--enhanced-form-font-size) !important;
-    }
-    
-    // ✅ DROPDOWN PANEL (LISTA DE OPCIONES) - ESPECÍFICO PARA LOCAL SELECT
-    :deep(.p-dropdown-panel) {
-      // ✅ FILTRO EN DROPDOWN (si hay muchas opciones)
-      .p-dropdown-filter-container {
-        padding: 0.5rem !important;
-        border-bottom: 1px solid $gray-200 !important;
-        
-        .p-dropdown-filter {
-          width: 100% !important;
-          padding: 0.5rem !important;
-          border: 1px solid $gray-200 !important;
-          border-radius: var(--enhanced-form-border-radius-small) !important;
-          font-size: 0.875rem !important;
-          
-          &:focus {
-            border-color: $primary-color !important;
-            box-shadow: 0 0 0 1px $primary-color !important;
-            outline: none !important;
-          }
-        }
-      }
-    }
-    
-    :deep(.p-datepicker) {
-      border-radius: var(--enhanced-form-border-radius) !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      box-shadow: var(--enhanced-form-shadow-lg) !important;
-      margin-top: 0.125rem !important;
-      background: white !important;
-      overflow: hidden !important;
-      z-index: var(--enhanced-form-dropdown-z) !important;
-      
-      .p-datepicker-header {
-        background: $gray-50 !important;
-        border-bottom: 1px solid $gray-200 !important;
-        padding: 1rem !important;
-        
-        .p-datepicker-title {
-          color: $gray-800 !important;
-          font-weight: 600 !important;
-          font-size: var(--enhanced-form-font-size) !important;
-        }
-        
-        .p-datepicker-prev,
-        .p-datepicker-next {
-          color: $gray-600 !important;
-          width: 32px !important;
-          height: 32px !important;
-          border-radius: var(--enhanced-form-border-radius-small) !important;
-          transition: var(--enhanced-form-transition) !important;
-          
-          &:hover {
-            background: $gray-100 !important;
-            color: $gray-800 !important;
-          }
-        }
-      }
-      
-      .p-datepicker-calendar {
-        .p-datepicker-weekheader {
-          background: $gray-50 !important;
-          
-          th {
-            color: $gray-600 !important;
-            font-weight: 600 !important;
-            font-size: var(--enhanced-form-chip-font-size) !important;
-            padding: 0.75rem 0.5rem !important;
-          }
-        }
-        
-        td {
-          padding: 2px !important;
-          
-          .p-datepicker-day {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: var(--enhanced-form-border-radius-small) !important;
-            transition: var(--enhanced-form-transition) !important;
-            color: $gray-700 !important;
-            font-weight: 500 !important;
-            font-size: var(--enhanced-form-chip-font-size) !important;
-            
-            &:hover {
-              background: $primary-light !important;
-              color: $primary-color !important;
-              transform: scale(1.05) !important;
-            }
-            
-            &.p-datepicker-day-selected {
-              background: $primary-color !important;
-              color: white !important;
-              font-weight: 700 !important;
-              box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
-            }
-            
-            &.p-datepicker-day-other-month {
-              color: $gray-400 !important;
-            }
-            
-            &.p-datepicker-day-today {
-              background: $warning-light !important;
-              color: $warning-color !important;
-              font-weight: 700 !important;
-              
-              &:hover {
-                background: $warning-color !important;
-                color: white !important;
-              }
-            }
-          }
-        }
-      }
-      
-      .p-datepicker-buttonbar {
-        background: $gray-50 !important;
-        border-top: 1px solid $gray-200 !important;
-        padding: 1rem !important;
-        
-        .p-button {
-          height: 32px !important;
-          padding: 0 1rem !important;
-          font-size: var(--enhanced-form-chip-font-size) !important;
-          border-radius: var(--enhanced-form-border-radius-small) !important;
-          font-weight: 500 !important;
-        }
-      }
-    }
-
-    :deep(.form-field),
-    :deep(.enhanced-form__field),
-    :deep(.field-container) {
-      width: 100% !important;
-      max-width: none !important;
-      box-sizing: border-box !important;
-    }
-  
-    :deep(.date-field__wrapper) {
-      width: 100% !important;
-      max-width: none !important;
-      display: block !important; // O flex si es necesario
-      box-sizing: border-box !important;
-      position: relative !important;
-
-      // Botón clear del wrapper DateField
-      .date-field__clear-quick {
-        position: absolute !important;
-        top: 50% !important;
-        right: calc(var(--enhanced-form-field-height) + 8px) !important;
-        transform: translateY(-50%) !important;
-        width: 1.25rem !important;
-        height: 1.25rem !important;
-        border: none !important;
-        background: transparent !important;
-        color: $gray-500 !important;
-        cursor: pointer !important;
-        border-radius: 50% !important;
-        transition: var(--enhanced-form-transition) !important;
-        z-index: 3 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        
-        &:hover {
-          color: $error-color !important;
-          background: rgba($error-color, 0.1) !important;
-          transform: translateY(-50%) scale(1.1) !important;
-        }
-        
-        .pi {
-          font-size: 1rem !important; // ✅ HOMOLOGADO
-        }
-      }
-    }
-
-    :deep(.grid) {
-      margin: 0 !important;
-      row-gap: 1.5rem !important; // Aumentado para mejor respiración visual
-    }
-
-    :deep(.col-12) {
-      margin-bottom: 0 !important; // Usar solo row-gap del grid
-      padding: 0 !important;
-    }
-
-    :deep(.form-field__label) {
-      font-weight: 600 !important;
-      color: $gray-800 !important;
-      margin-bottom: 0.75rem !important;
-      font-size: 0.9rem !important;
-      letter-spacing: 0.02em !important;
-      line-height: 1.4 !important;
-    }
-    
-    :deep(.form-field--required .form-field__label::after) {
-      content: ' *' !important;
-      color: $error-color !important;
-      font-weight: bold !important;
-      margin-left: 0.125rem !important;
-    }
-
-    :deep(.p-dropdown:hover:not(.p-disabled)),
-    :deep(.p-multiselect:hover:not(.p-disabled)),
-    :deep(.p-calendar:hover:not(.p-calendar-disabled)) {
-      border-color: $gray-300 !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    :deep(.p-dropdown:focus-within),
-    :deep(.p-multiselect:focus-within),
-    :deep(.p-calendar:focus-within) {
-      transform: translateY(-1px) !important;
-      box-shadow: var(--enhanced-form-focus-shadow), 0 4px 12px rgba(59, 130, 246, 0.15) !important;
-    }
-
-    :deep(.p-multiselect-token) {
-      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
-      border: 1px solid rgba($primary-color, 0.2) !important;
-      color: $primary-color !important;
-      border-radius: 1rem !important;
-      padding: 0.25rem 0.75rem !important;
-      font-size: 0.8rem !important;
-      font-weight: 500 !important;
-      height: auto !important;
-      min-height: 1.5rem !important;
-      animation: chip-appear 0.2s ease-out !important;
-      
-      .p-multiselect-token-label {
-        color: inherit !important;
-        font-weight: inherit !important;
-      }
-      
-      .p-multiselect-token-icon {
-        margin-left: 0.5rem !important;
-        color: $primary-color !important;
-        font-size: 0.7rem !important;
-        transition: all 0.2s ease !important;
-        border-radius: 50% !important;
-        width: 1rem !important;
-        height: 1rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        
-        &:hover {
-          color: white !important;
-          background: $error-color !important;
-          transform: scale(1.1) !important;
-        }
-      }
-    }
-
-    :deep(.p-dropdown.p-inputwrapper-filled),
-    :deep(.p-multiselect.p-inputwrapper-filled),
-    :deep(.p-calendar.p-inputwrapper-filled) {
-      position: relative;
-      
-      &::after {
-        content: '' !important;
-        position: absolute !important;
-        top: 0 !important;
-        right: 0 !important;
-        width: 3px !important;
-        height: 100% !important;
-        background: $success-color !important;
-        border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
-        z-index: 1 !important;
-      }
-    }
-    
-    :deep(.p-dropdown-label.p-placeholder),
-    :deep(.p-multiselect-label.p-placeholder),
-    :deep(.p-calendar .p-inputtext::placeholder) {
-      color: $gray-400 !important;
-      font-style: italic !important;
-    }
-    
-    :deep(.p-dropdown),
-    :deep(.p-multiselect),
-    :deep(.p-calendar),
-    :deep(.p-multiselect-token) {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-  
-    :deep(.form-field__input-container),
-    :deep(.form-field__input-wrapper) {
-      width: 100% !important;
-      max-width: none !important;
-      display: flex !important;
-      align-items: stretch !important;
-      box-sizing: border-box !important;
-    }
-  
-  
-  // Progress bar styling
-  :deep(.p-progressbar) {
-    height: 6px !important;
-    background: $gray-200 !important;
-    border-radius: $border-radius !important;
-    overflow: hidden !important;
-    
-    .p-progressbar-value {
-      background: linear-gradient(90deg, $primary-color, $success-color) !important;
-      border-radius: $border-radius !important;
-      transition: width 0.3s ease !important;
-    }
-  }
-  
-  // ===============================
-  // RESPONSIVE DESIGN (ENHANCED)
+  // RESPONSIVE DESIGN
   // ===============================
   
   @media (max-width: $breakpoint-lg) {
-    .report-viewer {
-      padding: $spacing-md;
+    &__main {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+    
+    &__header {
+      padding: $spacing-lg;
       
-      // ✅ LAYOUT PRINCIPAL - De tu código existente
-      &__main {
-        grid-template-columns: 1fr;
-        gap: $spacing-lg;
-      }
-      
-      &__header {
-        padding: $spacing-lg;
-        
-        &-content {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: $spacing-md;
-        }
-      }
-      
-      &__format-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      &__quick-actions-buttons {
+      &-content {
         flex-direction: column;
+        align-items: flex-start;
+        gap: $spacing-md;
+      }
+    }
+    
+    &__format-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    &__quick-actions-buttons {
+      flex-direction: column;
+    }
+    
+    --enhanced-form-field-height: 3rem;
+    
+    &__generate-btn {
+      height: 3rem !important;
+      min-height: 3rem !important;
+    }
+    
+    &__parameters-content {
+      :deep(.grid) {
+        row-gap: 1.75rem !important;
       }
       
-      // ✅ ALTURAS DE CAMPO - Combinando ambos enfoques
-      // Variable global para tablet
-      --enhanced-form-field-height: 3rem; // Aumentado para tablet
-      
-      &__generate-btn {
-        height: 3rem !important; // Usar la nueva variable
-        min-height: 3rem !important;
-      }
-      
-      // ✅ MEJORAS DE CAMPOS - De las nuevas mejoras
-      &__parameters-content {
-        :deep(.grid) {
-          row-gap: 1.75rem !important;
-        }
-        
-        // Asegurar que todos los campos usen la nueva altura
-        :deep(.p-calendar),
-        :deep(.p-dropdown),
-        :deep(.p-multiselect) {
-          height: var(--enhanced-form-field-height) !important;
-          min-height: var(--enhanced-form-field-height) !important;
-        }
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
       }
     }
   }
   
   @media (max-width: $breakpoint-md) {
-    .report-viewer {
-      padding: $spacing-sm;
-      
-      // ✅ ESTADOS VACÍOS - De tu código existente
-      &__empty,
-      &__no-parameters {
-        padding: $spacing-xl $spacing-lg;
+    padding: $spacing-sm;
+    
+    &__empty,
+    &__no-parameters {
+      padding: $spacing-xl $spacing-lg;
+    }
+    
+    &__title {
+      font-size: $font-size-2xl;
+    }
+    
+    &__header {
+      &-icon {
+        width: 3rem;
+        height: 3rem;
+      }
+    }
+    
+    --enhanced-form-field-height: 3.25rem;
+    
+    &__generate-btn {
+      height: 3.25rem !important;
+      min-height: 3.25rem !important;
+      font-size: 1.1rem !important;
+    }
+    
+    // Mobile-specific component adjustments
+    .local-select-field {
+      .form-field__label {
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
       }
       
-      &__title {
-        font-size: $font-size-2xl;
+      .form-field__error-message {
+        font-size: 0.9rem !important;
+        gap: 0.5rem !important;
+      }
+    }
+    
+    .date-field__today-btn {
+      padding: 0.625rem 1rem !important;
+      font-size: 0.9rem !important;
+      
+      .pi {
+        font-size: 1rem !important;
+      }
+    }
+    
+    .date-field__selected-info {
+      font-size: 0.9rem !important;
+    }
+    
+    &__parameters-content {
+      :deep(.grid) {
+        row-gap: 2rem !important;
       }
       
-      &__header {
-        &-icon {
-          width: 3rem;
-          height: 3rem;
-        }
+      :deep(.form-field__label) {
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
       }
       
-      // ✅ ALTURAS MÓVIL - Más grandes para touch
-      --enhanced-form-field-height: 3.25rem; // Aún más grande para móvil
-      
-      &__generate-btn {
-        height: 3.25rem !important;
-        min-height: 3.25rem !important;
-        font-size: 1.1rem !important; // Texto más grande
-      }
-      
-      // ✅ MEJORAS MÓVIL - De las nuevas mejoras
-      &__parameters-content {
-        :deep(.grid) {
-          row-gap: 2rem !important; // Más espacio en móvil
-        }
+      :deep(.p-multiselect-token) {
+        padding: 0.375rem 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 2rem !important;
         
-        // Labels más grandes en móvil
-        :deep(.form-field__label) {
-          font-size: 1rem !important;
-          margin-bottom: 1rem !important;
+        .p-multiselect-token-icon {
+          width: 1.25rem !important;
+          height: 1.25rem !important;
+          margin-left: 0.75rem !important;
         }
+      }
+      
+      :deep(.p-dropdown-clear-icon),
+      :deep(.p-calendar-clear-icon) {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        right: calc(var(--enhanced-form-field-height) + 10px) !important;
         
-        // LOCAL SELECT - Labels más grandes en móvil
-        :deep(.local-select-field .field-label) {
-          font-size: 1rem !important;
-          margin-bottom: 1rem !important;
-        }
-        
-        // Chips más grandes en móvil
-        :deep(.p-multiselect-token) {
-          padding: 0.375rem 1rem !important;
+        .p-icon,
+        .pi {
           font-size: 0.9rem !important;
-          min-height: 2rem !important;
-          
-          .p-multiselect-token-icon {
-            width: 1.25rem !important;
-            height: 1.25rem !important;
-            margin-left: 0.75rem !important;
-          }
-        }
-        
-        // Clear buttons más grandes en móvil
-        :deep(.p-dropdown-clear-icon),
-        :deep(.date-field__clear-quick) {
-          width: 1.5rem !important;
-          height: 1.5rem !important;
-          right: calc(var(--enhanced-form-field-height) + 10px) !important;
-          
-          .p-icon,
-          .pi {
-            font-size: 0.9rem !important;
-          }
-        }
-        
-        // Asegurar que todos los campos usen la altura móvil
-        :deep(.p-calendar),
-        :deep(.p-dropdown),
-        :deep(.p-multiselect) {
-          height: var(--enhanced-form-field-height) !important;
-          min-height: var(--enhanced-form-field-height) !important;
         }
       }
       
-      // ✅ FORMATO GRID - Forzar columna única en móvil
-      &__format-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+      }
+      
+      // ✅ MOBILE: Ajustes para dropdown panels
+      :deep(.p-dropdown-panel),
+      :deep(.p-multiselect-panel) {
+        max-height: 40vh !important;
+        
+        .p-dropdown-items,
+        .p-multiselect-items {
+          max-height: none !important;
+        }
+      }
+      
+      :deep(.p-dropdown-item),
+      :deep(.p-multiselect-item) {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        
+        &:hover {
+          transform: none !important; // Disable transform on mobile
+        }
+      }
+    }
+    
+    &__format-grid {
+      grid-template-columns: 1fr !important;
+      gap: 1rem !important;
+    }
+  }
+  
+  // Extra small devices adjustments
+  @media (max-width: 480px) {
+    --enhanced-form-field-height: 3.5rem;
+    
+    &__parameters-content {
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+      }
+      
+      :deep(.p-dropdown-clear-icon),
+      :deep(.p-calendar-clear-icon) {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        right: calc(var(--enhanced-form-field-height) + 12px) !important;
       }
     }
   }
-
+}
 
 // ===============================
-// UTILITY CLASSES & ICONS (ENHANCED)
+// UTILITY CLASSES & ICONS
 // ===============================
 
-// Format icons with enhanced semantic colors
 .pi-file-pdf { 
   color: $error-color; 
 }
@@ -2127,10 +2134,13 @@ $panel-border: $gray-200;
   color: #0369a1; 
 }
 
-// Enhanced spinner animation
 .pi-spin { 
   animation: spin 1s linear infinite; 
 }
+
+// ===============================
+// KEYFRAME ANIMATIONS
+// ===============================
 
 @keyframes spin {
   from { 
@@ -2141,7 +2151,6 @@ $panel-border: $gray-200;
   }
 }
 
-// Fade in animation for panels
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -2153,38 +2162,19 @@ $panel-border: $gray-200;
   }
 }
 
-.report-viewer__parameters,
-.report-viewer__preview {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.report-viewer__generate-btn {
-  // Efecto de brillo al hover
-  position: relative !important;
-  overflow: hidden !important;
-  
-  &::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: -100% !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
-    transition: left 0.5s ease !important;
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) scaleY(0.95);
+    transform-origin: top;
   }
-  
-  &:hover:not(:disabled)::before {
-    left: 100% !important;
-  }
-  
-  // Efecto de pulsación
-  &:active {
-    transform: translateY(1px) !important;
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
   }
 }
 
-// Pulse animation para estados loading
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -2217,10 +2207,163 @@ $panel-border: $gray-200;
   }
 }
 
-// Aplicar animación sutil al hacer focus
+@keyframes fieldErrorShake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-2px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(2px); 
+  }
+}
+
+// ===============================
+// ANIMATION APPLICATIONS
+// ===============================
+
+.report-viewer__parameters,
+.report-viewer__preview {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.report-viewer__generate-btn {
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: left 0.5s ease !important;
+  }
+  
+  &:hover:not(:disabled)::before {
+    left: 100% !important;
+  }
+  
+  &:active {
+    transform: translateY(1px) !important;
+  }
+}
+
+// Enhanced form field focus animation
 .report-viewer__parameters-content {
   :deep(.form-field:focus-within) {
     animation: field-focus 0.3s ease-out !important;
   }
+  
+  // Error state animations
+  :deep(.p-invalid) {
+    animation: fieldErrorShake 0.5s ease-in-out !important;
+  }
 }
+
+// Panel animations
+:deep(.p-dropdown-panel),
+:deep(.p-multiselect-panel),
+:deep(.p-datepicker) {
+  animation: slideDown 0.2s ease-out !important;
 }
+
+// ===============================
+// ACCESSIBILITY ENHANCEMENTS
+// ===============================
+
+.report-viewer {
+  // Focus indicators
+  :deep(*:focus) {
+    outline: 2px solid rgba($primary-color, 0.5) !important;
+    outline-offset: 2px !important;
+  }
+  
+  // High contrast mode support
+  @media (prefers-contrast: high) {
+    --enhanced-form-border-width: 3px;
+    
+    :deep(.p-dropdown),
+    :deep(.p-calendar),
+    :deep(.p-multiselect) {
+      border-width: 3px !important;
+    }
+  }
+  
+  // Reduced motion support
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  // Print styles
+  @media print {
+    background: white !important;
+    color: black !important;
+    
+    &__parameters,
+    &__preview {
+      box-shadow: none !important;
+      border: 1px solid #000 !important;
+    }
+    
+    &__generate-btn,
+    &__quick-actions {
+      display: none !important;
+    }
+  }
+}
+
+// ===============================
+// DARK MODE SUPPORT (OPTIONAL)
+// ===============================
+
+@media (prefers-color-scheme: dark) {
+  .report-viewer {
+    // This section can be expanded for dark mode support
+    // Currently maintaining light theme for professional appearance
+    
+    // Future dark mode variables would go here:
+    // --surface-ground: #1f2937;
+    // --surface-section: #374151;
+    // --text-color: #f9fafb;
+    // etc.
+  }
+}
+
+// ===============================
+// PERFORMANCE OPTIMIZATIONS
+// ===============================
+
+.report-viewer {
+  // Hardware acceleration for smooth animations
+  &__parameters,
+  &__preview,
+  &__generate-btn {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  // Optimize scrolling performance
+  &__parameters-content,
+  &__preview-content {
+    contain: layout style;
+  }
+  
+  // Optimize dropdown rendering
+  :deep(.p-dropdown-panel),
+  :deep(.p-multiselect-panel),
+  :deep(.p-datepicker) {
+    contain: layout style paint;
+  }
+}
+
+/* ===================================================================
+   END OF REPORT VIEWER STYLES
+   =================================================================== */

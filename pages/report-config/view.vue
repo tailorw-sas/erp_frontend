@@ -154,14 +154,6 @@ const REPORT_FORMATS: ReportFormat[] = [
   },
 ]
 
-const FORM_VALIDATION_RULES = {
-  reportCode: z.string().min(1, 'Report code is required'),
-  formatType: z.object({
-    id: z.string(),
-    name: z.string()
-  })
-}
-
 // ========== REACTIVE STATE ==========
 const route = useRoute()
 const toast = useToast()
@@ -467,7 +459,7 @@ function useReportParameters() {
 
 function useFieldBuilder() {
   // ✅ IMPROVED: Better option normalization with support for defaultValue
-  function normalizeOptions(options: any[], defaultValue?: any): Array<{ name: string, value: any, id?: string, description?: string, defaultValue?: boolean }> {
+  function normalizeOptions(options: any[], _defaultValue?: any): any[] {
     if (!options || !Array.isArray(options) || options.length === 0) {
       return []
     }
@@ -476,6 +468,7 @@ function useFieldBuilder() {
     if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
       return options.map(opt => ({
         name: opt.name,
+        label: opt.name,
         value: opt.id,
         id: opt.id,
         description: opt.description || opt.slug,
@@ -487,6 +480,7 @@ function useFieldBuilder() {
     if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
       return options.map(opt => ({
         name: opt.name,
+        label: opt.name,
         value: opt.value,
         id: opt.id || opt.value,
         description: opt.description,
@@ -498,6 +492,7 @@ function useFieldBuilder() {
     if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
       return options.map(opt => ({
         name: opt.label,
+        label: opt.label,
         value: opt.value,
         id: opt.id || opt.value,
         description: opt.description,
@@ -509,6 +504,7 @@ function useFieldBuilder() {
     if (options.every(opt => typeof opt === 'string')) {
       return options.map(opt => ({
         name: opt,
+        label: opt,
         value: opt,
         id: opt,
         defaultValue: false
@@ -517,18 +513,23 @@ function useFieldBuilder() {
 
     // Si son objetos mixtos
     if (options.every(opt => opt && typeof opt === 'object')) {
-      return options.map((opt, index) => ({
-        name: opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`,
-        value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
-        id: (opt.id || opt.value || index).toString(),
-        description: opt.description || opt.slug,
-        defaultValue: opt.defaultValue === true
-      }))
+      return options.map((opt, index) => {
+        const displayName = opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`
+        return {
+          name: displayName,
+          label: displayName,
+          value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
+          id: (opt.id || opt.value || index).toString(),
+          description: opt.description || opt.slug,
+          defaultValue: opt.defaultValue === true
+        }
+      })
     }
 
     // Fallback
     return options.map((opt, index) => ({
       name: String(opt),
+      label: String(opt),
       value: opt,
       id: String(index),
       defaultValue: false
@@ -639,7 +640,7 @@ function useFieldBuilder() {
         }
 
         return {
-          ...FieldBuilder.select(param.paramName, param.label, options),
+          ...FieldBuilder.select(param.paramName, param.label, options.map(opt => ({ ...opt, label: opt.name }))),
           ...baseProps,
           type: 'localselect',
           dataType: 'localselect',
@@ -702,7 +703,6 @@ const {
 
 const {
   createFieldFromParameter,
-  normalizeOptions,
   mapBackendParameter
 } = useFieldBuilder()
 
@@ -727,6 +727,10 @@ const canGenerate = computed(() => {
 
 const progressPercentage = computed(() => {
   return Math.round(reportProgress.progress || 0)
+})
+
+const isDevelopment = computed(() => {
+  return import.meta.env.DEV
 })
 
 // ========== METHODS ==========
@@ -1221,6 +1225,8 @@ const isShareSupported = computed(() => {
                   <LocalSelectField
                     :field="{
                       name: fieldItem.field,
+                      field: fieldItem.field,
+                      dataType: 'localselect',
                       label: fieldItem.label,
                       type: fieldItem.type,
                       placeholder: fieldItem.placeholder || `Select ${fieldItem.label}`,
@@ -1231,9 +1237,9 @@ const isShareSupported = computed(() => {
                       options: fieldItem.options || [],
                     }"
                     :value="data[fieldItem.field]"
-                    :error="errors && errors.length > 0 ? errors.map(e => ({ message: e })) : []"
+                    :error="errors && errors.length > 0 ? errors.map((e: string) => ({ message: e })) : []"
                     :disabled="isGenerating"
-                    :config="{ showDebugInfo: process.env.NODE_ENV === 'development' }"
+                    :config="{ showDebugInfo: isDevelopment }"
                     @update:value="onUpdate(fieldItem.field, $event)"
                   />
                 </div>

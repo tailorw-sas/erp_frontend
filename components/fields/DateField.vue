@@ -1,11 +1,10 @@
-<!-- components/fields/DateField.vue -->
+<!-- DateField.vue - CLEAN VERSION SIN ESTILOS -->
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import Calendar from 'primevue/calendar'
 import type { FormFieldProps, ValidationError } from '../../types/form'
 import BaseField from './BaseField.vue'
 
-// ========== INTERFACES ==========
 interface CalendarRef {
   $el?: HTMLElement
   show?: () => void
@@ -14,8 +13,20 @@ interface CalendarRef {
 }
 
 interface DateFieldProps extends Omit<FormFieldProps<Date | string | null>, 'value'> {
-  // ✅ FIXED: Proper prop extension
   value?: Date | string | null
+  readonly?: boolean
+  required?: boolean
+  name?: string
+  id?: string
+  placeholder?: string
+  helpText?: string
+  label?: string
+  description?: string
+  size?: string
+  variant?: string
+  class?: string
+  config?: any
+  onUpdate?: (value: Date | string | null) => void
   dateFormat?: string
   timeOnly?: boolean
   showTime?: boolean
@@ -49,15 +60,19 @@ interface DateFieldProps extends Omit<FormFieldProps<Date | string | null>, 'val
   keepInvalid?: boolean
   mask?: string
   slotChar?: string
-  // ✅ NEW: Enhanced UX props
   autoFocus?: boolean
   clearable?: boolean
   showToday?: boolean
   highlightWeekends?: boolean
 }
 
-// ========== PROPS ==========
 const props = withDefaults(defineProps<DateFieldProps>(), {
+  readonly: false,
+  required: false,
+  clearable: true,
+  autoFocus: false,
+  showToday: false,
+  highlightWeekends: false,
   dateFormat: 'yy-mm-dd',
   hourFormat: '24',
   showIcon: true,
@@ -76,16 +91,11 @@ const props = withDefaults(defineProps<DateFieldProps>(), {
   monthNavigator: false,
   hideOnDateTimeSelect: true,
   keepInvalid: false,
-  slotChar: '_',
-  autoFocus: false,
-  clearable: true,
-  showToday: false,
-  highlightWeekends: false
+  slotChar: '_'
 })
 
-// ========== EMITS ==========
 const emit = defineEmits<{
-  'update:value': [value: Date | string | null]
+  'update:modelValue': [value: Date | string | null]
   'blur': []
   'focus': []
   'clear': []
@@ -98,11 +108,10 @@ const emit = defineEmits<{
   'hide': []
 }>()
 
-// ========== REFS ==========
 const calendarRef = ref<CalendarRef | null>(null)
 const isMounted = ref(false)
+const internalValue = ref<Date | null>(null)
 
-// ========== COMPUTED PROPERTIES ==========
 const isDateTime = computed(() =>
   props.field?.type === 'datetime' || props.showTime
 )
@@ -111,39 +120,56 @@ const isTimeOnly = computed(() =>
   props.field?.type === 'time' || props.timeOnly
 )
 
-// ✅ IMPROVED: Simplified calendar value handling
+watch(() => props.value, (newValue) => {
+  if (!newValue) {
+    internalValue.value = null
+    return
+  }
+
+  if (typeof newValue === 'string') {
+    const date = new Date(newValue)
+    internalValue.value = Number.isNaN(date.getTime()) ? null : date
+  }
+  else if (newValue instanceof Date) {
+    internalValue.value = newValue
+  }
+  else {
+    internalValue.value = null
+  }
+}, { immediate: true })
+
 const calendarValue = computed({
-  get: () => {
-    if (!props.value) { return null }
-
-    // Handle different input formats
-    if (typeof props.value === 'string') {
-      const date = new Date(props.value)
-      return isNaN(date.getTime()) ? null : date
-    }
-
-    return props.value instanceof Date ? props.value : null
-  },
+  get: () => internalValue.value,
   set: (newValue: Date | null) => {
+    internalValue.value = newValue
     handleValueUpdate(newValue)
   }
 })
 
-// ✅ IMPROVED: Better responsive handling
 const isMobile = computed(() => {
   if (typeof window === 'undefined') { return false }
   return window.innerWidth <= 768
 })
 
+const isDisabled = computed(() =>
+  props.disabled || props.field?.ui?.readonly || props.readonly
+)
+
+const showClearButton = computed(() => {
+  if (!props.clearable || isDisabled.value) { return false }
+
+  return internalValue.value !== null
+    && internalValue.value !== undefined
+    && !isDisabled.value
+})
+
 const calendarClasses = computed(() => {
   const classes = ['date-field__calendar']
 
-  // Error state
   if (props.error && props.error.length > 0) {
     classes.push('p-invalid')
   }
 
-  // Layout variants
   if (props.inline) {
     classes.push('date-field__calendar--inline')
   }
@@ -152,7 +178,6 @@ const calendarClasses = computed(() => {
     classes.push('date-field__calendar--mobile')
   }
 
-  // Field UI classes
   if (props.field?.ui?.className) {
     const uiClasses = Array.isArray(props.field.ui.className)
       ? props.field.ui.className
@@ -166,22 +191,16 @@ const calendarClasses = computed(() => {
 const wrapperClasses = computed(() => {
   const classes = ['date-field__wrapper']
 
-  // Error states
   if (props.error && props.error.length > 0) {
     classes.push('date-field__wrapper--error', 'p-invalid')
   }
 
-  // Loading state
   if (props.loading) {
     classes.push('date-field__wrapper--loading')
   }
 
   return classes
 })
-
-const isDisabled = computed(() =>
-  props.disabled || props.field?.ui?.readonly
-)
 
 const placeholder = computed(() => {
   if (props.field?.ui?.placeholder) {
@@ -208,15 +227,8 @@ const computedDateFormat = computed(() => {
   return props.dateFormat
 })
 
-const hasValue = computed(() => calendarValue.value !== null)
-
-const showClearButton = computed(() =>
-  props.clearable && hasValue.value && !isDisabled.value
-)
-
 const fieldStyle = computed(() => props.field?.ui?.style || {})
 
-// ✅ NEW: Enhanced responsive options
 const responsiveCalendarOptions = computed(() => {
   if (props.responsiveOptions) { return props.responsiveOptions }
 
@@ -226,16 +238,50 @@ const responsiveCalendarOptions = computed(() => {
   ]
 })
 
-// ========== METHODS ==========
-function handleValueUpdate(value: Date | null) {
-  let processedValue: Date | string | null = value
+const baseFieldProps = computed(() => ({
+  field: props.field,
+  value: props.value ?? null,
+  error: props.error,
+  loading: props.loading,
+  disabled: props.disabled,
+  readonly: props.readonly,
+  required: props.required,
+  name: props.name,
+  id: props.id,
+  placeholder: props.placeholder,
+  helpText: props.helpText,
+  label: props.label,
+  description: props.description,
+  size: props.size,
+  variant: props.variant,
+  class: props.class,
+  config: props.config,
+  style: fieldStyle.value,
+  onUpdate: props.onUpdate || handleValueUpdate
+}))
 
-  // Convert to string format if needed for form compatibility
-  if (value instanceof Date && props.field?.type === 'date' && !isDateTime.value) {
-    processedValue = value.toISOString().split('T')[0]
+function handleValueUpdate(value: Date | null) {
+  let processedValue: Date | string | null = null
+
+  if (value instanceof Date) {
+    if (props.field?.type === 'date' && !isDateTime.value) {
+      processedValue = value.toISOString().split('T')[0]
+    }
+    else {
+      processedValue = value
+    }
+  }
+  else {
+    processedValue = null
   }
 
-  emit('update:value', processedValue)
+  if (props.onUpdate) {
+    props.onUpdate(processedValue)
+  }
+
+  if (processedValue !== props.value) {
+    emit('update:modelValue', processedValue)
+  }
 }
 
 function handleBlur() {
@@ -247,7 +293,16 @@ function handleFocus() {
 }
 
 function handleClear() {
-  emit('update:value', null)
+  const oldValue = internalValue.value
+  internalValue.value = null
+
+  if (oldValue !== null) {
+    emit('update:modelValue', null)
+    if (props.onUpdate) {
+      props.onUpdate(null)
+    }
+  }
+
   emit('clear')
   emit('clearClick')
 }
@@ -258,6 +313,7 @@ function handleDateSelect(value: Date) {
 
 function handleTodayClick() {
   const today = new Date()
+  internalValue.value = today
   handleValueUpdate(today)
   emit('todayClick', today)
 }
@@ -278,7 +334,6 @@ function handleHide() {
   emit('hide')
 }
 
-// ========== UTILITY METHODS ==========
 function formatDisplayValue(date: Date | null): string {
   if (!date) { return '' }
 
@@ -312,12 +367,6 @@ function formatDisplayValue(date: Date | null): string {
   }
 }
 
-function getErrorMessages(): string[] {
-  if (!props.error || props.error.length === 0) { return [] }
-  return props.error.map((err: ValidationError) => err.message)
-}
-
-// ========== EXPOSED METHODS ==========
 async function focus() {
   await nextTick()
   if (calendarRef.value?.$el) {
@@ -350,14 +399,12 @@ function navigateToToday() {
   calendarRef.value?.navigateToDate?.(today)
 }
 
-// ========== WATCHERS ==========
 watch(() => props.autoFocus, (shouldFocus) => {
   if (shouldFocus && isMounted.value) {
     nextTick(() => focus())
   }
 }, { immediate: true })
 
-// ========== LIFECYCLE ==========
 watch(() => true, () => {
   isMounted.value = true
 }, { immediate: true })
@@ -370,27 +417,20 @@ defineExpose({
   getToday,
   navigateToToday,
   calendarRef,
-  formatDisplayValue,
-  getErrorMessages
+  formatDisplayValue
 })
 </script>
 
 <template>
-  <BaseField
-    v-bind="$props"
-    :style="fieldStyle"
-    @update:value="handleValueUpdate"
-    @blur="handleBlur"
-    @focus="handleFocus"
-    @clear="handleClear"
-  >
-    <template #input="{ fieldId, onBlur, onFocus }">
+  <BaseField v-bind="baseFieldProps">
+    <template #input="{ fieldId, onUpdate, onBlur, onFocus }">
       <div :class="wrapperClasses">
         <Calendar
           :id="fieldId"
           ref="calendarRef"
           v-model="calendarValue"
           :class="calendarClasses"
+          :style="fieldStyle"
           :date-format="computedDateFormat"
           :time-only="isTimeOnly"
           :show-time="isDateTime"
@@ -423,43 +463,30 @@ defineExpose({
           :slot-char="slotChar"
           :placeholder="placeholder"
           :disabled="isDisabled"
+          :show-clear="showClearButton"
           @blur="onBlur"
           @focus="onFocus"
           @date-select="handleDateSelect"
           @today-click="handleTodayClick"
-          @clear-click="handleClear"
+          @clear="handleClear"
           @month-change="handleMonthChange"
           @year-change="handleYearChange"
           @show="handleShow"
           @hide="handleHide"
         >
-          <!-- ✅ IMPROVED: Better header with conditional rendering -->
-          <template #header>
-            <slot name="header" :calendar-ref="calendarRef">
-              <div v-if="showButtonBar || showToday" class="date-field__header">
-                <button
-                  v-if="showToday"
-                  type="button"
-                  class="date-field__today-btn"
-                  @click="handleTodayClick"
-                >
-                  <i class="pi pi-calendar" />
-                  <span>Today</span>
-                </button>
-                <button
-                  v-if="showClearButton"
-                  type="button"
-                  class="date-field__clear-btn"
-                  @click="handleClear"
-                >
-                  <i class="pi pi-times" />
-                  <span>Clear</span>
-                </button>
-              </div>
-            </slot>
+          <template v-if="showToday && !inline" #header>
+            <div class="date-field__header">
+              <button
+                type="button"
+                class="date-field__today-btn"
+                @click="handleTodayClick"
+              >
+                <i class="pi pi-calendar" />
+                <span>Today</span>
+              </button>
+            </div>
           </template>
 
-          <!-- ✅ IMPROVED: Enhanced footer -->
           <template #footer>
             <slot name="footer" :value="calendarValue" :formatted-value="formatDisplayValue(calendarValue)">
               <div v-if="calendarValue" class="date-field__footer">
@@ -471,7 +498,6 @@ defineExpose({
             </slot>
           </template>
 
-          <!-- Custom date cell rendering -->
           <template #date="{ date }">
             <slot name="date" :date="date">
               <span
@@ -485,22 +511,9 @@ defineExpose({
             </slot>
           </template>
         </Calendar>
-
-        <!-- ✅ NEW: Quick actions for better UX -->
-        <div v-if="showClearButton && !inline" class="date-field__quick-actions">
-          <button
-            type="button"
-            class="date-field__clear-quick"
-            :disabled="isDisabled"
-            @click="handleClear"
-          >
-            <i class="pi pi-times" />
-          </button>
-        </div>
       </div>
     </template>
 
-    <!-- Pass through all slots -->
     <template #label="slotProps">
       <slot name="label" v-bind="slotProps" />
     </template>

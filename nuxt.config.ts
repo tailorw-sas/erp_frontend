@@ -42,7 +42,8 @@ export default defineNuxtConfig({
       },
       loadTableData: true,
       showSaveConfirm: false,
-      showDeleteConfirm: false
+      showDeleteConfirm: false,
+      useIndexedDbCache: true
     }
   },
 

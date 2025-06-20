@@ -20,7 +20,6 @@ import type {
   FormFieldEvent,
   FormSubmitEvent,
   FormValidationEvent,
-  UseFormOptions,
   ValidationError
 } from '../../types/form'
 import { globalFieldFactory } from '../fields/registry'

@@ -28,6 +28,7 @@
     "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
+    "next-auth": "4.22.1",
     "nuxt": "^3.11.2",
     "pinia": "^2.1.7",
     "primeflex": "^3.3.1",
@@ -47,13 +48,15 @@
     "@types/uuid": "^10.0.0",
     "@vueuse/nuxt": "^10.10.0",
     "eslint": "^8.57.0",
+    "eslint-import-resolver-node": "^0.3.9",
+    "eslint-plugin-import": "^2.31.0",
     "nuxt-primevue": "^3.0.0",
     "oxlint": "^0.2.15",
     "sass": "^1.77.2",
     "typescript": "^5.4.3",
     "vue-tsc": "^2.0.7"
   },
-  "peerDependencies": {
-    "next-auth": "^4.24.11"
+  "overrides": {
+    "next-auth": "4.22.1"
   }
 }

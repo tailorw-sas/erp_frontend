@@ -1,4 +1,3 @@
-<!-- CustomAutoCompleteComponent.vue -->
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import type {
@@ -170,18 +169,22 @@ async function performSearch(query: string): Promise<void> {
     Logger.warn('No apiConfig provided, cannot perform search')
     return
   }
-
   try {
     isLoading.value = true
     errorMessage.value = ''
 
     const filters = buildFilters(query)
+    Logger.info('Filters:', filters)
+    Logger.info('API Config:', props.apiConfig)
+
     const results = await loadDynamicData(
       query,
       props.apiConfig!.moduleApi,
       props.apiConfig!.uriApi,
       filters
     )
+
+    Logger.info('Results:', results)
 
     // Actualizar las sugerencias internas
     if (results && Array.isArray(results)) {
@@ -349,7 +352,9 @@ function getChipLabel(value: any): string {
 
 // Cargar datos iniciales al montar el componente (BASE ORIGINAL)
 onMounted(() => {
+  Logger.error('✅ Mounted with props:', { ...props })
   if (props.loadOnOpen && internalSuggestions.value.length === 0) {
+    Logger.error('🟡 loadInitialData triggered on mount')
     loadInitialData()
   }
 })
