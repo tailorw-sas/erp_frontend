@@ -3,7 +3,6 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
-import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
@@ -199,6 +198,7 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         printLog("Start readPaymentCacheAndSave process");
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
         List<PaymentImportCache> paymentImportCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
+
         if (Objects.nonNull(paymentImportCacheList) && !paymentImportCacheList.isEmpty()) {
             Map<Long, PaymentDetailDto> depositPaymentDetailMap = this.getPaymentDetailMap(paymentImportCacheList);
             List<PaymentDetailDto> paymentDetailDtoList = new ArrayList<>(depositPaymentDetailMap.values());
@@ -251,10 +251,10 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
 
             CreateAntiToIncomeFromPaymentRequest createAntiToIncomeFromPaymentRequest = new CreateAntiToIncomeFromPaymentRequest();
             createAntiToIncomeFromPaymentRequest.setCreateIncomeRequests(createAntiToIncomeRequestList);
-            CreateAntiToIncomeFromPaymentMessage msg = this.createIncomeHttpService.sendCreateIncomeRequest(createAntiToIncomeFromPaymentRequest);
+            CreateAntiToIncomeFromPaymentMessage incomeCreationResponse = this.createIncomeHttpService.sendCreateIncomeRequest(createAntiToIncomeFromPaymentRequest);
 
-            if(Objects.nonNull(msg) && Objects.nonNull(msg.getIncomes()) && !msg.getIncomes().isEmpty()){
-                List<ManageInvoiceDto> incomeList = new ArrayList<>(this.processNewIncomes(msg.getIncomes()));
+            if(Objects.nonNull(incomeCreationResponse) && Objects.nonNull(incomeCreationResponse.getIncomes()) && !incomeCreationResponse.getIncomes().isEmpty()){
+                List<ManageInvoiceDto> incomeList = this.processNewIncomes(incomeCreationResponse.getIncomes());
 
                 Map<UUID, ManageInvoiceDto> incomeMap = incomeList.stream().
                         collect(Collectors.toMap(ManageInvoiceDto::getId, manageInvoiceDto -> manageInvoiceDto));
@@ -281,9 +281,9 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                 List<ManageBookingDto> bookings = incomeList.stream().flatMap(invoiceDto -> invoiceDto.getBookings().stream()).toList();
                 List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(bookings, false);
                 this.replicateBookingBalanceService.replicateBooking(replicateBookingBalanceHelpers);
+            }else{
+                throw new RuntimeException("ERROR: incomeCreationResponse is null or empty. ImportProcessId: " + request.getImportProcessId());
             }
-        }else{
-            //BusinessRuleValidationException
         }
         printLog("End readPaymentCacheAndSave process");
     }
