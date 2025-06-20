@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.services.helpers;
 import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.application.excel.ReaderConfiguration;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
+import com.kynsof.share.core.domain.exception.BusinessRuleValidationException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
 import com.kynsof.share.core.domain.http.entity.BookingHttp;
@@ -12,15 +13,10 @@ import com.kynsof.share.core.domain.http.entity.income.adjustment.CreateAntiToIn
 import com.kynsof.share.core.domain.http.entity.income.attachment.CreateAntiToIncomeAttachmentRequest;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
 import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
-import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
-import com.kynsof.share.core.infrastructure.specifications.LogicalOperation;
-import com.kynsof.share.core.infrastructure.specifications.SearchOperation;
-import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.command.paymentImport.detail.PaymentImportDetailRequest;
-import com.kynsoft.finamer.payment.application.query.objectResponse.ManagePaymentTransactionTypeResponse;
 import com.kynsoft.finamer.payment.application.services.paymentDetail.apply.ReplicateBookingBalanceService;
 import com.kynsoft.finamer.payment.domain.core.applyPayment.ProcessApplyPaymentDetail;
 import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
@@ -29,7 +25,6 @@ import com.kynsoft.finamer.payment.domain.dto.helper.DetailAndIncomeHelper;
 import com.kynsoft.finamer.payment.domain.dto.helper.ReplicateBookingBalanceHelper;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceStatus;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.PaymentImportCache;
 import com.kynsoft.finamer.payment.domain.excel.bean.Row;
@@ -41,18 +36,12 @@ import com.kynsoft.finamer.payment.infrastructure.excel.event.createAttachment.C
 import com.kynsoft.finamer.payment.infrastructure.excel.validators.anti.PaymentAntiValidatorFactory;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentDetail;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportCacheRepository;
-import com.kynsoft.finamer.payment.infrastructure.repository.redis.PaymentImportErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.repository.redis.error.PaymentImportAntiErrorRepository;
 import com.kynsoft.finamer.payment.infrastructure.services.http.CreateIncomeHttpService;
-import com.kynsoft.finamer.payment.infrastructure.services.kafka.producer.updateBooking.ProducerUpdateBookingService;
 import com.kynsoft.finamer.payment.infrastructure.utils.PaymentUploadAttachmentUtil;
-import io.jsonwebtoken.lang.Assert;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -77,7 +66,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     private final IPaymentDetailService paymentDetailService;
     private final IManagePaymentTransactionTypeService transactionTypeService;
     private final PaymentImportAntiErrorRepository antiErrorRepository;
-    private final PaymentImportErrorRepository paymentImportErrorRepository;
 
     private final IManageInvoiceStatusService statusService;
     private final IManageInvoiceTypeService invoiceTypeService;
@@ -110,7 +98,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                                                     IPaymentDetailService paymentDetailService,
                                                     IManagePaymentTransactionTypeService transactionTypeService,
                                                     PaymentImportAntiErrorRepository antiErrorRepository,
-                                                    PaymentImportErrorRepository paymentImportErrorRepository,
                                                     IManageInvoiceStatusService statusService,
                                                     IManageInvoiceTypeService invoiceTypeService,
                                                     IManageEmployeeService manageEmployeeService,
@@ -130,7 +117,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         this.paymentDetailService = paymentDetailService;
         this.transactionTypeService = transactionTypeService;
         this.antiErrorRepository = antiErrorRepository;
-        this.paymentImportErrorRepository = paymentImportErrorRepository;
         this.statusService = statusService;
         this.invoiceTypeService = invoiceTypeService;
         this.manageEmployeeService = manageEmployeeService;
@@ -212,9 +198,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
     public void readPaymentCacheAndSave(Object rawRequest) {
         printLog("Start readPaymentCacheAndSave process");
         PaymentImportDetailRequest request = (PaymentImportDetailRequest) rawRequest;
-        if (!paymentImportErrorRepository.existsPaymentImportErrorByImportProcessId(request.getImportProcessId())) {
-
-            List<PaymentImportCache> paymentImportCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
+        List<PaymentImportCache> paymentImportCacheList = paymentImportCacheRepository.findAllByImportProcessId(request.getImportProcessId());
+        if (Objects.nonNull(paymentImportCacheList) && !paymentImportCacheList.isEmpty()) {
             Map<Long, PaymentDetailDto> depositPaymentDetailMap = this.getPaymentDetailMap(paymentImportCacheList);
             List<PaymentDetailDto> paymentDetailDtoList = new ArrayList<>(depositPaymentDetailMap.values());
 
@@ -297,6 +282,8 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
                 List<ReplicateBookingBalanceHelper> replicateBookingBalanceHelpers = ReplicateBookingBalanceHelper.from(bookings, false);
                 this.replicateBookingBalanceService.replicateBooking(replicateBookingBalanceHelpers);
             }
+        }else{
+            //BusinessRuleValidationException
         }
         printLog("End readPaymentCacheAndSave process");
     }
@@ -518,11 +505,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
         }
     }
 
-
-    private CreateAntiToIncomeAttachmentRequest attachment(String attachment, ManageEmployeeDto employeeDto) {
-        return new CreateAntiToIncomeAttachmentRequest(attachment, "" + employeeDto.getFirstName() + " " + employeeDto.getLastName(), employeeDto.getId());
-    }
-
     @Override
     public PaginatedResponse getPaymentImportErrors(String importProcessId, Pageable pageable) {
         Page<PaymentAntiRowError> page = antiErrorRepository.findAllByImportProcessId(importProcessId, pageable);
@@ -547,29 +529,6 @@ public class PaymentImportAntiIncomeHelperServiceImpl extends AbstractPaymentImp
             return paymentDetailDto.getPaymentId();
         }).orElse(null);
 
-    }
-
-    private UUID getDefaultApplyDepositTransactionTypeId() {
-        FilterCriteria markAsDefault = new FilterCriteria();
-        markAsDefault.setKey("defaults");
-        markAsDefault.setValue(true);
-        markAsDefault.setOperator(SearchOperation.EQUALS);
-        markAsDefault.setLogicalOperation(LogicalOperation.AND);
-
-        FilterCriteria applyDeposit = new FilterCriteria();
-        applyDeposit.setKey("applyDeposit");
-        applyDeposit.setValue(true);
-        applyDeposit.setOperator(SearchOperation.EQUALS);
-        applyDeposit.setLogicalOperation(LogicalOperation.AND);
-
-        FilterCriteria statusActive = new FilterCriteria();
-        statusActive.setKey("status");
-        statusActive.setValue(Status.ACTIVE);
-        statusActive.setOperator(SearchOperation.EQUALS);
-        PaginatedResponse response = transactionTypeService.search(Pageable.unpaged(), List.of(markAsDefault, applyDeposit, statusActive));
-        Assert.notEmpty(response.getData(), "There is not  default apply deposit transaction type");
-        ManagePaymentTransactionTypeResponse response1 = (ManagePaymentTransactionTypeResponse) response.getData().get(0);
-        return response1.getId();
     }
 
     private void printLog(String message){
