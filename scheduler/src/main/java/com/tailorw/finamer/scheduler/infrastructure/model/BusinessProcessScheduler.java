@@ -12,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -90,6 +91,12 @@ public class BusinessProcessScheduler {
     @Column(name = "deleted_at")
     public LocalDateTime deletedAt;
 
+    @Column(name = "start_time")
+    public LocalTime startTime;
+
+    @Column(name = "end_time")
+    public LocalTime endTime;
+
     public BusinessProcessScheduler(BusinessProcessSchedulerDto dto){
         this.id = dto.getId();
         this.frequency = Objects.nonNull(dto.getFrequency()) ? new Frequency(dto.getFrequency()) : null;
@@ -110,6 +117,8 @@ public class BusinessProcessScheduler {
         this.updatedAt = dto.getUpdatedAt();
         this.deletedAt = dto.getDeletedAt();
         this.allowsQueueing = dto.isAllowsQueueing();
+        this.startTime = dto.getStartTime();
+        this.endTime = dto.getEndTime();
     }
 
     public BusinessProcessSchedulerDto toAggregate(){
@@ -132,7 +141,9 @@ public class BusinessProcessScheduler {
                 Objects.nonNull(process) ? process.toAgrregate() : null,
                 updatedAt,
                 deletedAt,
-                allowsQueueing
+                allowsQueueing,
+                startTime,
+                endTime
         );
     }
 }
