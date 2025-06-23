@@ -36,9 +36,8 @@ public class PaymentTotalAmountValidator extends ExcelListRuleValidator<AntiToIn
 
         for(Map.Entry<Long, List<AntiToIncomeRow>> entry : paymentDetailGroupedMap.entrySet()){
             PaymentDetailDto depositPaymentDetail = this.cache.getPaymentDetailByPaymentDetailId(entry.getKey());
-            List<Integer> rowNumberList = entry.getValue().stream().map(AntiToIncomeRow::getRowNumber).toList();
-
-            if(Objects.nonNull(depositPaymentDetail)){
+            if(Objects.nonNull(depositPaymentDetail) && depositPaymentDetail.getTransactionType().getDeposit()){
+                List<Integer> rowNumberList = entry.getValue().stream().map(AntiToIncomeRow::getRowNumber).toList();
                 double amountToImport = entry.getValue().stream()
                         .filter(antiToIncomeRow -> Objects.nonNull(antiToIncomeRow.getAmount()))
                         .mapToDouble(AntiToIncomeRow::getAmount).sum();
@@ -46,8 +45,6 @@ public class PaymentTotalAmountValidator extends ExcelListRuleValidator<AntiToIn
                 if(amountToImport > depositPaymentDetail.getApplyDepositValue()){
                     addErrorsToRowList(errorRowList, rowNumberList, new ErrorField("Payment Amount", "Deposit Amount must be greather than zero and less or equal than the selected transaction amount."));
                 }
-            }else{
-                addErrorsToRowList(errorRowList, rowNumberList, new ErrorField("Payment Details", "Payment Details not found."));
             }
         }
     }
