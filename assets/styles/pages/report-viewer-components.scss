@@ -1,7 +1,7 @@
 /* ===================================================================
-   REPORT VIEWER - PROFESSIONAL COMPONENT STYLES
+   REPORT VIEWER - COMPONENT STYLES
+   Form fields, buttons, interactions, and component-specific styling
    Compatible with PrimeVue + PrimeFlex + Design System
-   Enhanced with unified component styling and behaviors
    =================================================================== */
 
 // ===============================
@@ -12,8 +12,6 @@
 @import '../variables';
 
 // Component-specific variables
-$report-viewer-grid-gap: $spacing-xl;
-$report-viewer-panel-radius: $border-radius-xl;
 $report-viewer-field-height: 2.75rem;
 $report-viewer-field-height-mobile: 3rem;
 
@@ -23,75 +21,9 @@ $status-success: $success-color;
 $status-warning: $warning-color;
 $status-error: $error-color;
 
-// Panel colors
-$panel-header-bg: $gray-50;
-$panel-border: $gray-200;
-
 // ===============================
-// COMPONENT-SPECIFIC MIXINS
+// COMPONENT MIXINS
 // ===============================
-
-@mixin status-card($border-color, $bg-color: transparent) {
-  @include card-base;
-  border-left: 4px solid $border-color;
-  padding: $spacing-xl;
-  margin-bottom: $spacing-lg;
-  
-  @if $bg-color != transparent {
-    background-color: $bg-color;
-  }
-}
-
-@mixin panel-base {
-  @include card-base;
-  display: flex;
-  flex-direction: column;
-  min-height: 75vh;
-  overflow: hidden;
-  
-  &__header {
-    padding: $spacing-lg $spacing-xl;
-    border-bottom: 1px solid $panel-border;
-    background: $panel-header-bg;
-    flex-shrink: 0;
-    position: relative;
-    
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, $panel-border 50%, transparent);
-    }
-  }
-  
-  &__content {
-    flex: 1;
-    padding: $spacing-xl;
-    overflow-y: auto;
-    background: white;
-    
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    &::-webkit-scrollbar-track {
-      background: $gray-100;
-      border-radius: 3px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background: $gray-300;
-      border-radius: 3px;
-      
-      &:hover {
-        background: $gray-400;
-      }
-    }
-  }
-}
 
 @mixin format-option {
   padding: $spacing-lg;
@@ -167,14 +99,10 @@ $panel-border: $gray-200;
 }
 
 // ===============================
-// MAIN COMPONENT
+// COMPONENT STYLES
 // ===============================
 
 .report-viewer {
-  min-height: 100vh;
-  background: linear-gradient(135deg, $gray-50 0%, $gray-100 100%);
-  padding: $spacing-lg;
-  font-family: inherit;
   
   // ===============================
   // CSS VARIABLES FOR ENHANCED FORMS
@@ -200,146 +128,10 @@ $panel-border: $gray-200;
   --enhanced-form-dropdown-z: 1000;
   
   // ===============================
-  // HEADER SECTION
-  // ===============================
-  
-  &__header {
-    @include card-base;
-    padding: $spacing-xl;
-    margin-bottom: $spacing-lg;
-    position: relative;
-    overflow: hidden;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, $primary-color, $success-color, $primary-color);
-    }
-    
-    &-content {
-      @extend .flex, .align-items-center, .justify-content-between;
-      gap: $spacing-lg;
-      
-      @media (max-width: $breakpoint-md) {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-    
-    &-info {
-      @extend .flex, .align-items-center;
-      gap: $spacing-lg;
-    }
-    
-    &-icon {
-      width: 3.5rem;
-      height: 3.5rem;
-      border-radius: 50%;
-      background: linear-gradient(135deg, $primary-color, $primary-hover);
-      @extend .flex, .align-items-center, .justify-content-center;
-      color: white;
-      font-size: $font-size-xl;
-      box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3);
-      position: relative;
-      
-      &::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, $primary-color, $success-color);
-        z-index: -1;
-        opacity: 0.3;
-      }
-    }
-    
-    &-badge {
-      @extend .flex, .align-items-center;
-      gap: $spacing-md;
-      padding: $spacing-md $spacing-lg;
-      background: linear-gradient(135deg, $gray-100, $gray-200);
-      border-radius: $border-radius-lg;
-      border: 1px solid $panel-border;
-      
-      i {
-        color: $primary-color;
-        font-size: $font-size-lg;
-      }
-      
-      &-content {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-xs;
-      }
-      
-      &-title {
-        font-size: $font-size-base;
-        font-weight: $font-weight-semibold;
-        color: $gray-800;
-        margin: 0;
-      }
-      
-      &-subtitle {
-        font-size: $font-size-small;
-        color: $gray-500;
-        margin: 0;
-      }
-    }
-  }
-  
-  &__title {
-    font-size: $font-size-3xl;
-    font-weight: $font-weight-bold;
-    color: $gray-900;
-    margin: 0;
-    line-height: 1.2;
-    background: linear-gradient(135deg, $gray-900, $gray-600);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  
-  &__subtitle {
-    color: $gray-600;
-    margin: $spacing-xs 0 0 0;
-    font-size: $font-size-base;
-    line-height: $line-height-base;
-  }
-  
-  // ===============================
-  // STATUS SECTION
+  // STATUS PROGRESS COMPONENTS
   // ===============================
   
   &__status {
-    margin-bottom: $spacing-lg;
-    
-    &-card {
-      &--loading {
-        @include status-card($status-loading, rgba(59, 130, 246, 0.05));
-      }
-      
-      &--success {
-        @include status-card($status-success, rgba(5, 150, 105, 0.05));
-      }
-      
-      &--warning {
-        @include status-card($status-warning, rgba(217, 119, 6, 0.05));
-      }
-      
-      &--error {
-        @include status-card($status-error, rgba(220, 38, 38, 0.05));
-      }
-    }
-    
-    &-content {
-      @extend .flex, .align-items-center;
-      gap: $spacing-lg;
-    }
-    
     &-progress {
       @include progress-indicator;
       
@@ -357,169 +149,180 @@ $panel-border: $gray-200;
         font-weight: $font-weight-medium;
       }
     }
-    
-    &-title {
-      margin: 0 0 $spacing-xs 0;
-      font-size: $font-size-lg;
-      font-weight: $font-weight-semibold;
-      color: $gray-900;
-    }
-    
-    &-message {
-      margin: 0;
-      font-size: $font-size-base;
-      color: $gray-600;
-      line-height: $line-height-base;
-    }
   }
   
   // ===============================
-  // MAIN LAYOUT GRID
+  // 🎯 HOMOLOGACIÓN TOTAL - TODOS LOS COMPONENTES USAN BaseField
   // ===============================
   
-  &__main {
-    display: grid;
-    grid-template-columns: 420px 1fr;
-    gap: $spacing-xl;
-    align-items: start;
-    min-height: 75vh;
-
-    @media (max-width: $breakpoint-lg) {
-      grid-template-columns: 1fr;
-      gap: $spacing-lg;
-    }
-  }
-  
-  // ===============================
-  // PARAMETERS PANEL
-  // ===============================
-  
-  &__parameters {
-    @include panel-base;
+  &__parameters-content {
     
-    &-container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    &-header {
-      padding: $spacing-xl $spacing-xl !important;
-      min-height: 80px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
+    // ✅ ESTRUCTURA UNIFICADA - TODOS LOS COMPONENTES USAN BaseField
+    .form-field {
+      margin-bottom: 0 !important;
       
-      &-content {
-        @extend .flex, .align-items-center;
-        gap: $spacing-lg;
-        flex: 1;
-      }
-      
-      &-actions {
-        flex-shrink: 0;
-        margin-left: $spacing-md;
+      .form-field__label {
+        display: block !important;
+        font-weight: 600 !important;
+        color: $gray-800 !important;
+        margin: 0 0 0.375rem 0 !important; // ✅ 6px exactos - UNIFICADO TOTAL
+        padding: 0 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.4 !important;
         
-        .p-button {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          
-          .pi {
-            font-size: $font-size-lg !important;
-          }
+        // Required indicator
+        &::after {
+          content: ' *' !important;
+          color: $error-color !important;
+          font-weight: bold !important;
+          margin-left: 0.125rem !important;
+          display: none !important; // Hidden by default
+        }
+        
+        // Show asterisk only when field is required
+        .form-field[required="true"] &::after,
+        .form-field--required &::after {
+          display: inline !important;
         }
       }
-    }
-    
-    &-icon {
-      width: 3rem !important;
-      height: 3rem !important;
-      border-radius: $border-radius-lg;
-      background: linear-gradient(135deg, $primary-color, $primary-hover);
-      @extend .flex, .align-items-center, .justify-content-center;
-      color: white;
-      font-size: $font-size-lg !important;
-      box-shadow: 0 3px 12px rgba(71, 85, 105, 0.25);
-      flex-shrink: 0;
-    }
-    
-    &-title {
-      margin: 0;
-      font-size: $font-size-xl !important;
-      font-weight: $font-weight-bold;
-      color: $gray-900;
-      line-height: 1.3;
-    }
-    
-    &-subtitle {
-      margin: $spacing-xs 0 0 0;
-      font-size: $font-size-base !important;
-      color: $gray-600;
-      line-height: 1.4;
-    }
-    
-    &-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: $spacing-xl !important;
       
-      // ✅ GRID SPACING HOMOLOGADO - UNA SOLA DEFINICIÓN
-      .grid {
+      .form-field__input-container {
         margin: 0 !important;
-        row-gap: 1.5rem !important;
-        column-gap: 1rem !important;
-      }
-      
-      // ✅ ELIMINAR MARGIN-BOTTOM CONFLICTIVO - Solo usar grid-gap
-      > * {
-        margin-bottom: 0 !important;
+        padding: 0 !important;
         
-        &:last-child {
-          margin-bottom: 0 !important;
+        .form-field__input-wrapper {
+          margin: 0 !important;
+          padding: 0 !important;
         }
       }
     }
-  }
-  
-  // ===============================
-  // 📝 LOCAL SELECT FIELD STYLES
-  // ===============================
-  
-  .local-select-field {
-    margin-bottom: 0 !important; // ✅ Quitar margin propio del componente
-    width: 100% !important;
-    animation: fadeInUp 0.3s ease-out !important; // ✅ Consistente con otros campos
     
-    // ✅ LABEL CONSISTENCY - Mismo estilo que DateField
-    .form-field__label {
-      display: block !important;
+    // ✅ DEEP SELECTORS para máxima compatibilidad
+    :deep(.form-field) {
+      margin-bottom: 0 !important;
+      
+      .form-field__label {
+        margin: 0 0 0.375rem 0 !important;
+        padding: 0 !important;
+        font-weight: 600 !important;
+        color: $gray-800 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.4 !important;
+      }
+    }
+    
+    :deep(.form-field__label) {
       font-weight: 600 !important;
       color: $gray-800 !important;
-      margin-bottom: 0.75rem !important; // ✅ CLAVE: Mismo spacing que DateField
+      margin: 0 0 0.375rem 0 !important; // ✅ SPACING UNIFORME TOTAL
+      padding: 0 !important;
       font-size: 0.9rem !important;
       letter-spacing: 0.02em !important;
       line-height: 1.4 !important;
+    }
+    
+    // ✅ GRID SPACING OPTIMIZADO
+    .grid {
+      margin: 0 !important;
+      row-gap: 1.25rem !important; // ✅ Compensado para el spacing reducido
+      column-gap: 1rem !important;
+    }
+    
+    // ✅ ELIMINAR MARGINS EXTRA DE CONTAINERS
+    > .col-12,
+    > div,
+    .col-12 {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
       
-      &.form-field--required::after {
-        content: ' *' !important;
-        color: $error-color !important;
-        font-weight: bold !important;
-        margin-left: 0.125rem !important;
+      &:last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+  }
+  
+  // ===============================
+  // 📝 COMPONENT-SPECIFIC STYLES (Ya no necesitamos clases específicas)
+  // ===============================
+  
+  .select-field__component,
+  .local-select-dropdown,
+  .date-field__calendar {
+    width: 100% !important;
+    
+    // Los estilos de label están manejados por BaseField arriba
+    // Solo necesitamos estilos específicos del componente si es necesario
+    
+    &.p-invalid {
+      // Error states son manejados por los estilos universales de formularios
+    }
+  }
+  
+  // ===============================
+  // 📅 DATE FIELD STYLES - SIMPLIFICADO
+  // ===============================
+  
+  .date-field__wrapper {
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    animation: fadeInUp 0.3s ease-out;
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    // Los estilos de label están manejados por BaseField arriba
+    
+    &--error {
+      .date-field__calendar {
+        border-color: $error-color !important;
+        box-shadow: 0 0 0 1px $error-color !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
       }
     }
     
-    // ✅ INPUT WRAPPER - Sin margin extra
+    &--loading {
+      opacity: 0.7 !important;
+      pointer-events: none !important;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+    }
+  }
+  
+  // ===============================
+  // 📝 LOCAL SELECT FIELD STYLES - SIMPLIFICADO
+  // ===============================
+  
+  .local-select-field {
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    animation: fadeInUp 0.3s ease-out !important;
+    
+    // ✅ SOLO PARA COMPATIBILIDAD LEGACY
+    // (El nuevo SelectField usa BaseField y no necesita estos estilos)
+    
     .form-field__input-wrapper {
       width: 100% !important;
       position: relative !important;
       display: flex !important;
       align-items: stretch !important;
       box-sizing: border-box !important;
-      margin-bottom: 0 !important; // ✅ Sin margin extra
+      margin: 0 !important;
+      padding: 0 !important;
     }
     
-    // ✅ ERROR MESSAGES - Consistente con DateField
     .form-field__error-messages {
       margin-top: 0.5rem !important;
       
@@ -545,7 +348,7 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // 📅 DATE FIELD STYLES
+  // 📅 DATE FIELD STYLES - SIMPLIFICADO
   // ===============================
   
   .date-field__wrapper {
@@ -555,6 +358,10 @@ $panel-border: $gray-200;
     align-items: stretch !important;
     box-sizing: border-box !important;
     animation: fadeInUp 0.3s ease-out;
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    // Los estilos de label están arriba en la sección de homologación
     
     &--error {
       .date-field__calendar {
@@ -675,7 +482,7 @@ $panel-border: $gray-200;
   
   &__parameters-content {
     
-    // ✅ UNIVERSAL CLEAR BUTTON - HOMOLOGADO PARA TODOS LOS COMPONENTES
+    // ✅ UNIVERSAL CLEAR BUTTON
     :deep(.p-calendar .p-calendar-clear-icon),
     :deep(.p-dropdown .p-dropdown-clear-icon),
     :deep(.p-multiselect .p-multiselect-clear-icon),
@@ -739,7 +546,7 @@ $panel-border: $gray-200;
       width: 100% !important;
     }
     
-    // ✅ UNIVERSAL FIELD SIZING - ALTURA EXACTAMENTE IGUAL
+    // ✅ UNIVERSAL FIELD SIZING
     :deep(.p-inputtext),
     :deep(.p-dropdown),
     :deep(.p-multiselect),
@@ -755,7 +562,7 @@ $panel-border: $gray-200;
       min-height: var(--enhanced-form-field-height) !important;
     }
     
-    // ✅ CALENDAR/DATE FIELD STYLING - FOCUS CORREGIDO
+    // ✅ CALENDAR/DATE FIELD STYLING
     :deep(.p-calendar) {
       position: relative !important;
       border: var(--enhanced-form-border-width) solid $gray-200 !important;
@@ -778,7 +585,6 @@ $panel-border: $gray-200;
         align-items: center !important;
       }
       
-      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
       .p-inputtext,
       .p-datepicker-trigger {
         border: none !important;
@@ -828,20 +634,12 @@ $panel-border: $gray-200;
           color: $primary-hover !important;
         }
         
-        &:focus,
-        &:focus-visible {
-          outline: none !important;
-          background: rgba($primary-color, 0.1) !important;
-          box-shadow: none !important;
-        }
-        
         .p-icon {
           color: inherit !important;
           font-size: 1.1rem !important;
         }
       }
       
-      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
       &:hover:not(.p-calendar-disabled):not(.p-calendar-opened):not(.p-focus) {
         border-color: $gray-300 !important;
         transform: translateY(-1px) !important;
@@ -854,7 +652,6 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
       &.p-calendar-opened {
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
@@ -877,7 +674,7 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ DROPDOWN STYLING - FOCUS CORREGIDO
+    // ✅ DROPDOWN STYLING
     :deep(.p-dropdown) {
       background: white !important;
       border: var(--enhanced-form-border-width) solid $gray-200 !important;
@@ -886,7 +683,6 @@ $panel-border: $gray-200;
       box-shadow: var(--enhanced-form-shadow) !important;
       overflow: hidden !important;
       
-      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
       &:hover:not(.p-disabled):not(.p-dropdown-opened):not(.p-focus) {
         border-color: $gray-300 !important;
         transform: translateY(-1px) !important;
@@ -899,7 +695,6 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
       &.p-dropdown-opened {
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
@@ -910,21 +705,12 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
       .p-dropdown-label,
       .p-dropdown-trigger,
       .p-inputtext {
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        
-        &:focus,
-        &:focus-visible,
-        &:focus-within {
-          border: none !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
       }
       
       .p-dropdown-label {
@@ -957,13 +743,6 @@ $panel-border: $gray-200;
           background: $gray-50 !important;
         }
         
-        &:focus,
-        &:focus-visible {
-          outline: none !important;
-          background: $gray-100 !important;
-          box-shadow: none !important;
-        }
-        
         .p-icon {
           color: $primary-color !important;
           transition: transform 0.2s ease !important;
@@ -987,7 +766,7 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ MULTISELECT STYLING - FOCUS CORREGIDO
+    // ✅ MULTISELECT STYLING
     :deep(.p-multiselect) {
       min-height: var(--enhanced-form-field-height) !important;
       background: white !important;
@@ -997,7 +776,6 @@ $panel-border: $gray-200;
       box-shadow: var(--enhanced-form-shadow) !important;
       overflow: hidden !important;
       
-      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
       &:hover:not(.p-disabled):not(.p-multiselect-opened):not(.p-focus) {
         border-color: $gray-300 !important;
         transform: translateY(-1px) !important;
@@ -1010,7 +788,6 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
       &.p-multiselect-opened {
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
@@ -1021,20 +798,11 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ ELIMINAR BORDES INTERNOS
       .p-multiselect-label-container,
       .p-multiselect-trigger {
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        
-        &:focus,
-        &:focus-visible,
-        &:focus-within {
-          border: none !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
       }
       
       .p-multiselect-label-container {
@@ -1061,13 +829,6 @@ $panel-border: $gray-200;
           background: $gray-50 !important;
         }
         
-        &:focus,
-        &:focus-visible {
-          outline: none !important;
-          background: $gray-100 !important;
-          box-shadow: none !important;
-        }
-        
         .p-icon {
           color: $primary-color !important;
         }
@@ -1086,7 +847,7 @@ $panel-border: $gray-200;
       }
     }
 
-    // ✅ AUTOCOMPLETE FIELD STYLING - HOMOLOGADO CON DROPDOWN
+    // ✅ AUTOCOMPLETE STYLING
     :deep(.p-autocomplete) {
       position: relative !important;
       border: var(--enhanced-form-border-width) solid $gray-200 !important;
@@ -1098,24 +859,11 @@ $panel-border: $gray-200;
       overflow: hidden !important;
       box-shadow: var(--enhanced-form-shadow) !important;
       
-      .p-component {
-        height: 100% !important;
-      }
-
-      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
       .p-inputtext,
       .p-autocomplete-dropdown {
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        
-        &:focus,
-        &:focus-visible,
-        &:focus-within {
-          border: none !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
       }
       
       .p-inputtext {
@@ -1152,20 +900,12 @@ $panel-border: $gray-200;
           color: $primary-hover !important;
         }
         
-        &:focus,
-        &:focus-visible {
-          outline: none !important;
-          background: rgba($primary-color, 0.1) !important;
-          box-shadow: none !important;
-        }
-        
         .p-icon {
           color: inherit !important;
           font-size: 1.1rem !important;
         }
       }
       
-      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
       &:hover:not(.p-disabled):not(.p-autocomplete-open):not(.p-focus) {
         border-color: $gray-300 !important;
         transform: translateY(-1px) !important;
@@ -1178,7 +918,6 @@ $panel-border: $gray-200;
         transform: translateY(-1px) !important;
       }
       
-      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
       &.p-autocomplete-open {
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
@@ -1201,21 +940,20 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ PANELS STYLING - SIN DOBLE BORDE
+    // ✅ DROPDOWN PANELS
     :deep(.p-dropdown-panel),
     :deep(.p-multiselect-panel),
     :deep(.p-autocomplete-panel) {
       border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
       border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
-      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
+      border-top: none !important;
       box-shadow: var(--enhanced-form-shadow-lg) !important;
-      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      margin-top: 0 !important;
       background: white !important;
       z-index: var(--enhanced-form-dropdown-z) !important;
       animation: slideDown 0.2s ease-out !important;
       overflow: hidden !important;
       
-      // ✅ CONECTAR VISUALMENTE CON EL DROPDOWN
       &::before {
         content: '';
         position: absolute;
@@ -1258,7 +996,7 @@ $panel-border: $gray-200;
       font-size: var(--enhanced-form-font-size) !important;
       margin: 0.125rem 0.5rem !important;
       border-radius: $border-radius !important;
-      border: none !important; // ✅ SIN BORDES EN ITEMS
+      border: none !important;
       
       &:hover {
         background: $gray-100 !important;
@@ -1280,9 +1018,7 @@ $panel-border: $gray-200;
       }
     }
 
-    // ===============================
-    // 🎯 AUTOCOMPLETE MULTIPLE CHIPS (si se usa)
-    // ===============================
+    // ✅ TOKENS/CHIPS
     :deep(.p-autocomplete-multiple-container) {
       min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
       padding: 0.375rem 0.625rem !important;
@@ -1292,7 +1028,8 @@ $panel-border: $gray-200;
       gap: 0.25rem !important;
     }
 
-    :deep(.p-autocomplete-token) {
+    :deep(.p-autocomplete-token),
+    :deep(.p-multiselect-token) {
       background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
       border: 1px solid rgba($primary-color, 0.2) !important;
       color: $primary-color !important;
@@ -1311,7 +1048,8 @@ $panel-border: $gray-200;
         transform: scale(1.05) !important;
       }
       
-      .p-autocomplete-token-icon {
+      .p-autocomplete-token-icon,
+      .p-multiselect-token-icon {
         margin-left: 0.5rem !important;
         color: $primary-color !important;
         border-radius: 50% !important;
@@ -1330,18 +1068,17 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ DATE PICKER PANEL - SIN DOBLE BORDE
+    // ✅ DATE PICKER PANEL
     :deep(.p-datepicker) {
       border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
       border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
-      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
-      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      border-top: none !important;
+      margin-top: 0 !important;
       background: white !important;
       overflow: hidden !important;
       z-index: var(--enhanced-form-dropdown-z) !important;
       animation: slideDown 0.2s ease-out !important;
       
-      // ✅ CONECTAR VISUALMENTE CON EL CALENDAR
       &::before {
         content: '';
         position: absolute;
@@ -1445,50 +1182,12 @@ $panel-border: $gray-200;
       }
     }
     
-    // ✅ MULTISELECT TOKENS
-    :deep(.p-multiselect-token) {
-      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
-      border: 1px solid rgba($primary-color, 0.2) !important;
-      color: $primary-color !important;
-      border-radius: 1rem !important;
-      padding: 0.25rem 0.75rem !important;
-      font-size: 0.8rem !important;
-      font-weight: 500 !important;
-      height: auto !important;
-      min-height: 1.5rem !important;
-      animation: chip-appear 0.2s ease-out !important;
-      transition: var(--enhanced-form-transition) !important;
-      
-      &:hover {
-        background: linear-gradient(135deg, $primary-color, $primary-hover) !important;
-        color: white !important;
-        transform: scale(1.05) !important;
-      }
-      
-      .p-multiselect-token-icon {
-        margin-left: 0.5rem !important;
-        color: $primary-color !important;
-        border-radius: 50% !important;
-        width: 1rem !important;
-        height: 1rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          color: white !important;
-          background: $error-color !important;
-          transform: scale(1.1) !important;
-        }
-      }
-    }
-    
-    // ✅ UNIVERSAL FORM LABELS
+    // ✅ UNIVERSAL FORM LABELS - ARQUITECTURA UNIFICADA BaseField
     :deep(.form-field__label) {
       font-weight: 600 !important;
       color: $gray-800 !important;
-      margin-bottom: 0.75rem !important;
+      margin: 0 0 0.375rem 0 !important; // ✅ SPACING UNIFORME TOTAL
+      padding: 0 !important;
       font-size: 0.9rem !important;
       letter-spacing: 0.02em !important;
       line-height: 1.4 !important;
@@ -1524,80 +1223,16 @@ $panel-border: $gray-200;
   }
   
   // ===============================
-  // LOADING STATE
+  // FORMAT OPTIONS COMPONENTS
   // ===============================
-  
-  &__loading {
-    @extend .flex, .justify-content-center, .align-items-center;
-    padding: $spacing-3xl;
-    min-height: 300px;
-    
-    &-content {
-      @extend .flex, .flex-column, .align-items-center;
-      gap: $spacing-lg;
-      text-align: center;
-      
-      p {
-        margin: 0;
-        color: $gray-600;
-        font-size: $font-size-base;
-        font-weight: $font-weight-medium;
-      }
-    }
-  }
-  
-  // ===============================
-  // ACTIONS SECTION
-  // ===============================
-  
-  &__actions {
-    margin-top: $spacing-xl;
-    padding-top: $spacing-xl;
-    border-top: 1px solid $gray-200;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, $primary-color, transparent);
-    }
-  }
   
   &__format {
-    &-section {
-      margin-bottom: $spacing-xl;
-    }
-    
-    &-label {
-      @extend .flex, .align-items-center;
-      font-size: $font-size-base;
-      font-weight: $font-weight-bold;
-      color: $gray-800;
-      margin-bottom: $spacing-lg;
-      
-      .pi {
-        margin-right: $spacing-sm;
-        color: $primary-color;
-      }
-    }
-    
-    &-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: $spacing-md;
-      margin-top: $spacing-md;
-    }
-    
     &-option {
       @include format-option;
       
       &-header {
-        @extend .flex, .align-items-center;
+        display: flex;
+        align-items: center;
         gap: $spacing-sm;
         margin-bottom: $spacing-sm;
         
@@ -1621,26 +1256,9 @@ $panel-border: $gray-200;
     }
   }
   
-  &__generation {
-    &-controls {
-      margin-bottom: $spacing-lg;
-    }
-    
-    &-info {
-      text-align: center;
-      margin-top: $spacing-md;
-      
-      .flex {
-        @extend .justify-content-center;
-        font-size: $font-size-small;
-        color: $gray-600;
-        background: $gray-50;
-        padding: $spacing-sm $spacing-md;
-        border-radius: $border-radius;
-        border: 1px solid $gray-200;
-      }
-    }
-  }
+  // ===============================
+  // BUTTON COMPONENTS
+  // ===============================
   
   &__generate-btn {
     @include button-base;
@@ -1694,411 +1312,11 @@ $panel-border: $gray-200;
     }
   }
   
-  &__quick-actions {
-    padding-top: $spacing-lg;
-    border-top: 1px solid $gray-200;
-    
-    &-title {
-      margin: 0 0 $spacing-md 0;
-      font-size: $font-size-base;
-      font-weight: $font-weight-semibold;
-      color: $gray-800;
-    }
-    
-    &-buttons {
-      @extend .flex;
-      gap: $spacing-sm;
-      
-      @media (max-width: $breakpoint-md) {
-        flex-direction: column;
-      }
-      
-      .p-button {
-        flex: 1;
-        justify-content: center;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          transform: translateY(-1px) !important;
-        }
-      }
-    }
-  }
-  
   // ===============================
-  // EMPTY STATES
-  // ===============================
-  
-  &__no-parameters {
-    padding: $spacing-3xl $spacing-xl;
-    text-align: center;
-    
-    &-content {
-      max-width: 320px;
-      margin: 0 auto;
-    }
-    
-    &-icon {
-      width: 4rem;
-      height: 4rem;
-      border-radius: 50%;
-      background: linear-gradient(135deg, $success-color, $success-light);
-      color: white;
-      @extend .flex, .align-items-center, .justify-content-center;
-      margin: 0 auto $spacing-xl;
-      font-size: $font-size-2xl;
-      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
-    }
-    
-    &-title {
-      margin: 0 0 $spacing-md 0;
-      font-size: $font-size-xl;
-      font-weight: $font-weight-bold;
-      color: $gray-900;
-    }
-    
-    &-text {
-      margin: 0 0 $spacing-xl 0;
-      color: $gray-600;
-      line-height: $line-height-base;
-    }
-  }
-  
-  &__empty {
-    padding: $spacing-3xl $spacing-xl;
-    text-align: center;
-    
-    &-content {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    
-    &-icon {
-      width: 5rem;
-      height: 5rem;
-      border-radius: 50%;
-      background: linear-gradient(135deg, $gray-100, $gray-200);
-      color: $gray-400;
-      @extend .flex, .align-items-center, .justify-content-center;
-      margin: 0 auto $spacing-xl;
-      font-size: $font-size-4xl;
-    }
-    
-    &-title {
-      margin: 0 0 $spacing-md 0;
-      font-size: $font-size-2xl;
-      font-weight: $font-weight-bold;
-      color: $gray-900;
-    }
-    
-    &-text {
-      margin: 0 0 $spacing-xl 0;
-      color: $gray-600;
-      line-height: $line-height-base;
-    }
-    
-    &-help {
-      background: linear-gradient(135deg, $gray-50, $gray-100);
-      border-radius: $border-radius-lg;
-      padding: $spacing-lg;
-      border: 1px solid $panel-border;
-    }
-  }
-  
-  &__help {
-    &-content {
-      @extend .flex;
-      gap: $spacing-md;
-      text-align: left;
-      
-      i {
-        color: $primary-color;
-        font-size: $font-size-lg;
-        margin-top: 2px;
-      }
-    }
-    
-    &-title {
-      margin: 0 0 $spacing-xs 0;
-      font-size: $font-size-base;
-      font-weight: $font-weight-semibold;
-      color: $gray-800;
-    }
-    
-    &-text {
-      margin: 0;
-      font-size: $font-size-base;
-      color: $gray-600;
-      line-height: 1.5;
-      
-      code {
-        background: $gray-200;
-        padding: $spacing-xs $spacing-sm;
-        border-radius: $border-radius-sm;
-        font-family: 'Monaco', 'Menlo', monospace;
-        font-size: $font-size-small;
-        color: $gray-700;
-        border: 1px solid $gray-300;
-      }
-    }
-  }
-  
-  // ===============================
-  // PREVIEW PANEL
-  // ===============================
-  
-  &__preview {
-    @include panel-base;
-    
-    &-container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    &-header {
-      padding: $spacing-xl $spacing-xl !important;
-      min-height: 80px !important;
-      
-      &-content {
-        @extend .flex, .align-items-center;
-        gap: $spacing-lg;
-        width: 100%;
-      }
-      
-      &-actions {
-        @extend .flex, .align-items-center;
-        gap: $spacing-sm;
-        margin-left: auto;
-        
-        .p-button {
-          height: 36px !important;
-          min-height: 36px !important;
-          transition: var(--enhanced-form-transition) !important;
-          
-          &.p-button-sm {
-            padding: 0 $spacing-md !important;
-          }
-          
-          &:hover {
-            transform: translateY(-1px) !important;
-          }
-        }
-      }
-    }
-    
-    &-icon {
-      width: 3rem !important;
-      height: 3rem !important;
-      border-radius: $border-radius-lg;
-      background: linear-gradient(135deg, $gray-600, $gray-700);
-      @extend .flex, .align-items-center, .justify-content-center;
-      color: white;
-      font-size: $font-size-lg !important;
-      box-shadow: 0 3px 12px rgba(100, 116, 139, 0.25);
-      flex-shrink: 0;
-    }
-    
-    &-title {
-      margin: 0;
-      font-size: $font-size-xl !important;
-      font-weight: $font-weight-bold;
-      color: $gray-900;
-      line-height: 1.3;
-    }
-    
-    &-subtitle {
-      margin: $spacing-xs 0 0 0;
-      font-size: $font-size-base !important;
-      color: $gray-600;
-      line-height: 1.4;
-    }
-    
-    &-content {
-      flex: 1;
-      padding: 0;
-      background: $gray-50;
-    }
-    
-    &-empty {
-      @extend .flex, .align-items-center, .justify-content-center;
-      height: 100%;
-      min-height: 500px;
-      padding: $spacing-xl;
-      background: linear-gradient(135deg, $gray-50 0%, $gray-100 100%);
-      
-      &-content {
-        text-align: center;
-        max-width: 450px;
-      }
-      
-      &-icon {
-        width: 5rem;
-        height: 5rem;
-        border-radius: 50%;
-        background: linear-gradient(135deg, $gray-100, $gray-200);
-        color: $gray-400;
-        @extend .flex, .align-items-center, .justify-content-center;
-        margin: 0 auto $spacing-xl;
-        font-size: $font-size-4xl;
-        box-shadow: $shadow-md;
-      }
-      
-      &-title {
-        margin: 0 0 $spacing-md 0;
-        font-size: $font-size-2xl;
-        font-weight: $font-weight-bold;
-        color: $gray-900;
-      }
-      
-      &-text {
-        margin: 0 0 $spacing-xl 0;
-        color: $gray-600;
-        line-height: $line-height-base;
-        font-size: $font-size-base;
-      }
-      
-      &-info {
-        @extend .flex, .align-items-center, .justify-content-center;
-        gap: $spacing-sm;
-        padding: $spacing-md $spacing-lg;
-        background: linear-gradient(135deg, $primary-light, $gray-50);
-        border-radius: $border-radius-lg;
-        color: $primary-color;
-        font-size: $font-size-base;
-        border: 1px solid $primary-color;
-        font-weight: $font-weight-medium;
-      }
-    }
-    
-    &-features {
-      background: white;
-      border-radius: $border-radius-lg;
-      padding: $spacing-lg;
-      margin-bottom: $spacing-xl;
-      border: 1px solid $panel-border;
-      box-shadow: $shadow-sm;
-      
-      &-title {
-        margin: 0 0 $spacing-md 0;
-        font-size: $font-size-base;
-        font-weight: $font-weight-semibold;
-        color: $gray-800;
-      }
-      
-      &-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        
-        li {
-          @extend .flex, .align-items-center;
-          gap: $spacing-sm;
-          padding: $spacing-xs 0;
-          font-size: $font-size-base;
-          color: $gray-600;
-          
-          i {
-            color: $primary-color;
-            width: 16px;
-          }
-        }
-      }
-    }
-  }
-  
-  // ===============================
-  // PDF VIEWER
-  // ===============================
-  
-  &__pdf {
-    &-container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background: white;
-    }
-    
-    &-toolbar {
-      padding: $spacing-lg $spacing-xl;
-      border-bottom: 1px solid $panel-border;
-      background: $panel-header-bg;
-      flex-shrink: 0;
-    }
-    
-    &-info {
-      @extend .flex, .align-items-center;
-      gap: $spacing-lg;
-    }
-    
-    &-object {
-      flex: 1;
-      width: 100%;
-      border: none;
-      background: white;
-      min-height: 600px;
-    }
-    
-    &-fallback {
-      @extend .flex, .align-items-center, .justify-content-center;
-      height: 100%;
-      min-height: 500px;
-      background: linear-gradient(135deg, $gray-50, $gray-100);
-      
-      &-content {
-        text-align: center;
-        padding: $spacing-xl;
-        
-        .pi {
-          font-size: 4rem;
-          color: $error-color;
-          margin-bottom: $spacing-lg;
-        }
-        
-        h4 {
-          margin: 0 0 $spacing-sm 0;
-          font-size: $font-size-xl;
-          font-weight: $font-weight-semibold;
-          color: $gray-900;
-        }
-        
-        p {
-          margin: 0 0 $spacing-xl 0;
-          color: $gray-600;
-          font-size: $font-size-base;
-        }
-      }
-    }
-  }
-  
-  // ===============================
-  // RESPONSIVE DESIGN
+  // RESPONSIVE COMPONENT ADJUSTMENTS
   // ===============================
   
   @media (max-width: $breakpoint-lg) {
-    &__main {
-      grid-template-columns: 1fr;
-      gap: $spacing-lg;
-    }
-    
-    &__header {
-      padding: $spacing-lg;
-      
-      &-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: $spacing-md;
-      }
-    }
-    
-    &__format-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    &__quick-actions-buttons {
-      flex-direction: column;
-    }
-    
     --enhanced-form-field-height: 3rem;
     
     &__generate-btn {
@@ -2122,24 +1340,6 @@ $panel-border: $gray-200;
   }
   
   @media (max-width: $breakpoint-md) {
-    padding: $spacing-sm;
-    
-    &__empty,
-    &__no-parameters {
-      padding: $spacing-xl $spacing-lg;
-    }
-    
-    &__title {
-      font-size: $font-size-2xl;
-    }
-    
-    &__header {
-      &-icon {
-        width: 3rem;
-        height: 3rem;
-      }
-    }
-    
     --enhanced-form-field-height: 3.25rem;
     
     &__generate-btn {
@@ -2148,11 +1348,11 @@ $panel-border: $gray-200;
       font-size: 1.1rem !important;
     }
     
-    // Mobile-specific component adjustments
     .local-select-field {
       .form-field__label {
         font-size: 1rem !important;
-        margin-bottom: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
+        padding: 0 !important;
       }
       
       .form-field__error-message {
@@ -2179,9 +1379,18 @@ $panel-border: $gray-200;
         row-gap: 1.75rem !important;
       }
       
-      :deep(.form-field__label) {
-        font-size: 1rem !important;
-        margin-bottom: 1rem !important;
+      &__parameters-content {
+        .form-field .form-field__label {
+          font-size: 1rem !important;
+          margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
+          padding: 0 !important;
+        }
+        
+        :deep(.form-field__label) {
+          font-size: 1rem !important;
+          margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
+          padding: 0 !important;
+        }
       }
       
       :deep(.p-multiselect-token) {
@@ -2217,7 +1426,6 @@ $panel-border: $gray-200;
         min-height: var(--enhanced-form-field-height) !important;
       }
       
-      // ✅ MOBILE: Ajustes para dropdown panels
       :deep(.p-dropdown-panel),
       :deep(.p-multiselect-panel),
       :deep(.p-autocomplete-panel) {
@@ -2237,18 +1445,12 @@ $panel-border: $gray-200;
         font-size: 1rem !important;
         
         &:hover {
-          transform: none !important; // Disable transform on mobile
+          transform: none !important;
         }
       }
     }
-    
-    &__format-grid {
-      grid-template-columns: 1fr !important;
-      gap: 1rem !important;
-    }
   }
   
-  // Extra small devices adjustments
   @media (max-width: 480px) {
     --enhanced-form-field-height: 3.5rem;
     
@@ -2276,33 +1478,18 @@ $panel-border: $gray-200;
 // UTILITY CLASSES & ICONS
 // ===============================
 
-.pi-file-pdf { 
-  color: $error-color; 
-}
-
-.pi-file-excel { 
-  color: $success-color; 
-}
-
-.pi-table { 
-  color: #0369a1; 
-}
-
-.pi-spin { 
-  animation: spin 1s linear infinite; 
-}
+.pi-file-pdf { color: $error-color; }
+.pi-file-excel { color: $success-color; }
+.pi-table { color: #0369a1; }
+.pi-spin { animation: spin 1s linear infinite; }
 
 // ===============================
 // KEYFRAME ANIMATIONS
 // ===============================
 
 @keyframes spin {
-  from { 
-    transform: rotate(0deg); 
-  }
-  to { 
-    transform: rotate(360deg); 
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes fadeInUp {
@@ -2330,47 +1517,25 @@ $panel-border: $gray-200;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes chip-appear {
-  0% { 
-    opacity: 0; 
-    transform: scale(0.8); 
-  }
-  100% { 
-    opacity: 1; 
-    transform: scale(1); 
-  }
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes field-focus {
-  0% { 
-    transform: translateY(0) scale(1); 
-  }
-  50% { 
-    transform: translateY(-1px) scale(1.001); 
-  }
-  100% { 
-    transform: translateY(-1px) scale(1); 
-  }
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1px) scale(1.001); }
+  100% { transform: translateY(-1px) scale(1); }
 }
 
 @keyframes fieldErrorShake {
-  0%, 100% { 
-    transform: translateX(0); 
-  }
-  10%, 30%, 50%, 70%, 90% { 
-    transform: translateX(-2px); 
-  }
-  20%, 40%, 60%, 80% { 
-    transform: translateX(2px); 
-  }
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
 // ===============================
@@ -2411,13 +1576,11 @@ $panel-border: $gray-200;
 // ===============================
 
 .report-viewer {
-  // Focus indicators
   :deep(*:focus) {
     outline: 2px solid rgba($primary-color, 0.5) !important;
     outline-offset: 2px !important;
   }
   
-  // High contrast mode support
   @media (prefers-contrast: high) {
     --enhanced-form-border-width: 3px;
     
@@ -2429,7 +1592,6 @@ $panel-border: $gray-200;
     }
   }
   
-  // Reduced motion support
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -2438,38 +1600,10 @@ $panel-border: $gray-200;
     }
   }
   
-  // Print styles
   @media print {
-    background: white !important;
-    color: black !important;
-    
-    &__parameters,
-    &__preview {
-      box-shadow: none !important;
-      border: 1px solid #000 !important;
-    }
-    
-    &__generate-btn,
-    &__quick-actions {
+    &__generate-btn {
       display: none !important;
     }
-  }
-}
-
-// ===============================
-// DARK MODE SUPPORT (OPTIONAL)
-// ===============================
-
-@media (prefers-color-scheme: dark) {
-  .report-viewer {
-    // This section can be expanded for dark mode support
-    // Currently maintaining light theme for professional appearance
-    
-    // Future dark mode variables would go here:
-    // --surface-ground: #1f2937;
-    // --surface-section: #374151;
-    // --text-color: #f9fafb;
-    // etc.
   }
 }
 
@@ -2478,21 +1612,11 @@ $panel-border: $gray-200;
 // ===============================
 
 .report-viewer {
-  // Hardware acceleration for smooth animations
-  &__parameters,
-  &__preview,
   &__generate-btn {
     will-change: transform;
     transform: translateZ(0);
   }
   
-  // Optimize scrolling performance
-  &__parameters-content,
-  &__preview-content {
-    contain: layout style;
-  }
-  
-  // Optimize dropdown rendering
   :deep(.p-dropdown-panel),
   :deep(.p-multiselect-panel),
   :deep(.p-autocomplete-panel),
@@ -2502,5 +1626,5 @@ $panel-border: $gray-200;
 }
 
 /* ===================================================================
-   END OF REPORT VIEWER STYLES
+   END OF COMPONENT STYLES - COMPLETE
    =================================================================== */

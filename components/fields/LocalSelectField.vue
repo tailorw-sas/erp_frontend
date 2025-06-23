@@ -1,34 +1,39 @@
-<!-- LocalSelectField.vue - CLEAN VERSION SIN ESTILOS -->
+<!-- LocalSelectField.vue - REFACTORED TO USE BaseField -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import Dropdown from 'primevue/dropdown'
+import type { FormFieldProps, ValidationError } from '../../types/form'
+import BaseField from './BaseField.vue'
 
-const props = defineProps<{
-  field: {
-    field: string
-    dataType: string
-    label?: string
-    placeholder?: string
-    required?: boolean
-    options?: any[]
-    ui?: {
-      readonly?: boolean
-      placeholder?: string
-      className?: string | string[]
-      style?: Record<string, any>
-    }
-    [key: string]: any
-  }
+// Props que extienden FormFieldProps para ser compatible con el sistema
+interface LocalSelectFieldProps extends Omit<FormFieldProps<any>, 'value'> {
   value?: any
-  error?: any[]
-  disabled?: boolean
   readonly?: boolean
+  required?: boolean
+  name?: string
+  id?: string
+  placeholder?: string
+  helpText?: string
+  label?: string
+  description?: string
+  size?: string
+  variant?: string
+  class?: string
+  config?: any
+  onUpdate?: (value: any) => void
+  disabled?: boolean
   clearable?: boolean
-}>()
+}
+
+const props = withDefaults(defineProps<LocalSelectFieldProps>(), {
+  readonly: false,
+  required: false,
+  disabled: false,
+  clearable: true
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: any]
-  'update:value': [value: any]
   'blur': []
   'focus': []
   'clear': []
@@ -37,9 +42,19 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.value)
 
+// Watch del valor prop para sincronizar
 watch(() => props.value, (newValue) => {
   internalValue.value = newValue
 }, { immediate: true })
+
+// Computed para el valor actual (compatible con BaseField)
+const currentValue = computed({
+  get: () => internalValue.value,
+  set: (newValue: any) => {
+    internalValue.value = newValue
+    handleValueUpdate(newValue)
+  }
+})
 
 function normalizeOptions(options: any[]): Array<{ name: string, value: any }> {
   if (!options || !Array.isArray(options) || options.length === 0) {
@@ -65,24 +80,8 @@ function normalizeOptions(options: any[]): Array<{ name: string, value: any }> {
   return options.map((opt, _index) => ({ name: String(opt), value: opt }))
 }
 
-const fieldLabel = computed(() => {
-  return props.field.label || props.field.field || 'Select Option'
-})
-
-const fieldPlaceholder = computed(() => {
-  return props.field.ui?.placeholder || props.field.placeholder || `Select ${fieldLabel.value}`
-})
-
-const isRequired = computed(() => {
-  return props.field.required || false
-})
-
-const hasError = computed(() => {
-  return props.error && props.error.length > 0
-})
-
 const normalizedOptions = computed(() => {
-  return normalizeOptions(props.field.options || [])
+  return normalizeOptions(props.field?.options || [])
 })
 
 const isDisabled = computed(() =>
@@ -104,15 +103,24 @@ const showClearButton = computed(() => {
     && !isDisabled.value
 })
 
-const dropdownValue = computed({
-  get: () => internalValue.value,
-  set: newValue => handleValueUpdate(newValue)
+const placeholder = computed(() => {
+  if (props.field?.ui?.placeholder) {
+    return props.field.ui.placeholder
+  }
+
+  if (props.field?.placeholder) {
+    return props.field.placeholder
+  }
+
+  const label = props.field?.label || props.field?.field || 'Option'
+  return `Select ${label}`
 })
 
-const dropdownClasses = computed(() => {
-  const classes = ['w-full', 'local-select-dropdown']
+// Computed para clases del componente
+const componentClasses = computed(() => {
+  const classes = ['local-select-dropdown']
 
-  if (hasError.value) {
+  if (props.error && props.error.length > 0) {
     classes.push('p-invalid')
   }
 
@@ -126,12 +134,43 @@ const dropdownClasses = computed(() => {
   return classes
 })
 
+// Computed para el estilo del campo
 const fieldStyle = computed(() => props.field?.ui?.style || {})
 
+// Computed para el BaseField props
+const baseFieldProps = computed(() => ({
+  field: props.field,
+  value: props.value ?? null,
+  error: props.error,
+  loading: props.loading,
+  disabled: props.disabled,
+  readonly: props.readonly,
+  required: props.required,
+  name: props.name,
+  id: props.id,
+  placeholder: props.placeholder,
+  helpText: props.helpText,
+  label: props.label,
+  description: props.description,
+  size: props.size,
+  variant: props.variant,
+  class: props.class,
+  config: props.config,
+  style: fieldStyle.value,
+  onUpdate: props.onUpdate || handleValueUpdate
+}))
+
+// Event handlers compatibles con BaseField
 function handleValueUpdate(value: any) {
-  internalValue.value = value
-  emit('update:modelValue', value)
-  emit('update:value', value)
+  if (props.onUpdate) {
+    props.onUpdate(value)
+  }
+
+  if (value !== props.value) {
+    emit('update:modelValue', value)
+  }
+
+  emit('change', value)
 }
 
 function handleBlur() {
@@ -147,9 +186,7 @@ function handleClear() {
   internalValue.value = null
 
   if (oldValue !== null) {
-    emit('update:modelValue', null)
-    emit('update:value', null)
-    emit('change', null)
+    handleValueUpdate(null)
   }
 
   emit('clear')
@@ -157,46 +194,56 @@ function handleClear() {
 
 function handleChange(event: any) {
   const newValue = event?.value !== undefined ? event.value : event
-  handleValueUpdate(newValue)
-  emit('change', newValue)
+  currentValue.value = newValue
 }
 
 function handleFilter(event: any) {
   console.log('Filter:', event.value)
 }
+
+// Función para obtener el display label
+function getDisplayLabel(value: any): string {
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  const option = normalizedOptions.value.find(opt => opt.value === value)
+  return option?.name || String(value)
+}
+
+// Expose functions for BaseField compatibility
+defineExpose({
+  focus: () => {}, // TODO: Implementar focus en el dropdown
+  blur: () => {}, // TODO: Implementar blur en el dropdown
+  clear: handleClear,
+  getDisplayLabel
+})
 </script>
 
 <template>
-  <div v-if="field.dataType === 'localselect'" class="local-select-field w-full">
-    <!-- Label -->
-    <label
-      v-if="fieldLabel"
-      :for="`local-select-${field.field}`"
-      class="form-field__label"
-      :class="{ 'form-field--required': isRequired }"
-    >
-      {{ fieldLabel }}
-    </label>
-
-    <!-- Input wrapper -->
-    <div class="form-field__input-wrapper">
+  <!-- ✅ USANDO BaseField COMO DateField Y SelectField -->
+  <BaseField
+    v-if="field?.dataType === 'localselect'"
+    v-bind="baseFieldProps"
+  >
+    <template #input="{ fieldId, onUpdate, onBlur, onFocus }">
       <Dropdown
-        :id="`local-select-${field.field}`"
-        v-model="dropdownValue"
+        :id="fieldId"
+        v-model="currentValue"
         :options="normalizedOptions"
         option-label="name"
         option-value="value"
-        :placeholder="fieldPlaceholder"
-        :class="dropdownClasses"
+        :placeholder="placeholder"
+        :class="componentClasses"
         :style="fieldStyle"
         :filter="normalizedOptions.length > 10"
         :show-clear="showClearButton"
         :disabled="isDisabled"
-        :loading="false"
+        :loading="props.loading || false"
         filter-placeholder="Search..."
-        @update:model-value="handleValueUpdate"
-        @blur="handleBlur"
-        @focus="handleFocus"
+        @update:model-value="onUpdate"
+        @blur="onBlur"
+        @focus="onFocus"
         @change="handleChange"
         @clear="handleClear"
         @filter="handleFilter"
@@ -209,25 +256,58 @@ function handleFilter(event: any) {
 
         <template #value="{ value }">
           <div v-if="value !== null && value !== undefined" class="dropdown-selected">
-            <span>{{ normalizedOptions.find(opt => opt.value === value)?.name || value }}</span>
+            <span>{{ getDisplayLabel(value) }}</span>
           </div>
           <span v-else class="dropdown-placeholder">
-            {{ fieldPlaceholder }}
+            {{ placeholder }}
           </span>
         </template>
-      </Dropdown>
-    </div>
 
-    <!-- Error messages -->
-    <div v-if="hasError" class="form-field__error-messages">
-      <small
-        v-for="(errorItem, index) in error"
-        :key="index"
-        class="form-field__error-message"
-      >
-        <i class="pi pi-exclamation-triangle" />
-        {{ errorItem.message || errorItem }}
-      </small>
-    </div>
-  </div>
+        <template #empty>
+          <div class="p-dropdown-empty-message">
+            <span>No options available.</span>
+          </div>
+        </template>
+
+        <template #loader>
+          <div class="p-dropdown-loader">
+            <i class="pi pi-spin pi-spinner" />
+          </div>
+        </template>
+      </Dropdown>
+    </template>
+
+    <!-- ✅ SLOTS PASADOS A BaseField -->
+    <template #label="slotProps">
+      <slot name="label" v-bind="slotProps" />
+    </template>
+
+    <template #prefix="slotProps">
+      <slot name="prefix" v-bind="slotProps" />
+    </template>
+
+    <template #suffix="slotProps">
+      <slot name="suffix" v-bind="slotProps" />
+    </template>
+
+    <template #icon="slotProps">
+      <slot name="icon" v-bind="slotProps" />
+    </template>
+
+    <template #help="slotProps">
+      <slot name="help" v-bind="slotProps" />
+    </template>
+
+    <template #error="slotProps">
+      <slot name="error" v-bind="slotProps" />
+    </template>
+
+    <template #loading>
+      <slot name="loading" />
+    </template>
+
+    <template #clear-icon>
+      <slot name="clear-icon" />
+    </template>
+  </BaseField>
 </template>

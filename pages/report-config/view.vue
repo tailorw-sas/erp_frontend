@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, readonly, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, reactive, readonly, ref, watch } from 'vue'
 import { z } from 'zod'
 import dayjs from 'dayjs'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -10,55 +10,32 @@ import ProgressBar from 'primevue/progressbar'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
 import Divider from 'primevue/divider'
-import Skeleton from 'primevue/skeleton'
 import Toast from 'primevue/toast'
 import ConfirmPopup from 'primevue/confirmpopup'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
-import { FormFieldBuilder as FieldBuilder } from '~/utils/formFieldBuilder'
-import CustomAutoCompleteComponent from '~/components/fields/CustomAutoCompleteComponent.vue'
-import CustomMultiSelectComponent from '~/components/fields/CustomMultiSelectComponent.vue'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
-import LocalSelectField from '~/components/fields/LocalSelectField.vue'
+
+// ✅ FIXED: Import createDynamicField as value, not type
+import type {
+  DynamicApiConfig,
+  DynamicFieldArgs,
+  FormField,
+  ReportFormField,
+} from '~/types/form'
+import { createDynamicField } from '~/types/form'
 
 // ========== TYPES & INTERFACES ==========
-interface ReportFormField {
-  name: string // Requerido por FormField
-  type: string // Requerido por FormField
-  field: string // Tu propiedad existente
-  label: string
-  class?: string
-  placeholder?: string
-  helpText?: string
-  validation?: any
-  dataType?: string
-  options?: any[]
-  objApi?: {
-    moduleApi: string
-    uriApi: string
-  }
-  kwArgs?: any
-  multiple?: boolean
-  filterable?: boolean
-  maxSelectedLabels?: number
-  selectionLimit?: number
-  showClear?: boolean
-  disabled?: boolean
-  hidden?: boolean
-  required?: boolean
-  defaultValue?: any
-}
-
 interface FieldValues {
   [key: string]: any
 }
 
 interface ReportConfig {
-  moduleApi: string
-  uriApiReportGenerate: string
-  timeout?: number
-  retryAttempts?: number
-  retryDelay?: number
+  readonly moduleApi: string
+  readonly uriApiReportGenerate: string
+  readonly timeout?: number
+  readonly retryAttempts?: number
+  readonly retryDelay?: number
 }
 
 interface ReportProgress {
@@ -68,67 +45,93 @@ interface ReportProgress {
 }
 
 interface ReportResponse {
-  base64Report: string
+  readonly base64Report: string
 }
 
 interface ReportFormat {
-  id: 'PDF' | 'XLS' | 'CSV'
-  name: string
-  icon: string
-  description: string
+  readonly id: 'PDF' | 'XLS' | 'CSV'
+  readonly name: string
+  readonly icon: string
+  readonly description: string
 }
 
-// ========== BACKEND INTERFACES - NEW ==========
+// ========== BACKEND INTERFACES ==========
 interface BackendReportParameter {
-  id: string
-  paramName: string
-  type: string // java.sql.Date, java.lang.String, etc.
-  module: string
-  service: string
-  label: string
-  componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
-  jasperReportTemplate: any // Nested object we don't need
-  reportClass: string
-  reportValidation: string
-  parameterPosition: number
-  dependentField: string
-  filterKeyValue: string
-  dataValueStatic: string
+  readonly id: string
+  readonly paramName: string
+  readonly type: string
+  readonly module: string
+  readonly service: string
+  readonly label: string
+  readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
+  readonly jasperReportTemplate: any
+  readonly reportClass: string
+  readonly reportValidation: string
+  readonly parameterPosition: number
+  readonly dependentField: string
+  readonly filterKeyValue: string
+  readonly dataValueStatic: string
 }
 
 interface BackendReportInfo {
-  id: string
-  code: string
-  name: string
-  description?: string
-  parameters?: BackendReportParameter[]
+  readonly id: string
+  readonly code: string
+  readonly name: string
+  readonly description?: string
+  readonly parameters?: BackendReportParameter[]
 }
 
-// ========== FRONTEND INTERFACES - UPDATED ==========
+// ========== FRONTEND INTERFACES ==========
 interface ReportParameter {
-  paramName: string
-  label: string
-  componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
-  module?: string
-  service?: string
-  reportClass?: string
-  dataValueStatic?: string
-  filtersBase?: any[]
-  dependentField?: string
-  debounceTimeMs?: number
-  maxSelectedLabels?: number
-  required?: boolean
-  defaultValue?: any
-  parameterPosition?: number
+  readonly id?: string
+  readonly paramName: string
+  readonly label: string
+  readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
+  readonly module?: string
+  readonly service?: string
+  readonly reportClass?: string
+  readonly dataValueStatic?: string
+  readonly filtersBase?: any[]
+  readonly dependentField?: string
+  readonly debounceTimeMs?: number
+  readonly maxSelectedLabels?: number
+  readonly required?: boolean
+  readonly defaultValue?: any
+  readonly parameterPosition?: number
 }
 
 interface ReportInfo {
-  id: string
-  code: string
-  name: string
-  description?: string
-  category?: string
-  parameters?: ReportParameter[]
+  readonly id: string
+  readonly code: string
+  readonly name: string
+  readonly description?: string
+  readonly category?: string
+  readonly parameters?: ReportParameter[]
+}
+
+// ========== TYPED FIELD CONFIGURATIONS ==========
+interface FieldConfigurationMap {
+  readonly multiselect: () => ReportFormField
+  readonly select: () => ReportFormField
+  readonly localselect: () => ReportFormField
+  readonly date: () => ReportFormField
+  readonly number: () => ReportFormField
+  readonly text: () => ReportFormField
+}
+
+interface NormalizedOption {
+  readonly name: string
+  readonly label: string
+  readonly value: any
+  readonly id: string
+  readonly description?: string
+  readonly defaultValue?: boolean
+}
+
+// ✅ FIXED: Using mutable ReportFormField type for assignment compatibility
+interface MutableReportFormField extends Omit<ReportFormField, 'objApi' | 'kwArgs'> {
+  objApi?: DynamicApiConfig
+  kwArgs?: DynamicFieldArgs
 }
 
 // ========== CONSTANTS ==========
@@ -170,7 +173,6 @@ const formValidationErrors = ref<Record<string, string[]>>({})
 // Report state
 const currentReport = ref<ReportInfo | null>(null)
 const loadingReport = ref(false)
-const suggestionsData = ref<any[]>([])
 
 // Report generator config
 const reportConfig = reactive<ReportConfig>({
@@ -180,6 +182,328 @@ const reportConfig = reactive<ReportConfig>({
   retryAttempts: 2,
   retryDelay: 3000
 })
+
+// ========== UTILITY FUNCTIONS - MODULAR APPROACH ==========
+
+/**
+ * Normalizes options from various formats into a consistent structure
+ * @param options - Raw options array
+ * @returns Normalized options array
+ */
+function normalizeOptions(options: any[]): NormalizedOption[] {
+  if (!options || !Array.isArray(options) || options.length === 0) {
+    return []
+  }
+
+  // Handle backend localselect format: {id, name, slug, defaultValue}
+  if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
+    return options.map(opt => ({
+      name: opt.name,
+      label: opt.name,
+      value: opt.id,
+      id: opt.id,
+      description: opt.description || opt.slug,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
+
+  // Already normalized with 'name'
+  if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
+    return options.map(opt => ({
+      name: opt.name,
+      label: opt.name,
+      value: opt.value,
+      id: opt.id || opt.value,
+      description: opt.description,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
+
+  // Has 'label' instead of 'name'
+  if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
+    return options.map(opt => ({
+      name: opt.label,
+      label: opt.label,
+      value: opt.value,
+      id: opt.id || opt.value,
+      description: opt.description,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
+
+  // String array
+  if (options.every(opt => typeof opt === 'string')) {
+    return options.map(opt => ({
+      name: opt,
+      label: opt,
+      value: opt,
+      id: opt,
+      defaultValue: false
+    }))
+  }
+
+  // Mixed objects fallback
+  if (options.every(opt => opt && typeof opt === 'object')) {
+    return options.map((opt, index) => {
+      const displayName = opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`
+      return {
+        name: displayName,
+        label: displayName,
+        value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
+        id: (opt.id || opt.value || index).toString(),
+        description: opt.description || opt.slug,
+        defaultValue: opt.defaultValue === true
+      }
+    })
+  }
+
+  // Ultimate fallback
+  return options.map((opt, index) => ({
+    name: String(opt),
+    label: String(opt),
+    value: opt,
+    id: String(index),
+    defaultValue: false
+  }))
+}
+
+/**
+ * Maps backend parameter to frontend parameter with proper typing
+ * @param backendParam - Backend parameter definition
+ * @returns Mapped frontend parameter
+ */
+function mapBackendParameter(backendParam: BackendReportParameter): ReportParameter {
+  const mappedParam: ReportParameter = {
+    id: backendParam.id,
+    paramName: backendParam.paramName,
+    label: backendParam.label,
+    componentType: backendParam.componentType,
+    required: false,
+    debounceTimeMs: 300,
+    maxSelectedLabels: 2,
+    parameterPosition: backendParam.parameterPosition || 0,
+  }
+
+  // Add module/service for dynamic components
+  if (backendParam.module?.trim()) {
+    Object.assign(mappedParam, { module: backendParam.module.trim() })
+  }
+
+  if (backendParam.service?.trim()) {
+    Object.assign(mappedParam, { service: backendParam.service.trim() })
+  }
+
+  // Handle dependent field relationships
+  if (backendParam.dependentField?.trim()) {
+    Object.assign(mappedParam, { dependentField: backendParam.dependentField.trim() })
+  }
+
+  // Map filterKeyValue to filtersBase structure
+  if (backendParam.filterKeyValue?.trim()) {
+    Object.assign(mappedParam, {
+      filtersBase: [{
+        key: backendParam.filterKeyValue.trim(),
+        value: null
+      }]
+    })
+  }
+  else {
+    Object.assign(mappedParam, { filtersBase: [] })
+  }
+
+  if (backendParam.componentType === 'localselect' && backendParam.dataValueStatic) {
+    Object.assign(mappedParam, { dataValueStatic: backendParam.dataValueStatic })
+  }
+
+  return mappedParam
+}
+
+/**
+ * Creates form field from parameter with proper type safety
+ * @param param - Report parameter
+ * @returns Configured form field
+ */
+function createFieldFromParameter(param: ReportParameter): ReportFormField {
+  const baseProps = {
+    id: param.id,
+    name: param.paramName,
+    type: param.componentType,
+    field: param.paramName,
+    label: param.label,
+    class: 'col-12 md:col-6',
+    placeholder: `Select ${param.label}`,
+    helpText: param.required ? 'This field is required' : `Optional - ${param.label}`,
+    validation: param.required
+      ? z.string().min(1, `${param.label} is required`)
+      : z.string().optional(),
+    required: param.required || false,
+    showClear: true,
+    filterable: true
+  }
+
+  if (param.required) {
+    baseProps.class = `${baseProps.class} required`
+  }
+
+  // API Configuration
+  const apiConfig: DynamicApiConfig | undefined = param.module && param.service
+    ? {
+        moduleApi: param.module,
+        uriApi: param.service
+      }
+    : undefined
+
+  Logger.log('- Generated apiConfig:', apiConfig)
+
+  // Dynamic Arguments
+  const kwArgs: DynamicFieldArgs = {
+    filtersBase: param.filtersBase || [],
+    dependentField: param.dependentField,
+    debounceTimeMs: param.debounceTimeMs || 300,
+    maxSelectedLabels: param.maxSelectedLabels || 3,
+    loadOnOpen: true,
+    minQueryLength: 0,
+    maxItems: 50
+  }
+
+  // ✅ FIXED: Properly typed field configurations
+  const fieldConfigs: FieldConfigurationMap = {
+    multiselect: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'multiselect',
+        param.label,
+        apiConfig,
+        {
+          ...baseProps,
+          dataType: 'multiselect',
+          multiple: true,
+          maxSelectedLabels: param.maxSelectedLabels || 3,
+          kwArgs,
+          filtersBase: param.filtersBase || []
+        }
+      )
+    },
+
+    select: (): ReportFormField => {
+      Logger.log('🔍 SELECT FIELD CONFIG:', {
+        module: param.module,
+        service: param.service
+      })
+
+      return createDynamicField(
+        param.paramName,
+        'select',
+        param.label,
+        apiConfig,
+        {
+          ...baseProps,
+          dataType: 'select',
+          multiple: false,
+          kwArgs,
+          filtersBase: param.filtersBase || []
+        }
+      )
+    },
+
+    localselect: (): ReportFormField => {
+      let options: NormalizedOption[] = []
+      let defaultValue: any = null
+
+      try {
+        if (param.dataValueStatic) {
+          const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
+          options = normalizeOptions(rawData)
+
+          // Find default value
+          const defaultOption = options.find(opt => opt.defaultValue === true)
+          if (defaultOption) {
+            defaultValue = defaultOption.value
+          }
+        }
+      }
+      catch (e) {
+        Logger.error('Invalid JSON in dataValueStatic for param', param.paramName, e)
+        options = []
+      }
+
+      return createDynamicField(
+        param.paramName,
+        'localselect',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          type: 'localselect',
+          dataType: 'localselect',
+          options: options.map(opt => ({ ...opt, label: opt.name })),
+          defaultValue,
+          filterable: options.length > 5,
+          config: {
+            showDebugInfo: false
+          }
+        }
+      )
+    },
+
+    date: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'date',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'date'
+        }
+      )
+    },
+
+    number: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'number',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'number'
+        }
+      )
+    },
+
+    text: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'text',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'text'
+        }
+      )
+    }
+  }
+
+  const generatedField = fieldConfigs[param.componentType]?.() || fieldConfigs.text()
+
+  Logger.log('🎯 GENERATED FIELD COMPLETE:', {
+    fieldName: param.paramName,
+    componentType: param.componentType,
+    config: {
+      apiConfig: generatedField.apiConfig,
+      objApi: generatedField.objApi,
+      kwArgs: generatedField.kwArgs,
+      dataType: generatedField.dataType,
+      multiple: generatedField.multiple,
+      filtersBase: generatedField.filtersBase,
+      debounceTimeMs: generatedField.debounceTimeMs
+    }
+  })
+
+  return generatedField
+}
 
 // ========== COMPOSABLES ==========
 function useReportGenerator(config: ReportConfig) {
@@ -457,225 +781,6 @@ function useReportParameters() {
 }
 
 function useFieldBuilder() {
-  // ✅ IMPROVED: Better option normalization with support for defaultValue
-  function normalizeOptions(options: any[], _defaultValue?: any): any[] {
-    if (!options || !Array.isArray(options) || options.length === 0) {
-      return []
-    }
-
-    // Handle backend localselect format: {id, name, slug, defaultValue}
-    if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
-      return options.map(opt => ({
-        name: opt.name,
-        label: opt.name,
-        value: opt.id,
-        id: opt.id,
-        description: opt.description || opt.slug,
-        defaultValue: opt.defaultValue === true
-      }))
-    }
-
-    // Si ya están normalizadas con 'name'
-    if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
-      return options.map(opt => ({
-        name: opt.name,
-        label: opt.name,
-        value: opt.value,
-        id: opt.id || opt.value,
-        description: opt.description,
-        defaultValue: opt.defaultValue === true
-      }))
-    }
-
-    // Si tienen 'label' en lugar de 'name'
-    if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
-      return options.map(opt => ({
-        name: opt.label,
-        label: opt.label,
-        value: opt.value,
-        id: opt.id || opt.value,
-        description: opt.description,
-        defaultValue: opt.defaultValue === true
-      }))
-    }
-
-    // Si son strings
-    if (options.every(opt => typeof opt === 'string')) {
-      return options.map(opt => ({
-        name: opt,
-        label: opt,
-        value: opt,
-        id: opt,
-        defaultValue: false
-      }))
-    }
-
-    // Si son objetos mixtos
-    if (options.every(opt => opt && typeof opt === 'object')) {
-      return options.map((opt, index) => {
-        const displayName = opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`
-        return {
-          name: displayName,
-          label: displayName,
-          value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
-          id: (opt.id || opt.value || index).toString(),
-          description: opt.description || opt.slug,
-          defaultValue: opt.defaultValue === true
-        }
-      })
-    }
-
-    // Fallback
-    return options.map((opt, index) => ({
-      name: String(opt),
-      label: String(opt),
-      value: opt,
-      id: String(index),
-      defaultValue: false
-    }))
-  }
-
-  // ✅ NEW: Map backend parameter to frontend parameter
-  function mapBackendParameter(backendParam: BackendReportParameter): ReportParameter {
-    const mappedParam: ReportParameter = {
-      paramName: backendParam.paramName,
-      label: backendParam.label,
-      componentType: backendParam.componentType,
-      required: false, // Default as requested
-      debounceTimeMs: 300, // Default as requested
-      maxSelectedLabels: 3, // Default as requested
-      parameterPosition: backendParam.parameterPosition || 0, // ✅ NEW: Preserve parameter order
-    }
-
-    // Add module/service for dynamic components
-    if (backendParam.module && backendParam.module.trim() !== '') {
-      mappedParam.module = backendParam.module.trim()
-    }
-
-    if (backendParam.service && backendParam.service.trim() !== '') {
-      mappedParam.service = backendParam.service.trim()
-    }
-
-    // Handle dependent field relationships
-    if (backendParam.dependentField && backendParam.dependentField.trim() !== '') {
-      mappedParam.dependentField = backendParam.dependentField.trim()
-    }
-
-    // Map filterKeyValue to filtersBase structure
-    if (backendParam.filterKeyValue && backendParam.filterKeyValue.trim() !== '') {
-      mappedParam.filtersBase = [{
-        key: backendParam.filterKeyValue.trim(),
-        value: null // Will be populated dynamically based on dependent field
-      }]
-    }
-    else {
-      mappedParam.filtersBase = []
-    }
-
-    // Handle static data for localselect
-    if (backendParam.componentType === 'localselect' && backendParam.dataValueStatic) {
-      mappedParam.dataValueStatic = backendParam.dataValueStatic
-    }
-
-    return mappedParam
-  }
-
-  function createFieldFromParameter(param: ReportParameter): any {
-    const baseProps = {
-      name: param.paramName,
-      type: param.componentType,
-      field: param.paramName,
-      label: param.label,
-      class: 'col-12 md:col-6', // Default layout
-      placeholder: `Select ${param.label}`,
-      helpText: param.required ? 'This field is required' : `Optional - ${param.label}`,
-      validation: param.required
-        ? z.string().min(1, `${param.label} is required`)
-        : z.string().optional(),
-      required: param.required || false,
-      showClear: true,
-      filterable: true
-    }
-
-    if (param.required) {
-      baseProps.class = `${baseProps.class} required`
-    }
-
-    const fieldConfigs = {
-      multiselect: () => ({
-        ...FieldBuilder.multiselect(param.paramName, param.label, []),
-        ...baseProps,
-        dataType: 'multiselect',
-        multiple: true,
-        maxSelectedLabels: param.maxSelectedLabels || 3,
-        selectionLimit: 50
-      }),
-
-      select: () => ({
-        ...FieldBuilder.select(param.paramName, param.label, []),
-        ...baseProps,
-        dataType: 'select'
-      }),
-
-      localselect: () => {
-        let options: Array<{ name: string, value: any, id?: string, description?: string, defaultValue?: boolean }> = []
-        let defaultValue: any = null
-
-        try {
-          if (param.dataValueStatic) {
-            const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
-            options = normalizeOptions(rawData)
-
-            // ✅ IMPROVED: Find default value with better logic
-            const defaultOption = options.find(opt => opt.defaultValue === true)
-            if (defaultOption) {
-              defaultValue = defaultOption.value
-            }
-          }
-        }
-        catch (e) {
-          Logger.error('Invalid JSON in dataValueStatic for param', param.paramName, e)
-          options = []
-        }
-
-        return {
-          ...FieldBuilder.select(param.paramName, param.label, options.map(opt => ({ ...opt, label: opt.name }))),
-          ...baseProps,
-          type: 'localselect',
-          dataType: 'localselect',
-          options, // ✅ Compatible with LocalSelectField
-          defaultValue,
-          filterable: options.length > 5, // Only filter if many options
-          showClear: true,
-          // ✅ NUEVO: Additional props for LocalSelectField
-          config: {
-            showDebugInfo: false // Set to true for development
-          }
-        }
-      },
-
-      date: () => ({
-        ...FieldBuilder.date(param.paramName, param.label),
-        ...baseProps,
-        dataType: 'date'
-      }),
-
-      number: () => ({
-        ...FieldBuilder.number(param.paramName, param.label),
-        ...baseProps,
-        dataType: 'number'
-      }),
-
-      text: () => ({
-        ...FieldBuilder.text(param.paramName, param.label),
-        ...baseProps,
-        dataType: 'text'
-      })
-    }
-
-    return fieldConfigs[param.componentType]?.() || fieldConfigs.text()
-  }
-
   return {
     createFieldFromParameter,
     normalizeOptions,
@@ -701,8 +806,8 @@ const {
 } = useReportParameters()
 
 const {
-  createFieldFromParameter,
-  mapBackendParameter
+  createFieldFromParameter: createField,
+  mapBackendParameter: mapParameter
 } = useFieldBuilder()
 
 // ========== COMPUTED PROPERTIES ==========
@@ -728,17 +833,15 @@ const progressPercentage = computed(() => {
   return Math.round(reportProgress.progress || 0)
 })
 
-const isDevelopment = computed(() => {
-  return import.meta.env.DEV
-})
-
 // ========== METHODS ==========
 async function loadReport(reportId: string) {
-  if (!reportId) { return }
+  if (!reportId) {
+    return
+  }
 
   try {
-    Logger.log('Detected load report:', reportId)
     loadingReport.value = true
+
     const response = await GenericService.getById<BackendReportInfo>(
       'report',
       'jasper-report-template/template-with-params/',
@@ -752,7 +855,7 @@ async function loadReport(reportId: string) {
       description: response.description,
       parameters: response.parameters
         ? response.parameters
-            .map(mapBackendParameter)
+            .map(mapParameter)
             .sort((a, b) => (a.parameterPosition || 0) - (b.parameterPosition || 0))
         : []
     }
@@ -761,7 +864,7 @@ async function loadReport(reportId: string) {
     await loadReportParameters(mappedReport.id, mappedReport.code, mappedReport)
   }
   catch (error) {
-    console.error('Error loading report:', error)
+    Logger.error('🧪 [ERROR] loadReport failed:', error)
     toast.add({
       severity: 'error',
       summary: 'Load Failed',
@@ -775,19 +878,22 @@ async function loadReport(reportId: string) {
 }
 
 async function loadReportParameters(id: string, code: string, reportData?: ReportInfo) {
-  if (!id) { return }
+  if (!id) {
+    return
+  }
 
   try {
     showForm.value = false
 
-    // ✅ IMPROVED: Better parameter processing with default values and proper ordering
-    if (reportData?.parameters && reportData.parameters.length > 0) {
-      // Parameters are already sorted by parameterPosition in loadReport method
-      reportData.parameters.forEach((param: ReportParameter, index: number) => {
-        // Create field definition
-        const fieldDef = createFieldFromParameter(param)
+    // Clear existing fields
+    fields.value = []
 
-        // ✅ NEW: Set default value if available
+    if (reportData?.parameters && reportData.parameters.length > 0) {
+      reportData.parameters.forEach((param: ReportParameter) => {
+        // Create field definition
+        const fieldDef = createField(param) as MutableReportFormField
+
+        // Set default value if available
         let initialValue = param.componentType === 'multiselect' ? [] : ''
         if (param.componentType === 'localselect' && fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
           initialValue = fieldDef.defaultValue
@@ -799,8 +905,17 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
         // Initialize field value
         item.value[param.paramName] = initialValue
 
-        // ✅ IMPROVED: Better API configuration for dynamic fields
+        // ✅ FIXED: Enhanced API configuration for dynamic fields using mutable interface
         if (['select', 'multiselect'].includes(param.componentType) && param.module && param.service) {
+          Logger.log('🔍 LOADING REPORT PARAMETERS:', {
+            field: param.paramName,
+            componentType: param.componentType,
+            module: param.module,
+            service: param.service,
+            dependentField: param.dependentField,
+            filtersBase: param.filtersBase
+          })
+
           fieldDef.objApi = {
             moduleApi: param.module,
             uriApi: param.service
@@ -813,33 +928,16 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
           }
         }
 
-        fields.value.push(fieldDef)
-
-        Logger.log(`✅ Parameter ${index + 1} loaded:`, {
-          paramName: param.paramName,
-          position: param.parameterPosition,
-          componentType: param.componentType,
-          hasDefault: fieldDef.defaultValue !== undefined,
-          initialValue,
-          optionsCount: fieldDef.options?.length || 0
-        })
+        fields.value.push(fieldDef as ReportFormField)
       })
     }
 
     item.value.jasperReportCode = code || ''
-    currentReport.value = reportData || null // ✅ FIXED: Update current report
+    currentReport.value = reportData || null
     formReload.value++
 
     await nextTick()
     showForm.value = true
-
-    Logger.log('✅ Parameters loaded successfully', {
-      reportCode: code,
-      parametersCount: reportData?.parameters?.length || 0,
-      fieldsGenerated: fields.value.length,
-      parameterOrder: reportData?.parameters?.map(p => ({ name: p.paramName, position: p.parameterPosition })) || [],
-      currentFormValues: item.value
-    })
   }
   catch (error) {
     Logger.error('Error loading parameters:', error)
@@ -877,8 +975,6 @@ async function executeReport() {
       item.value.jasperReportCode,
       item.value.reportFormatType
     )
-
-    Logger.log('Executing report with payload:', payload)
 
     const base64Report = await generateReport(payload)
 
@@ -935,7 +1031,6 @@ function clearForm() {
 
 // ========== EVENT HANDLERS ==========
 function handleFieldUpdate(event: any) {
-  // Adaptar diferentes formatos de evento
   const name = event.name || event.fieldName || event.field
   const value = event.value
 
@@ -958,7 +1053,6 @@ function handleCancel() {
 function handleValidationErrors(event: any) {
   // Handle FormValidationEvent properly
   if (event && typeof event === 'object' && 'errors' in event) {
-    // Convert ValidationError[] to Record<string, string[]>
     const errorRecord: Record<string, string[]> = {}
     if (Array.isArray(event.errors)) {
       event.errors.forEach((error: any) => {
@@ -973,7 +1067,6 @@ function handleValidationErrors(event: any) {
     formValidationErrors.value = errorRecord
   }
   else {
-    // Fallback for legacy format
     formValidationErrors.value = event || {}
   }
 }
@@ -1010,30 +1103,23 @@ function shareReport() {
   }
 }
 
-// PDF Viewer functions (placeholders for actual implementation)
+// PDF Viewer functions
 function zoomIn() {
-  // Implement zoom in functionality
   Logger.log('Zoom in')
 }
 
 function zoomOut() {
-  // Implement zoom out functionality
   Logger.log('Zoom out')
 }
 
 // ========== WATCHERS ==========
 watch(() => route.query.reportId, (newReportId) => {
-  Logger.log('Detected reportId change:', newReportId)
   if (newReportId && typeof newReportId === 'string') {
     loadReport(newReportId)
   }
 }, { immediate: true })
 
 // ========== LIFECYCLE ==========
-onMounted(() => {
-  Logger.log('ReportViewer mounted with query params:', route.query)
-})
-
 onUnmounted(() => {
   cleanup()
 })
@@ -1200,9 +1286,9 @@ const isShareSupported = computed(() => {
             </div>
 
             <EnhancedFormComponent
-              v-else-if="showForm"
+              v-if="showForm"
               :key="formReload"
-              :fields="fields as any"
+              :fields="fields as FormField[]"
               :initial-values="item"
               :show-actions="false"
               :loading="isGenerating"
@@ -1214,84 +1300,6 @@ const isShareSupported = computed(() => {
               @cancel="handleCancel"
             >
               <template
-                v-for="fieldItem in fields.filter((f) => f.field !== 'reportFormatType' && f.dataType && ['select', 'multiselect', 'localselect'].includes(f.dataType))"
-                :key="fieldItem.field"
-                #[`field-${fieldItem.field}`]="{ item: data, onUpdate, errors }"
-              >
-                <!-- Local Select (static options) -->
-                <div v-if="fieldItem.dataType === 'localselect'" class="w-full">
-                  <LocalSelectField
-                    :field="{
-                      name: fieldItem.field,
-                      field: fieldItem.field,
-                      dataType: 'localselect',
-                      label: fieldItem.label,
-                      type: fieldItem.type,
-                      placeholder: fieldItem.placeholder || `Select ${fieldItem.label}`,
-                      showClear: fieldItem.showClear !== false,
-                      filterable: fieldItem.filterable !== false,
-                      required: fieldItem.required || false,
-                      helpText: fieldItem.helpText,
-                      options: fieldItem.options || [],
-                    }"
-                    :value="data[fieldItem.field]"
-                    :error="errors && errors.length > 0 ? errors.map((e: string) => ({ message: e })) : []"
-                    :disabled="isGenerating"
-                    :config="{ showDebugInfo: isDevelopment }"
-                    @update:value="onUpdate(fieldItem.field, $event)"
-                  />
-                </div>
-
-                <!-- Dynamic Select (API-based) -->
-                <div
-                  v-else-if="fieldItem.dataType === 'select' && !isGenerating"
-                  class="w-full"
-                >
-                  <CustomAutoCompleteComponent
-                    :id="`autocomplete-${fieldItem.field}`"
-                    field="name"
-                    item-value="id"
-                    :model="data[fieldItem.field]"
-                    :suggestions="suggestionsData"
-                    :filters-base="fieldItem.kwArgs?.filtersBase || []"
-                    :api-config="fieldItem.objApi"
-                    :dependent-field="fieldItem.kwArgs?.dependentField"
-                    :debounce-time-ms="fieldItem.kwArgs?.debounceTimeMs || 300"
-                    :class="{ 'p-invalid': errors && errors.length > 0 }"
-                    class="w-full"
-                    @change="onUpdate(fieldItem.field, $event)"
-                  />
-                </div>
-
-                <!-- Dynamic MultiSelect (API-based) -->
-                <div
-                  v-else-if="fieldItem.dataType === 'multiselect' && !isGenerating"
-                  class="w-full"
-                >
-                  <CustomMultiSelectComponent
-                    :id="`multiselect-${fieldItem.field}`"
-                    field="name"
-                    item-value="id"
-                    class="w-full"
-                    :class="{ 'p-invalid': errors && errors.length > 0 }"
-                    :model-value="data[fieldItem.field] || []"
-                    :api-config="fieldItem.objApi"
-                    :filters-base="fieldItem.kwArgs?.filtersBase || []"
-                    :dependent-field="fieldItem.kwArgs?.dependentField"
-                    :debounce-time-ms="fieldItem.kwArgs?.debounceTimeMs || 300"
-                    :max-selected-labels="fieldItem.kwArgs?.maxSelectedLabels || 3"
-                    :load-on-open="true"
-                    :min-query-length="0"
-                    @update:model-value="onUpdate(fieldItem.field, $event)"
-                  />
-                </div>
-
-                <!-- Loading skeleton for dynamic fields -->
-                <Skeleton v-else class="w-full h-3rem" />
-              </template>
-
-              <!-- Custom header for specific fields -->
-              <template
                 v-for="fieldItem in fields.filter((f) => f.required)"
                 :key="`header-${fieldItem.field}`"
                 #[`header-${fieldItem.field}`]="{ field }"
@@ -1302,7 +1310,6 @@ const isShareSupported = computed(() => {
                 </div>
               </template>
             </EnhancedFormComponent>
-
             <!-- Enhanced Action Section -->
             <div class="report-viewer__actions">
               <!-- Export Format Selection -->
@@ -1598,6 +1605,6 @@ const isShareSupported = computed(() => {
 </template>
 
 <style scoped>
-@import '@/assets/styles/pages/report-viewer.scss';
-  /* @import '@/assets/styles/main.scss'; */
+@import '@/assets/styles/pages/report-viewer-layout.scss';
+@import '@/assets/styles/pages/report-viewer-components.scss';
 </style>

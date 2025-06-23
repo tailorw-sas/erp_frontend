@@ -7,18 +7,7 @@ import type {
 } from 'primevue/autocomplete'
 import Logger from '../../utils/Logger'
 import type { IFilter } from './interfaces/IFieldInterfaces'
-import { useDynamicData } from '~/composables/useDynamicData'
-
-// Definir interfaces para mayor claridad
-interface ApiConfig {
-  moduleApi: string
-  uriApi: string
-}
-
-interface DependentField {
-  name: string
-  filterKeyValue: string
-}
+import { searchWithCache } from '~/composables/useDynamicData'
 
 // Props simplificados sin herencia de altura
 const props = withDefaults(defineProps<{
@@ -68,7 +57,18 @@ const emit = defineEmits<{
   'blur': []
 }>()
 
-const { loadDynamicData } = useDynamicData()
+Logger.info('🧪 props.apiConfig recibido:', props.apiConfig)
+
+// Definir interfaces para mayor claridad
+interface ApiConfig {
+  moduleApi: string
+  uriApi: string
+}
+
+interface DependentField {
+  name: string
+  filterKeyValue: string
+}
 
 // Estado reactivo mejorado (BASE ORIGINAL)
 const localModelValue = ref(props.model)
@@ -88,6 +88,13 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+watch(() => props.apiConfig, (newVal) => {
+  if (newVal && props.loadOnOpen) {
+    Logger.log('📦 apiConfig changed, reloading data:', newVal)
+    loadInitialData()
+  }
+}, { immediate: true, deep: true })
 
 // Computed para validaciones
 const hasApiConfig = computed(() => {
@@ -177,11 +184,16 @@ async function performSearch(query: string): Promise<void> {
     Logger.info('Filters:', filters)
     Logger.info('API Config:', props.apiConfig)
 
-    const results = await loadDynamicData(
-      query,
+    const payload = {
+      filter: filters,
+      pageSize: 1000,
+      page: 0
+    }
+
+    const results = await searchWithCache(
       props.apiConfig!.moduleApi,
       props.apiConfig!.uriApi,
-      filters
+      payload
     )
 
     Logger.info('Results:', results)
@@ -354,6 +366,7 @@ function getChipLabel(value: any): string {
 // Cargar datos iniciales al montar el componente (BASE ORIGINAL)
 onMounted(() => {
   Logger.error('✅ Mounted with props:', { ...props })
+  Logger.info('📦 apiConfig recibido en componente:', props.apiConfig)
   if (props.loadOnOpen && internalSuggestions.value.length === 0) {
     Logger.error('🟡 loadInitialData triggered on mount')
     loadInitialData()

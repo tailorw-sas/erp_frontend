@@ -1,4 +1,4 @@
-// components/fields/registry.ts
+// components/fields/registry.ts - VERSIÓN CORREGIDA
 import { type Component, defineAsyncComponent } from 'vue'
 import type { FieldType, FormFieldComponent, FormFieldRegistry } from '../../types/form'
 
@@ -20,7 +20,7 @@ export const fieldComponents = {
   datetime: defineAsyncComponent(() => import('./DateField.vue')),
   time: defineAsyncComponent(() => import('./DateField.vue')),
 
-  // Selection fields
+  // ✅ FIXED: Selection fields ahora mapean a UnifiedSelectField
   select: defineAsyncComponent(() => import('./SelectField.vue')),
   multiselect: defineAsyncComponent(() => import('./SelectField.vue')),
   localselect: defineAsyncComponent(() => import('./LocalSelectField.vue')),
@@ -149,7 +149,9 @@ export class FieldFactory {
 
     if (!component) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(`Field component for type "${type}" not found in registry`)
+        Logger.warn(`Field component for type "${type}" not found in registry`)
+        Logger.log('Available types:', this.registry.getRegisteredTypes())
+        Logger.log('Registry size:', this.registry.size)
       }
       return null
     }
@@ -174,6 +176,79 @@ export class FieldFactory {
 
 // Global factory instance
 export const globalFieldFactory = new FieldFactory()
+
+// ✅ NUEVO: Debug utilities mejoradas
+export const registryDebugUtils = {
+  /**
+   * Debug registry state
+   */
+  debugRegistry(): void {
+    if (process.env.NODE_ENV === 'development') {
+      Logger.group('🔧 [DEBUG] Field Registry State')
+      Logger.log('Registered types:', globalFieldRegistry.getRegisteredTypes())
+      Logger.log('Registry size:', globalFieldRegistry.size)
+
+      // Test each registered component
+      const types = globalFieldRegistry.getRegisteredTypes()
+      types.forEach((type) => {
+        const component = globalFieldFactory.create(type)
+        Logger.log(`- ${type}:`, component ? '✅ Available' : '❌ Missing')
+      })
+
+      // Test specific ReportViewer types
+      const reportViewerTypes = ['select', 'multiselect', 'localselect', 'date', 'text']
+      Logger.log('\nReportViewer compatibility:')
+      reportViewerTypes.forEach((type) => {
+        const canCreate = globalFieldFactory.canCreate(type as FieldType)
+        Logger.log(`- ${type}:`, canCreate ? '✅ Compatible' : '❌ Incompatible')
+      })
+
+      console.groupEnd()
+    }
+  },
+
+  /**
+   * Test component creation
+   */
+  testComponentCreation(type: FieldType): boolean {
+    try {
+      const component = globalFieldFactory.create(type)
+      return !!component
+    }
+    catch (error) {
+      console.error(`Error creating component "${type}":`, error)
+      return false
+    }
+  },
+
+  /**
+   * Validate ReportViewer integration
+   */
+  validateReportViewerIntegration(): {
+    isValid: boolean
+    missingComponents: string[]
+    availableComponents: string[]
+  } {
+    const requiredTypes = ['select', 'multiselect', 'localselect', 'date', 'text']
+    const availableComponents: string[] = []
+    const missingComponents: string[] = []
+
+    requiredTypes.forEach((type) => {
+      if (globalFieldFactory.canCreate(type as FieldType)) {
+        availableComponents.push(type)
+      }
+      else {
+        missingComponents.push(type)
+      }
+    })
+
+    return {
+      isValid: missingComponents.length === 0,
+      missingComponents,
+      availableComponents
+    }
+  }
+}
 
 // Utility functions for field management
 export const fieldUtils = {
@@ -339,7 +414,7 @@ export const fieldUtils = {
       select: {
         category: 'selection',
         label: 'Dropdown Select',
-        description: 'Single option selection',
+        description: 'Single option selection with API support',
         icon: 'pi pi-chevron-down',
         supportedValidations: ['required'],
         available: true
@@ -347,7 +422,7 @@ export const fieldUtils = {
       multiselect: {
         category: 'selection',
         label: 'Multi Select',
-        description: 'Multiple option selection',
+        description: 'Multiple option selection with API support',
         icon: 'pi pi-list',
         supportedValidations: ['required'],
         available: true
@@ -621,17 +696,7 @@ export const devUtils = {
    * Debug registry state
    */
   debugRegistry(): void {
-    if (process.env.NODE_ENV === 'development') {
-      console.group('Field Registry Debug')
-      // eslint-disable-next-line no-console
-      console.log('Registered types:', globalFieldRegistry.getRegisteredTypes())
-      // eslint-disable-next-line no-console
-      console.log('Registry size:', globalFieldRegistry.size)
-      // eslint-disable-next-line no-console
-      console.log('Available categories:', fieldUtils.getFieldCategories())
-
-      console.groupEnd()
-    }
+    registryDebugUtils.debugRegistry()
   },
 
   /**
@@ -655,12 +720,12 @@ export const devUtils = {
 
     // Validate required properties based on field type
     if (type === 'select' || type === 'multiselect' || type === 'radio' || type === 'localselect') {
-      if (!config.options && !config.asyncDataSource) {
+      if (!config.options && !config.asyncDataSource && !config.objApi && !config.apiConfig) {
         if (type === 'localselect' && !config.options) {
-          errors.push(`Field type "local-select" requires options array`)
+          errors.push(`Field type "localselect" requires options array`)
         }
         else if (type !== 'localselect') {
-          warnings.push(`Field type "${type}" should have options or asyncDataSource`)
+          warnings.push(`Field type "${type}" should have options, apiConfig, or objApi`)
         }
       }
     }
@@ -729,8 +794,8 @@ export const devUtils = {
         date: 35,
         datetime: 38,
         time: 30,
-        select: 28,
-        multiselect: 32,
+        select: 45, // Increased for UnifiedSelectField
+        multiselect: 45, // Increased for UnifiedSelectField
         autocomplete: 40,
         checkbox: 12,
         radio: 18,
@@ -867,5 +932,6 @@ export default {
   presets: fieldPresets,
   devUtils,
   validationUtils: fieldValidationUtils,
-  createPlugin: createFieldPlugin
+  createPlugin: createFieldPlugin,
+  debugUtils: registryDebugUtils // ✅ NUEVO: Export debug utilities
 }

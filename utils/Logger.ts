@@ -2,68 +2,63 @@
 type LogLevel = 'log' | 'info' | 'warn' | 'error' | 'none'
 
 class Logger {
-  private static instance: Logger
-  private logLevel: LogLevel = 'log'
+  private static logLevel: LogLevel = 'log'
 
-  private constructor() {}
-
-  static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger()
-    }
-    return Logger.instance
+  static setLevel(level: LogLevel): void {
+    Logger.logLevel = level
   }
 
-  setLevel(level: LogLevel): void {
-    this.logLevel = level
-  }
-
-  private shouldLog(level: LogLevel): boolean {
+  private static shouldLog(level: LogLevel): boolean {
     const levels: LogLevel[] = ['log', 'info', 'warn', 'error', 'none']
-    return levels.indexOf(level) >= levels.indexOf(this.logLevel)
+    return levels.indexOf(level) >= levels.indexOf(Logger.logLevel)
   }
 
-  log(...args: any[]): void {
-    if (process.client && this.shouldLog('log')) {
+  // ✅ FIXED: Detección correcta para Nuxt 3
+  private static isClient(): boolean {
+    return typeof window !== 'undefined'
+  }
+
+  static log(...args: any[]): void {
+    if (Logger.isClient() && Logger.shouldLog('log')) {
       console.log('%c[LOG]', 'color: #1976D2; font-weight: bold;', ...args)
     }
   }
 
-  info(...args: any[]): void {
-    if (process.client && this.shouldLog('info')) {
+  static info(...args: any[]): void {
+    if (Logger.isClient() && Logger.shouldLog('info')) {
       console.info('%c[INFO]', 'color: #2E7D32; font-weight: bold;', ...args)
     }
   }
 
-  warn(...args: any[]): void {
-    if (process.client && this.shouldLog('warn')) {
+  static warn(...args: any[]): void {
+    if (Logger.isClient() && Logger.shouldLog('warn')) {
       console.warn('%c[WARN]', 'color: #F9A825; font-weight: bold;', ...args)
     }
   }
 
-  error(...args: any[]): void {
-    if (process.client && this.shouldLog('error')) {
+  static error(...args: any[]): void {
+    if (Logger.isClient() && Logger.shouldLog('error')) {
       console.error('%c[ERROR]', 'color: #C62828; font-weight: bold;', ...args)
     }
   }
 
-  table(data: any): void {
-    if (process.client && this.shouldLog('log')) {
+  static table(data: any): void {
+    if (Logger.isClient() && Logger.shouldLog('log')) {
       console.table(data)
     }
   }
 
-  group(label: string): void {
-    if (process.client && this.shouldLog('log')) {
+  static group(label: string): void {
+    if (Logger.isClient() && Logger.shouldLog('log')) {
       console.group(label)
     }
   }
 
-  groupEnd(): void {
-    if (process.client && this.shouldLog('log')) {
+  static groupEnd(): void {
+    if (Logger.isClient() && Logger.shouldLog('log')) {
       console.groupEnd()
     }
   }
 }
 
-export default Logger.getInstance()
+export default Logger

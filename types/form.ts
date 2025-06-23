@@ -1,4 +1,5 @@
-// types/form.ts
+// types/form.ts - FIXED VERSION
+
 export type FieldType =
   | 'text'
   | 'email'
@@ -87,9 +88,32 @@ export interface AsyncDataSource<T = unknown> {
   readonly transform?: (data: unknown) => SelectOption<T>[]
 }
 
+export interface DynamicApiConfig {
+  readonly moduleApi: string
+  readonly uriApi: string
+}
+
+export interface DynamicFilter {
+  readonly key: string
+  readonly operator?: 'EQUALS' | 'LIKE' | 'IN' | 'GT' | 'LT' | 'BETWEEN'
+  readonly value: unknown
+  readonly logicalOperation?: 'AND' | 'OR'
+}
+
+export interface DynamicFieldArgs {
+  readonly filtersBase?: DynamicFilter[]
+  readonly dependentField?: string | object
+  readonly debounceTimeMs?: number
+  readonly maxSelectedLabels?: number
+  readonly loadOnOpen?: boolean
+  readonly minQueryLength?: number
+  readonly maxItems?: number
+  readonly [key: string]: any
+}
+
 export interface FormField<T = unknown> {
   readonly name: string
-  readonly type: FieldType
+  readonly type: FieldType // ✅ FIXED: Strong typing
   readonly label?: string
   readonly validation?: ValidationSchema<T>
   readonly ui?: FieldUIConfig
@@ -124,6 +148,76 @@ export interface FormField<T = unknown> {
   readonly accept?: string
   readonly maxFileSize?: number
   readonly maxFiles?: number
+
+  // ✅ DYNAMIC FIELD PROPERTIES
+  readonly objApi?: DynamicApiConfig
+  readonly apiConfig?: DynamicApiConfig
+  readonly kwArgs?: DynamicFieldArgs
+  readonly filtersBase?: DynamicFilter[]
+  readonly dependentField?: string | object
+  readonly debounceTimeMs?: number
+  readonly maxSelectedLabels?: number
+  readonly loadOnOpen?: boolean
+  readonly minQueryLength?: number
+  readonly maxItems?: number
+  readonly showClear?: boolean
+  readonly filterable?: boolean
+
+  // ✅ REPORT VIEWER COMPATIBILITY PROPERTIES
+  readonly field?: string // Para compatibilidad con ReportViewer
+  readonly dataType?: string
+  readonly class?: string
+  readonly placeholder?: string
+  readonly helpText?: string
+  readonly required?: boolean
+  readonly disabled?: boolean
+  readonly hidden?: boolean
+  readonly readonly?: boolean
+  readonly selectionLimit?: number
+
+  // ✅ ALLOW ADDITIONAL PROPERTIES FOR FLEXIBILITY
+  readonly [key: string]: any
+}
+
+// ✅ FIXED: ReportFormField now properly extends FormField with correct typing
+export interface ReportFormField extends FormField {
+  // ✅ FIXED: Ensure type compatibility with FormField
+  readonly type: FieldType // Now properly typed as FieldType instead of string
+  readonly field: string // Campo requerido en ReportViewer
+  readonly name: string
+  readonly label: string
+
+  // Propiedades específicas de reportes - all optional to maintain compatibility
+  readonly objApi?: DynamicApiConfig
+  readonly kwArgs?: DynamicFieldArgs
+  readonly dataType?: string
+  readonly class?: string
+  readonly validation?: any
+  readonly options?: any[]
+  readonly defaultValue?: any
+
+  // Propiedades de UI específicas para reportes
+  readonly placeholder?: string
+  readonly helpText?: string
+  readonly required?: boolean
+  readonly disabled?: boolean
+  readonly hidden?: boolean
+  readonly readonly?: boolean
+
+  // Propiedades de campos de selección
+  readonly multiple?: boolean
+  readonly filterable?: boolean
+  readonly maxSelectedLabels?: number
+  readonly selectionLimit?: number
+  readonly showClear?: boolean
+
+  // Propiedades de campos dinámicos
+  readonly filtersBase?: DynamicFilter[]
+  readonly dependentField?: string | object
+  readonly debounceTimeMs?: number
+  readonly loadOnOpen?: boolean
+  readonly minQueryLength?: number
+  readonly maxItems?: number
 }
 
 export interface LocalSelectOption {
@@ -168,6 +262,97 @@ export type ExtendedFormField = FormField & {
 
   // Allow any additional properties to be flexible
   [key: string]: any
+}
+
+// ✅ ENHANCED: Type guard functions with better type safety
+export function isDynamicField(field: FormField): field is FormField & {
+  objApi: DynamicApiConfig
+  kwArgs?: DynamicFieldArgs
+} {
+  return !!(field.objApi?.moduleApi && field.objApi?.uriApi)
+}
+
+export function isSelectField(field: FormField): field is FormField & {
+  type: 'select' | 'multiselect' | 'localselect'
+} {
+  return ['select', 'multiselect', 'localselect'].includes(field.type)
+}
+
+export function isReportFormField(field: any): field is ReportFormField {
+  return field
+    && typeof field.name === 'string'
+    && typeof field.type === 'string'
+    && typeof field.field === 'string'
+    && ['text', 'email', 'password', 'textarea', 'number', 'currency', 'percentage', 'date', 'datetime', 'time', 'select', 'multiselect', 'localselect', 'autocomplete', 'checkbox', 'radio', 'toggle', 'file', 'image'].includes(field.type)
+}
+
+export function extractDynamicProps(field: FormField): Record<string, any> {
+  const dynamicProps: Record<string, any> = {}
+
+  // Extraer propiedades de API
+  if (field.objApi) { dynamicProps.objApi = field.objApi }
+  if (field.apiConfig) { dynamicProps.apiConfig = field.apiConfig }
+  if (field.kwArgs) { dynamicProps.kwArgs = field.kwArgs }
+
+  // Extraer propiedades de comportamiento
+  if (field.multiple !== undefined) { dynamicProps.multiple = field.multiple }
+  if (field.maxSelectedLabels !== undefined) { dynamicProps.maxSelectedLabels = field.maxSelectedLabels }
+  if (field.debounceTimeMs !== undefined) { dynamicProps.debounceTimeMs = field.debounceTimeMs }
+  if (field.filtersBase) { dynamicProps.filtersBase = field.filtersBase }
+  if (field.dependentField) { dynamicProps.dependentField = field.dependentField }
+  if (field.loadOnOpen !== undefined) { dynamicProps.loadOnOpen = field.loadOnOpen }
+  if (field.minQueryLength !== undefined) { dynamicProps.minQueryLength = field.minQueryLength }
+  if (field.maxItems !== undefined) { dynamicProps.maxItems = field.maxItems }
+  if (field.showClear !== undefined) { dynamicProps.showClear = field.showClear }
+  if (field.filterable !== undefined) { dynamicProps.filterable = field.filterable }
+
+  // Extraer propiedades de UI adicionales
+  if (field.placeholder) { dynamicProps.placeholder = field.placeholder }
+  if (field.helpText) { dynamicProps.helpText = field.helpText }
+  if (field.required !== undefined) { dynamicProps.required = field.required }
+  if (field.disabled !== undefined) { dynamicProps.disabled = field.disabled }
+  if (field.readonly !== undefined) { dynamicProps.readonly = field.readonly }
+  if (field.defaultValue !== undefined) { dynamicProps.defaultValue = field.defaultValue }
+  if (field.options) { dynamicProps.options = field.options }
+  if (field.dataType) { dynamicProps.dataType = field.dataType }
+  if (field.class) { dynamicProps.class = field.class }
+
+  return dynamicProps
+}
+
+// ✅ FIXED: createDynamicField with proper type enforcement
+export function createDynamicField(
+  name: string,
+  type: FieldType, // ✅ FIXED: Use FieldType instead of generic string
+  label: string,
+  apiConfig?: DynamicApiConfig,
+  options?: Partial<ReportFormField>
+): ReportFormField {
+  // ✅ VALIDATION: Ensure type is valid FieldType
+  const validTypes: FieldType[] = ['text', 'email', 'password', 'textarea', 'number', 'currency', 'percentage', 'date', 'datetime', 'time', 'select', 'multiselect', 'localselect', 'autocomplete', 'checkbox', 'radio', 'toggle', 'file', 'image']
+
+  if (!validTypes.includes(type)) {
+    console.warn(`Invalid field type "${type}", falling back to "text"`)
+    type = 'text'
+  }
+
+  return {
+    name,
+    field: name, // Para compatibilidad con ReportViewer
+    type, // ✅ Now properly typed as FieldType
+    label,
+    objApi: apiConfig,
+    apiConfig,
+    multiple: type === 'multiselect',
+    filterable: ['select', 'multiselect'].includes(type),
+    showClear: true,
+    loadOnOpen: true,
+    debounceTimeMs: 300,
+    maxSelectedLabels: 3,
+    minQueryLength: 0,
+    maxItems: 50,
+    ...options
+  }
 }
 
 export function isExtendedFormField(field: any): field is ExtendedFormField {
