@@ -16,7 +16,10 @@ const props = defineProps({
     default: 'new-detail'
   }
 })
+
 const emit = defineEmits(['update:visible', 'save', 'applyPayment', 'update:amount'])
+const isSaving = ref(false)
+const loadingSaveSpinner = ref(false)
 const confirm = useConfirm()
 const onOffDialog = ref(props.visible)
 const transactionTypeList = ref<any[]>([])
@@ -24,6 +27,7 @@ const formReload = ref(0)
 const disabledBtnApplyPaymentByTransactionType = ref(true)
 const forceSave = ref(false)
 let submitEvent: Event = new Event('')
+const isSubmitting = ref(false)
 
 const amountLocalTemp = ref('0')
 
@@ -41,10 +45,27 @@ async function handleSave(event: any) {
   item.value = event
   emit('save', item.value)
 }
+async function saveSubmit(event: Event) {
+  // Si ya estamos procesando, salimos
+  if (isSubmitting.value) { return }
 
-function saveSubmit(event: Event) {
+  // Bloqueamos futuros clics
+  isSubmitting.value = true
+  loadingSaveSpinner.value = true
   forceSave.value = true
   submitEvent = event
+
+  try {
+    saveSubmit.value = event
+    await nextTick()
+  }
+  catch (error) {
+    console.error('Error en el guardado:', error)
+  }
+  finally {
+    loadingSaveSpinner.value = false
+    isSubmitting.value = false
+  }
 }
 // function openDialogApplyPayment(event: Event) {
 
@@ -779,9 +800,14 @@ function processValidation($event: any, data: any) {
           </IfCan>
           <!-- <IfCan :perms="['PAYMENT-MANAGEMENT:CREATE-DETAIL']">
           </IfCan> -->
-          <Button v-tooltip.top="'Apply'" class="w-3rem ml-4 p-button" icon="pi pi-save" :loading="props.loadingSaveAll" @click="saveSubmit($event)" />
-          <!-- <Button v-tooltip.top="'Cancel'" class="ml-1 w-3rem p-button-secondary" icon="pi pi-times" @click="closeDialog" /> -->
-          <!-- <Button v-tooltip.top="'Cancel'" class="w-3rem p-button-danger p-button-outlined" icon="pi pi-trash" @click="closeDialog" /> -->
+          <Button
+            v-tooltip.top="'Apply'"
+            class="w-3rem ml-4 p-button"
+            icon="pi pi-save"
+            :loading="loadingSaveAll"
+            :disabled="isSaving"
+            @click.once="saveSubmit"
+          />
         </div>
       </div>
     </template>

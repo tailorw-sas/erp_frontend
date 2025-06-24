@@ -279,6 +279,7 @@ const Columns: IColumn[] = [
   { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'shareFileMonth', header: 'Month', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px', },
+  { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
 ]
 // const columnsAttachment: IColumn[] = [
 //   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
@@ -373,15 +374,20 @@ async function getList() {
     Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      shareFileList = [...shareFileList, { ...iterator, paymentId: iterator.resource?.paymentId || '', shareFileMonth: iterator.shareFileMonth ? dayjs(`2024-${iterator.shareFileMonth}-01`).format('MMMM') || '' : '' }]
+      shareFileList = [...shareFileList, {
+        ...iterator,
+        paymentId: iterator.resource?.paymentId || '',
+        shareFileMonth: iterator.shareFileMonth
+          ? dayjs(`2024-${iterator.shareFileMonth}-01`).format('MMMM')
+          : '',
+        // <<< AÑADIDO: la fecha
+        createdAt: iterator.createdAt
+          ? dayjs(iterator.createdAt).format('DD/MM/YYYY')
+          : ''
+      }]
     }
 
     listItems.value = [...shareFileList]
-
-    // for (const iterator of dataList) {
-    //   listItems.value = [...listItems.value, { ...iterator, loadingEdit: false, loadingDelete: false, roomRateId: iterator?.roomRate?.roomRateId }]
-    // }
-
     if (listItems.value.length > 0) {
       idItemToLoadFirstTime.value = listItems.value[0].id
     }
@@ -831,7 +837,6 @@ onMounted(async () => {
                       auto
                       custom-upload
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                      accept="application/pdf"
                       @uploader="($event: any) => {
                         customBase64Uploader($event, fieldsV2, 'path');
                         onUpdate('path', $event)
@@ -852,7 +857,6 @@ onMounted(async () => {
                     :multiple="false"
                     auto
                     custom-upload
-                    accept="application/pdf,text/plain,application/octet-stream"
                     @uploader="(event: any) => {
                       //customBase64Uploader($event, fieldsV2, 'path');
                       const file = event.files[0]
@@ -941,7 +945,6 @@ onMounted(async () => {
                       auto
                       custom-upload
                       style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                      accept="application/pdf"
                       @uploader="($event: any) => {
                         customBase64Uploader($event, fieldsV2, 'path');
                         onUpdate('path', $event)

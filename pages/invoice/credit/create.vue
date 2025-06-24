@@ -1257,7 +1257,8 @@ onMounted(async () => {
               <IfCan :perms="['INVOICE-MANAGEMENT:CREATE']">
                 <Button
                   v-tooltip.top="'Save'" class="w-3rem mx-1" icon="pi pi-save" :loading="loadingSaveAll"
-                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv" @click="props.item.submitForm($event)"
+                  :disabled="bookingList.length === 0 || !existsAttachmentTypeInv || invoiceAmount === 0"
+                  @click="props.item.submitForm($event)"
                 />
               </IfCan>
 

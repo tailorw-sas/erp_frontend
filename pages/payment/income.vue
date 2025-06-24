@@ -209,8 +209,8 @@ const columns: IColumn[] = [
   { field: 'ratePlan', header: 'Rate Plan', type: 'text' },
   { field: 'hotelAmount', header: 'Hotel Amount', type: 'number' },
   { field: 'invoiceAmount', header: 'Booking Amount', type: 'number' },
-
 ]
+
 const adjustmentColumns: IColumn[] = [
   { field: 'adjustmentId', header: 'ID', type: 'text' },
   { field: 'amount', header: 'Amount', type: 'number' },
@@ -248,16 +248,7 @@ const fields: Array<FieldDefinitionType> = [
     dataType: 'text',
     class: 'field col-12 md:col-3',
   },
-  // {
-  //   field: 'dueDate',
-  //   header: 'Due Date',
-  //   dataType: 'date',
-  //   class: 'field col-12 md:col-2 required ',
-  //   validation: z.date({
-  //     required_error: 'The Due Date field is required',
-  //     invalid_type_error: 'The Due Date field is required',
-  //   }).max(dayjs().endOf('day').toDate(), 'The Due Date field cannot be greater than current date')
-  // },
+
   {
     field: 'invoiceDate',
     header: 'Invoice Date',
@@ -313,23 +304,6 @@ const fields: Array<FieldDefinitionType> = [
     validation: validateEntityStatus('Status'),
     disabled: true,
   },
-  // {
-  //   field: 'reSend',
-  //   header: 'Re-Send',
-  //   dataType: 'check',
-  //   class: 'field col-12 md:col-1 mt-3 mb-3',
-  // },
-  // {
-  //   field: 'reSendDate',
-  //   header: 'Re-Send Date',
-  //   dataType: 'date',
-  //   class: 'field col-12 md:col-2',
-  //   validation: z
-  //     .union([z.date(), z.null()])
-  //     .refine(date => !date || date <= dayjs().endOf('day').toDate(), {
-  //       message: 'The Re-Send Date field cannot be greater than current date',
-  //     })
-  // },
   {
     field: 'manual',
     header: 'Manual',
@@ -397,30 +371,32 @@ const itemTemp = ref({
 })
 
 const fieldAdjustments = ref<FieldDefinitionType[]>([
-
-  // {
-  //   field: 'amount',
-  //   header: 'Amount',
-  //   dataType: 'text',
-  //   class: 'field col-12 required',
-  //   validation: z.string().min(1, { message: 'The amount field is required' })
-  //     .regex(/^-?\d+(\.\d{1,2})?$/, { message: 'The amount does not meet the correct format of n integer digits and 2 decimal digits' })
-  //     .refine(value => Number.parseFloat(value) !== 0, { message: 'The amount field must be different from zero' }),
-  // },
   {
     field: 'amount',
     header: 'Amount',
     dataType: 'number',
     class: 'field col-12 required',
-    validation: z.number({
-      invalid_type_error: 'The amount field is required',
-      required_error: 'The amount field is required',
-    })
-      // .positive({ message: 'The amount must be a positive number' })
-      .refine(value => Number.isInteger(value * 100), { message: 'The amount must have up to 2 decimal places' })
-      .refine(value => value !== 0, { message: 'The amount field must be different from zero' }),
+    validation: z.preprocess(
+      (value) => {
+        if (typeof value === 'string') {
+        // Eliminar comas y espacios antes de convertir a número
+          const cleanValue = Number(value.replace(/,/g, '').trim())
+          return isNaN(cleanValue) ? value : cleanValue
+        }
+        return value
+      },
+      z.number({
+        invalid_type_error: 'The amount field is required',
+        required_error: 'The amount field is required',
+      })
+        .refine(value => Number.isFinite(value) && Number((value).toFixed(2)) === value, {
+          message: 'The amount must have up to 2 decimal places'
+        })
+        .refine(value => value !== 0, {
+          message: 'The amount field must be different from zero'
+        })
+    ),
   },
-
   {
     field: 'date',
     header: 'Date',
@@ -631,25 +607,6 @@ watch(idItem, () => {
   }
 })
 
-async function validateIncomeCloseOperation(item: { [key: string]: any }) {
-  if (item) {
-    const hotelId = Object.prototype.hasOwnProperty.call(item.hotel, 'id') ? item.hotel.id : item.hotel
-    const dateList: string[] = AdjustmentList.value.map((e: any) => e.date)
-    if (item.invoiceDate) {
-      dateList.push(dayjs(item.invoiceDate).format('YYYY-MM-DD'))
-    }
-    await validateCloseOperation(hotelId, dateList)
-  }
-}
-
-async function validateCloseOperation(hotelId: string, dateList: string[]) {
-  const payload = {
-    hotelId,
-    dates: dateList
-  }
-  await GenericService.create(confApi.moduleApi, 'check-dates', payload)
-}
-
 async function goToList() {
   if (window.opener) {
     window.close()
@@ -671,6 +628,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
     payload.employee = userData?.data?.userId
+    payload.reSend = payload.reSend ? payload.reSend : false
 
     let totalIncomeAmount = 0
     if (Array.isArray(payload.incomeAmount)) {
@@ -693,6 +651,17 @@ async function createItem(item: { [key: string]: any }) {
         paymentResourceType: item.paymentResourceType.id,
       }))
     }
+
+    // Asignacion de los ajuste al payload
+    if (AdjustmentList.value.length > 0) {
+      payload.adjustments = AdjustmentList.value.map(item => ({
+        transactionType: item.transactionType ? item.transactionType.id : null,
+        amount: Number.parseFloat(item.amount),
+        date: item.date ? dayjs(item.date).format('YYYY-MM-DD') : null,
+        remark: item.remark
+      }))
+    }
+
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
@@ -729,14 +698,10 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      // await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
       updateFieldProperty(fields, 'reSendDate', 'disabled', true)
-      if (AdjustmentList.value.length > 0) {
-        await createAdjustment(AdjustmentList.value)
-      }
       await getItemById(idItem.value)
     }
     catch (error: any) {
@@ -795,6 +760,7 @@ async function getItemById(id: string) {
   }
 }
 
+/*
 async function createAdjustment(items: any[]) {
   try {
     // console.log(item)
@@ -825,7 +791,7 @@ async function createAdjustment(items: any[]) {
   finally {
     loadingSaveAdjustment.value = false
   }
-}
+} */
 
 async function createInvoiceAdjustment(item: { [key: string]: any }) {
   try {

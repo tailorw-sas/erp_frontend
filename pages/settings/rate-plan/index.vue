@@ -171,7 +171,7 @@ async function getList(loadFirstItem: boolean = true) {
 
     for (const iterator of dataList) {
       const obj = {
-        hotel: { id: iterator.hotel.id, name: iterator.hotel.name },
+        hotel: { id: iterator.hotel.id, name: `${iterator.hotel.code} - ${iterator.hotel.name}` },
         id: iterator.id,
         code: iterator.code,
         name: iterator.name,
@@ -470,6 +470,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Manage Rate Plan'
   }
 })
 // -------------------------------------------------------------------------------------------------------

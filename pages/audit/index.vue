@@ -32,7 +32,7 @@ const confApi = reactive({
 })
 
 const fields: Array<FieldDefinitionType> = [
-    {
+  {
     field: 'auditCreate',
     header: 'Audit Create',
     dataType: 'check',
@@ -53,7 +53,7 @@ const fields: Array<FieldDefinitionType> = [
     class: 'field col-12 mt-1 required',
     headerClass: 'mb-1',
   },
- /* {
+  /* {
     field: 'serviceName',
     header: 'Service Name',
     dataType: 'text',
@@ -77,8 +77,8 @@ const item = ref<GenericObject>({
   auditUpdate: false,
   auditDelete: false,
   serviceName: '',
-  entityName:''
-  
+  entityName: ''
+
 })
 
 const itemTemp = ref<GenericObject>({
@@ -86,11 +86,9 @@ const itemTemp = ref<GenericObject>({
   auditUpdate: false,
   auditDelete: false,
   serviceName: '',
-  entityName:''
-  
+  entityName: ''
+
 })
-
-
 
 // -------------------------------------------------------------------------------------------------------
 const ENUM_FILTER = [
@@ -123,7 +121,7 @@ const payload = ref<IQueryRequest>({
   query: '',
   pageSize: 50,
   page: 0,
- sortBy: '',
+  sortBy: '',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const pagination = ref<IPagination>({
@@ -139,8 +137,7 @@ const pagination = ref<IPagination>({
 function clearForm() {
   item.value = { ...itemTemp.value }
   idItem.value = ''
-  
-  
+
   formReload.value++
 }
 
@@ -155,7 +152,7 @@ async function getList() {
     listItems.value = []
     const newListItems = []
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi,payload.value)
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -167,7 +164,7 @@ async function getList() {
     const existingIds = new Set(listItems.value.map(item => item.id))
 
     for (const iterator of dataList) {
-      /*if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+      /* if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
         iterator.status = statusToBoolean(iterator.status)
       }
 */
@@ -231,7 +228,7 @@ async function getItemById(id: string) {
     loadingSaveAll.value = true
     try {
       const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      console.log(response,'??')
+      console.log(response, '??')
       if (response) {
         item.value.id = response.auditConfigurationDto.id
         item.value.auditCreate = response.auditConfigurationDto.auditCreate
@@ -240,7 +237,7 @@ async function getItemById(id: string) {
         item.value.serviceName = response.auditConfigurationDto.serviceName
         item.value.entityName = response.auditConfigurationDto.entityName
       }
-        formReload.value += 1
+      formReload.value += 1
     }
     catch (error) {
       if (error) {
@@ -253,12 +250,10 @@ async function getItemById(id: string) {
   }
 }
 
-
-
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
- 
+
   await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
 }
 
@@ -293,7 +288,7 @@ async function saveItem(item: { [key: string]: any }) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
   }
- /* else {
+  /* else {
     try {
       await createItem(item)
       toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
@@ -302,7 +297,7 @@ async function saveItem(item: { [key: string]: any }) {
       successOperation = false
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
     }
-  }*/
+  } */
   loadingSaveAll.value = false
   if (successOperation) {
     clearForm()
@@ -353,30 +348,29 @@ function requireConfirmationToDelete(event: any) {
   }
 }
 
-
 async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type === 'filterSearch')]
   payload.value.filter = [...payload.value.filter, ...parseFilter || []]
   getList()
 }
-  
 
 function onSortField(event: any) {
   if (event) {
-    if (event.sortField === 'auditCreate'|| event.sortField ==='auditUpdate' || event.sortField=== 'auditDelete') {
+    if (event.sortField === 'auditCreate' || event.sortField === 'auditUpdate' || event.sortField === 'auditDelete') {
       // Invertir el orden de sortType
-      payload.value.sortType = event.sortOrder === 'ASC' ? 'DESC' : 'ASC';
-    } else {
-      // Para otros campos, simplemente toma el orden dado
-      payload.value.sortType = event.sortOrder;
+      payload.value.sortType = event.sortOrder === 'ASC' ? 'DESC' : 'ASC'
     }
-    
+    else {
+      // Para otros campos, simplemente toma el orden dado
+      payload.value.sortType = event.sortOrder
+    }
+
     // Asigna el campo de ordenación
-    payload.value.sortBy = event.sortField;
-    
+    payload.value.sortBy = event.sortField
+
     // Aplica el filtro
-    parseDataTableFilter(event.filter);
+    parseDataTableFilter(event.filter)
   }
 }
 
@@ -412,6 +406,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Logs'
   }
 })
 // -------------------------------------------------------------------------------------------------------
@@ -420,9 +415,8 @@ onMounted(() => {
 <template>
   <div class="flex justify-content-between align-items-center">
     <h3 class="mb-0">
-     Logs
+      Logs
     </h3>
-  
   </div>
   <div class="grid">
     <div class="col-12 order-0 md:order-1 md:col-6 xl:col-9">
@@ -487,7 +481,7 @@ onMounted(() => {
     <div class="col-12 order-1 md:order-0 md:col-6 xl:col-3">
       <div>
         <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-         Edit
+          Edit
         </div>
         <div class="card p-4">
           <EditFormV2
@@ -496,22 +490,20 @@ onMounted(() => {
             :item="item"
             :show-actions="true"
             :hide-delete-button="true"
-            
+
             :loading-save="loadingSaveAll"
             :loading-delete="loadingDelete"
             @cancel="clearForm"
             @delete="requireConfirmationToDelete($event)"
             @submit="requireConfirmationToSave($event)"
           >
-          <template #form-footer="props">
+            <template #form-footer="props">
               <div class="flex justify-content-end">
-              
-                  <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
-              
+                <Button v-tooltip.top="'Save'" class="w-3rem mx-2" icon="pi pi-save" :loading="loadingSaveAll" @click="props.item.submitForm($event)" />
+
                 <Button v-tooltip.top="'Cancel'" class="w-3rem mx-2" icon="pi pi-times" severity="secondary" :loading="loadingSaveAll" @click="clearForm" />
               </div>
             </template>
-        
           </EditFormV2>
         </div>
       </div>

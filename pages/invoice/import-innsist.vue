@@ -7,6 +7,7 @@ import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 import type { IData } from '~/components/table/interfaces/IModelData'
 
@@ -36,8 +37,8 @@ const filterToSearch = ref<IData>({
   allFromAndTo: false,
   agency: [],
   hotel: null,
-  from: dayjs(new Date()).startOf('month').toDate(),
-  to: dayjs(new Date()).endOf('month').toDate(),
+  from: new Date(),
+  to: new Date(),
 })
 
 const hotelList = ref<any[]>([])
@@ -662,6 +663,10 @@ async function searchAndFilterSearchErrors() {
   await getListSearchErrors()
 }
 
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
+}
+
 function clearFilterToSearch() {
   // Limpiar los filtros existentes
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
@@ -1176,6 +1181,12 @@ onMounted(async () => {
                       :loading="loadingSearch" @click="clearFilterToSearch"
                     />
                   </div>
+                  <Button
+                    v-tooltip.top="'Copiar tabla'"
+                    class="p-button-lg w-1rem h-2rem pt-2 -mr-2 -ml-2"
+                    icon="pi pi-copy"
+                    @click="copiarDatos"
+                  />
                 </div>
               </div>
             </div>

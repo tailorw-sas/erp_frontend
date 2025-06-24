@@ -2,6 +2,7 @@
 import { cards } from '~/components/cards/cards-data'
 
 useHead({
+  title: 'Home', // <- Este es el título de la pestaña del navegador
   link: [
     {
       rel: 'stylesheet',

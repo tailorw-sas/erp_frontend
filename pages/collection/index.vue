@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -12,12 +13,13 @@ import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
 import { statusToBoolean, statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
+import CollectionToPrintDialog from '~/pages/collection/print.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
-
+const selectedItem = ref({})
 const objItemSelectedForRightClickApplyPayment = ref({} as GenericObject)
 const objItemSelectedForRightClickChangeAgency = ref({} as GenericObject)
 const objItemSelectedForRightClickApplyPaymentOtherDeduction = ref({} as GenericObject)
@@ -25,13 +27,14 @@ const objItemSelectedForRightClickPaymentWithOrNotAttachment = ref({} as Generic
 const objItemSelectedForRightClickNavigateToPayment = ref({} as GenericObject)
 const maxSelectedLabels = ref(2)
 
+const CollectionToPrintDialogVisible = ref(false)
+
 const objItemSelectedForRightClickInvoice = ref({} as GenericObject)
 
 const onOffDialogPaymentDetailSummary = ref(false)
 
 // Attachments for Invoice
 const attachmentDialogOpenInvoice = ref<boolean>(false)
-const attachmentListInvoice = ref<any[]>([])
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -48,6 +51,7 @@ const contextMenu = ref()
 const contextMenuInvoice = ref()
 const dynamicTable = ref(0)
 const dynamicTableInv = ref(0)
+const router = useRouter()
 
 const allMenuListItems = ref([
   // {
@@ -231,6 +235,16 @@ const objApis = ref({
   transactionType: { moduleApi: 'settings', uriApi: 'manage-payment-transaction-type' },
 })
 
+function goToPrint() {
+  router.push({
+    path: '/print',
+    query: {
+      total: subTotalsInvoice.value.invoiceTotalAmount,
+      // Puedes pasar otros parámetros necesarios
+    }
+  })
+}
+
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -285,7 +299,9 @@ const loadingSaveAll = ref(false)
 const loadingDelete = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
+const hotelListTotal = ref<any[]>([])
 const hotelList = ref<any[]>([])
+const clientListTotal = ref<any[]>([])
 const clientList = ref<any[]>([])
 
 const exportDialogOpen = ref(false)
@@ -369,6 +385,9 @@ const formTitle = computed(() => {
 })
 
 // -------------------------------------------------------------------------------------------------------
+function closeCollectionToPrint() {
+  CollectionToPrintDialogVisible.value = false
+}
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
 
@@ -475,7 +494,7 @@ const columnsInvoice = ref<IColumn[]>([
     columnClass: 'truncate-text' // Clase CSS para truncar
   },
   { field: 'invoiceAmount', header: 'I. Amnt', tooltip: 'Invoice Amount', type: 'number' },
-  { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
+  // { field: 'paymentAmount', header: 'P.Amnt', tooltip: 'Payment Amount', type: 'text' },
   { field: 'dueAmount', header: 'I. Balance', tooltip: 'Invoice Balance', type: 'number' },
   {
     field: 'aging',
@@ -507,6 +526,8 @@ const columnsAgency: IColumn[] = [
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 
 ]
+console.log('Último ítem a guardar:', listItemsInvoice.value[0]?.hotel)
+// Debe mostrar: { name: "DRELM-Dreams Las Mareas Costa Rica", ... }
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
@@ -525,7 +546,7 @@ const options = ref({
 const optionsInv = ref({
   tableName: 'Invoice',
   moduleApi: 'invoicing',
-  uriApi: 'manage-invoice',
+  uriApi: 'collections/invoice-summary',
   loading: false,
   showDelete: false,
   showFilters: true,
@@ -622,6 +643,19 @@ function clearForm() {
   updateFieldProperty(fields, 'status', 'disabled', true)
   formReload.value++
 }
+function handlePrint() {
+  const dataToStore = {
+    listItems: listItemsInvoice.value,
+    totals: subTotalsInvoice.value,
+    totalElements: paginationInvoice.value.totalElements // AÑADIR ESTA LÍNEA
+
+  }
+  localStorage.setItem('invoiceViewData', JSON.stringify(dataToStore))
+  // navigateTo('/collection/print', { open: { target: '_blank' } })
+
+  // navigateTo('/collection/print', { open: { target: '_blank' } })
+  CollectionToPrintDialogVisible.value = true
+}
 
 function extractPaymentStatus(originalObject: any) {
   return {
@@ -656,6 +690,14 @@ function extractPaymentStatus(originalObject: any) {
       status: originalObject.paymentAttachmentStatusStatus ? originalObject.paymentAttachmentStatusStatus : null
     }
   }
+}
+const loadingSavePrint = ref(false)
+
+function savePrint() {
+  loadingSavePrint.value = true
+  setTimeout(() => {
+    loadingSavePrint.value = false
+  }, 3000)
 }
 
 async function getPaymentData() {
@@ -763,7 +805,6 @@ async function getPaymentData() {
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
     }
-
     listItems.value = [...listItems.value, ...newListItems]
   }
   catch (error) {
@@ -1054,9 +1095,6 @@ async function getListInvoice() {
     listItemsInvoice.value = []
     const newListItems = []
 
-    // totalInvoiceAmount.value = 0
-    // totalDueAmount.value = 0
-
     // Filtros por reconciledStatus y sentStatus ----------------------------------------------------------------------------------------------
     const objFilterByReconciledStatus = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceStatus.reconciledStatus')
     if (objFilterByReconciledStatus) {
@@ -1103,7 +1141,6 @@ async function getListInvoice() {
     // Aqui termina el filtro por el check Enable To Policy para el Status ----------------------------------------------------------------------------------------------
 
     // Filtro por el check Enable To Policy para el Invoice Type ----------------------------------------------------------------------------------------------
-
     const objFilterByInvoiceType = payloadInv.value.filter.find((item: IFilter) => item.key === 'manageInvoiceType.enabledToPolicy')
     if (objFilterByInvoiceType) {
       objFilterByInvoiceType.value = true
@@ -1135,8 +1172,9 @@ async function getListInvoice() {
     }
     // Aqui termina el filtro por el dueAmount ----------------------------------------------------------------------------------------------
 
-    const response = await GenericService.search(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const response = await GenericService.searchWithoutSearch(optionsInv.value.moduleApi, optionsInv.value.uriApi, payloadInv.value)
+    const { paginatedResponse, summaryResponse } = response
+    const { data: dataList, page, size, totalElements, totalPages } = paginatedResponse
     paginationInvoice.value.page = page
     paginationInvoice.value.limit = size
     paginationInvoice.value.totalElements = totalElements
@@ -1169,48 +1207,46 @@ async function getListInvoice() {
           dueAmount: iterator?.dueAmount || 0,
           invoiceAmount: iterator?.invoiceAmount || 0,
           invoiceNumber: invoiceNumber ? invoiceNumber.replace('OLD', 'CRE') : '',
-          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` }
+          invoiceStatus: iterator?.manageInvoiceStatus,
+          hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}` },
+          rowClass: iterator.aging > 60 ? 'row-aging' : '' // ✅ Asigna la clase aquí
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
-      // totalInvoiceAmount.value += iterator.invoiceAmount
-      // totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
 
     listItemsInvoice.value = [...listItemsInvoice.value, ...newListItems]
+
+    // Tomar los valores del resumen directamente del summaryResponse si existe
+    if (summaryResponse) {
+      count.days30Count = summaryResponse.totalInvoiceWith30 || 0
+      count.days30Balance = summaryResponse.totalInvoiceBalanceWithAging30 || 0
+      count.days30Percentage = summaryResponse.totalInvoicePercentWithAging30 || 0
+
+      count.days60Count = summaryResponse.totalInvoiceWithAging60 || 0
+      count.days60Balance = summaryResponse.totalInvoiceBalanceWithAging60 || 0
+      count.days60Percentage = summaryResponse.totalInvoicePercentWithAging60 || 0
+
+      count.days90Count = summaryResponse.totalInvoiceWithAging90 || 0
+      count.days90Balance = summaryResponse.totalInvoiceBalanceWithAging90 || 0
+      count.days90Percentage = summaryResponse.totalInvoicePercentWithAging90 || 0
+
+      count.days120Count = summaryResponse.totalInvoiceWithAging120 || 0
+      count.days120Balance = summaryResponse.totalInvoiceBalanceWithAging120 || 0
+      count.days120Percentage = summaryResponse.totalInvoicePercentWithAging120 || 0
+
+      count.days0Count = summaryResponse.totalInvoiceWithAging0 || 0
+
+      count.invoiceTotalAmount = summaryResponse.totalInvoiceAmount || 0
+      count.invoiceDueTotalAmount = summaryResponse.totalInvoiceDueAmount || 0
+    }
     return listItemsInvoice
   }
-
   catch (error) {
     console.error(error)
   }
   finally {
     optionsInv.value.loading = false
-    if (paginationInvoice.value.totalElements !== 0) {
-      const days30 = listItemsInvoice.value.filter(item => item.aging === 30)
-      count.days30Count = days30.length
-      count.days30Balance = days30.reduce((sum, item) => sum + item.dueAmount, 0)
-      count.days30Percentage = (count.days30Balance * 100) / count.invoiceTotalAmount
-
-      const days60 = listItemsInvoice.value.filter(item => item.aging === 60)
-      count.days60Count = days60.length
-      count.days60Balance = days60.reduce((sum, item) => sum + item.dueAmount, 0)
-      count.days60Percentage = (count.days60Balance * 100) / count.invoiceTotalAmount
-
-      const days90 = listItemsInvoice.value.filter(item => item.aging === 90)
-      count.days90Count = days90.length
-      count.days90Balance = days90.reduce((sum, item) => sum + item.dueAmount, 0)
-      count.days90Percentage = (count.days90Balance * 100) / count.invoiceTotalAmount
-
-      const days120 = listItemsInvoice.value.filter(item => item.aging === 120)
-      count.days120Count = days120.length
-      count.days120Balance = days120.reduce((sum, item) => sum + item.dueAmount, 0)
-      count.days120Percentage = (count.days120Balance * 100) / count.invoiceTotalAmount
-
-      const days0 = listItemsInvoice.value.filter(item => item.aging === 0)
-      count.days0Count = days0.length
-    }
     subTotalsInvoice.value = { ...count }
   }
 }
@@ -1235,6 +1271,7 @@ function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) {
 
 function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  payloadInv.value.filter = payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')
   // Client
   if (filterToSearch.value.client?.length > 0) {
     const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
@@ -1284,6 +1321,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1295,6 +1333,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1327,6 +1366,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1339,6 +1379,7 @@ function searchAndFilter() {
             operator: 'IN',
             value: itemIds,
             logicalOperation: 'AND',
+            type: 'filterSearch'
           }
         ] }
       }
@@ -1354,8 +1395,15 @@ function searchAndFilter() {
 }
 
 function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+  // payloadInv.value.filter = [...payloadInv.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
+
+  listItems.value = []
+  listItemsInvoice.value = []
+
+  payload.value.filter = []
+  payloadInv.value.filter = []
+
   filterToSearch.value = JSON.parse(JSON.stringify(filterToSearchTemp))
 
   const objColumnAgency = columns.value.find(item => item.field === 'agency')
@@ -1378,8 +1426,8 @@ function clearFilterToSearch() {
   dynamicTable.value = dynamicTable.value + 1
   dynamicTableInv.value = dynamicTableInv.value + 1
 
-  getList()
-  getListInvoice()
+  // getListInvoice()
+  // getPaymentData()
 }
 
 async function resetListItems() {
@@ -1577,23 +1625,19 @@ async function parseDataTableFilterInvoice(payloadFilter: any) {
   getListInvoice()
 }
 
-async function getClientList(query = '') {
+async function getClientListFilter(query: string = '') {
+  clientList.value = []
+  clientList.value = clientListTotal.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
+}
+
+async function getClientList() {
   try {
     const payload
             = {
               filter: [
-                {
-                  key: 'name',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
-                {
-                  key: 'code',
-                  operator: 'LIKE',
-                  value: query,
-                  logicalOperation: 'OR'
-                },
                 {
                   key: 'status',
                   operator: 'EQUALS',
@@ -1602,17 +1646,17 @@ async function getClientList(query = '') {
                 }
               ],
               query: '',
-              pageSize: 200,
+              pageSize: 2000,
               page: 0,
               sortBy: 'name',
               sortType: ENUM_SHORT_TYPE.ASC
             }
 
-    clientList.value = []
+    clientListTotal.value = []
     const response = await GenericService.search(confClientApi.moduleApi, confClientApi.uriApi, payload)
     const { data: dataList } = response
     for (const iterator of dataList) {
-      clientList.value = [...clientList.value, {
+      clientListTotal.value = [...clientListTotal.value, {
         id: iterator.id,
         name: `${iterator.code} - ${iterator.name}`,
         onlyName: iterator.name,
@@ -1805,23 +1849,19 @@ async function getHotelList(moduleApi: string, uriApi: string, queryObj: { query
   }
 }
 
-async function getHotelList2(query: string) {
+async function getHotelListFilter(query: string = '') {
+  hoteltList.value = []
+  hoteltList.value = hoteltListTotal.value.filter(item =>
+    item.code.toUpperCase().includes(query.toUpperCase())
+    || item.name.toUpperCase().includes(query.toUpperCase())
+  )
+}
+
+async function getHotelList2() {
   try {
     objLoading.value.loadingHotel = true
     const payload = {
       filter: [
-        {
-          key: 'name',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
-        {
-          key: 'code',
-          operator: 'LIKE',
-          value: query,
-          logicalOperation: 'OR'
-        },
         {
           key: 'status',
           operator: 'EQUALS',
@@ -1830,7 +1870,7 @@ async function getHotelList2(query: string) {
         },
       ],
       query: '',
-      pageSize: 20,
+      pageSize: 200,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -1838,20 +1878,25 @@ async function getHotelList2(query: string) {
 
     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
     const { data: dataList } = response
-    hotelList.value = []
+    //   for (const iterator of dataList) {
+    //     hotelListTotal.value = [
+    //       ...hotelList.value,
+    //       {
+    //         id: iterator.id,
+    //         name: `${iterator.code} - ${iterator.name}`,
+    //         // name: iterator.name,
+    //         code: iterator.code,
+    //         status: iterator.status,
+    //         description: iterator.description
+    //       }
+    //     ]
+    //   }
+    // }
+
     for (const iterator of dataList) {
-      hotelList.value = [
-        ...hotelList.value,
-        {
-          id: iterator.id,
-          name: `${iterator.code} - ${iterator.name}`,
-          // name: iterator.name,
-          code: iterator.code,
-          status: iterator.status,
-          description: iterator.description
-        }
-      ]
+      hotelListTotal.value = [...hotelListTotal.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
     }
+    hotelList.value = [...hotelListTotal.value]
   }
   catch (error) {
     console.error('Error loading hotel list:', error)
@@ -1965,8 +2010,6 @@ function onRowContextMenu(event: any) {
       menuItemApplayPayment.visible = true
     }
   }
-
-  console.log('event', event.data.attachmentStatus.pwaWithOutAttachment)
   if (event && event.data && event.data?.attachmentStatus && (event.data?.attachmentStatus?.supported === false || event.data.attachmentStatus.nonNone) && (event.data.attachmentStatus.pwaWithOutAttachment === false && event.data.attachmentStatus.patWithAttachment === false)) {
     const menuItemPaymentWithAttachment = allMenuListItems.value.find(item => item.id === 'paymentWithAttachment')
     if (menuItemPaymentWithAttachment) {
@@ -2254,6 +2297,9 @@ watch(() => idItemToLoadFirstTime.value, async (newValue) => {
 onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
+    getClientList()
+    getHotelList2()
+    document.title = 'Collection Management'
     // getList()
     // getPaymentData()
     // getListInvoice()
@@ -2300,10 +2346,10 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full custom-input"
-                        :model="filterToSearch.client"
+                        :model="selectedItem"
                         :suggestions="clientList"
                         placeholder=""
-                        @load="($event) => getClientList($event)"
+                        @load="($event) => getClientListFilter($event)"
                         @change="async ($event) => {
                           filterToSearch.client = $event
                           filterToSearch.agency = []
@@ -2368,6 +2414,7 @@ onMounted(() => {
                           field="name"
                           item-value="id"
                           class="w-full custom-input"
+                          :filter-fields="['name', 'code']"
                           :model="filterToSearch.client"
                           :suggestions="clientList"
                           placeholder=""
@@ -2423,6 +2470,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full hotel-input"
+                        :filter-fields="['name', 'code']"
                         :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.agency"
                         :loading="objLoading.loadingAgency"
@@ -2477,6 +2525,7 @@ onMounted(() => {
                         field="name"
                         item-value="id"
                         class="w-full hotel-input"
+                        :filter-fields="['name', 'code']"
                         :max-selected-labels="maxSelectedLabels"
                         :model="filterToSearch.hotel"
                         :loading="objLoading.loadingHotel"
@@ -2485,7 +2534,7 @@ onMounted(() => {
                         @change="($event) => {
                           filterToSearch.hotel = $event;
                         }"
-                        @load="($event) => getHotelList2($event)"
+                        @load="($event) => getHotelListFilter($event)"
                       >
                         <!-- @load="async($event) => {
                           const filter: FilterCriteria[] = [
@@ -2503,7 +2552,7 @@ onMounted(() => {
                           // await getHotelList(objApis.hotel.moduleApi, objApis.hotel.uriApi, objQueryToSearch, filter)
                           await getHotelList2($event)
                         }" -->
-                        <!-- <template #option="props">
+                        <template #option="props">
                           <span>{{ props.item.code }} - {{ props.item.name }}</span>
                         </template>
                         <template #chip="{ value }">
@@ -2529,11 +2578,6 @@ onMounted(() => {
                   v-tooltip.top="'Search'" class="w-2,5rem mx-1" icon="pi pi-search"
                   :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
                 />
-
-                <!-- <Button
-                  v-tooltip.top="'Test'" class="w-3rem mx-1" icon="pi pi-search"
-                  :loading="loadingSearch" @click="getPaymentData"
-                /> -->
                 <Button
                   v-tooltip.top="'Clear'" outlined class="w-2,5rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch"
@@ -2796,7 +2840,7 @@ onMounted(() => {
           >
             <Button
               v-tooltip.left="'Print'" text label="Print" icon="pi pi-print" class="w-5rem"
-              severity="primary" @click="navigateTo('/invoice/print', { open: { target: '_blank' } })"
+              severity="primary" @click="handlePrint()"
             />
           </div>
           <div
@@ -2823,6 +2867,8 @@ onMounted(() => {
         :columns="columnsInvoice"
         :options="optionsInv"
         :pagination="paginationInvoice"
+        :items="listItemsInvoice"
+        :row-class="rowClass"
         @on-confirm-create="clearForm"
         @on-change-pagination="payloadOnChangePageInv = $event"
         @on-change-filter="parseDataTableFilterInvoice"
@@ -2911,6 +2957,11 @@ onMounted(() => {
               />
             </Row>
           </ColumnGroup>
+          <DynamicContentModalImport
+            :visible="CollectionToPrintDialogVisible" :component="CollectionToPrintDialog"
+            header="Invoice To Print" :style="{ width, height, 'min-height': '98vh', 'min-width': '50vw' }"
+            @close="closeCollectionToPrint"
+          />
         </template>
       </DynamicTable>
     </div>
@@ -3204,6 +3255,10 @@ onMounted(() => {
         /* Altura por defecto */
 
     }
+    .row-aging {
+  background-color: rgb(241, 194, 246); /* O cualquier otro estilo llamativo */
+  font-weight: bold;
+}
 
 }
 </style>

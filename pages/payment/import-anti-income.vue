@@ -156,10 +156,12 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
+    loadingSaveAll.value = true
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
     event.target.value = ''
     await activeImport()
+    loadingSaveAll.value = false
   }
 }
 
@@ -469,7 +471,7 @@ onMounted(async () => {
                       class="w-full" show-clear aria-describedby="inputtext-help"
                     />
                     <span class="p-inputgroup-addon p-0 m-0">
-                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="fileUpload.click()" />
+                      <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" :disabled="loadingSaveAll" @click="fileUpload.click()" />
                     </span>
                   </div>
 
@@ -493,6 +495,14 @@ onMounted(async () => {
                     />
                     <span class="p-inputgroup-addon p-0 m-0">
                       <Button icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0" @click="attachUpload.click()" />
+                    </span>
+                    <span class="p-inputgroup-addon p-0 m-0 ml-1">
+                      <Button
+                        v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
+                        :disabled="uploadComplete || !importModel.transactionType || !inputFile || !attachFile"
+                        :loading="options.loading"
+                        @click="importAntiIncome"
+                      />
                     </span>
                   </div>
 
@@ -519,14 +529,7 @@ onMounted(async () => {
         </template>
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end mt-2">
-        <Button
-          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
-          :disabled="uploadComplete || !importModel.transactionType || !inputFile || !attachFile"
-          :loading="options.loading"
-          @click="importAntiIncome"
-        />
-      </div>
+      <div class="flex align-items-end justify-content-end mt-2" />
     </div>
   </div>
 </template>

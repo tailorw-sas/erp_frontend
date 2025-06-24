@@ -145,10 +145,12 @@ async function clearForm() {
 async function onChangeFile(event: any) {
   listItems.value = []
   if (event.target.files && event.target.files.length > 0) {
+    loadingSaveAll.value = true
     inputFile.value = event.target.files[0]
     importModel.value.importFile = inputFile.value.name
     uploadComplete.value = false
     event.target.value = ''
+    loadingSaveAll.value = false
   }
 }
 
@@ -193,9 +195,8 @@ async function importFileDetail() {
       await getErrorList()
       if (listItems.value.length === 0) {
         toast.add({ severity: 'info', summary: 'Confirmed', detail: `The file was upload successful!. ${totalImportedRows.value ? `${totalImportedRows.value} rows imported.` : ''}`, life: 10000 })
+        // options.value.loading = false
         onClose()
-        options.value.loading = false
-        await clearForm()
       }
     }
   }
@@ -230,7 +231,7 @@ async function validateStatusImport() {
         options.value.loading = false
         resolve() // Resuelve la promesa cuando el estado es FINISHED
       }
-    }, 10000)
+    }, 5000)
   })
 }
 
@@ -254,12 +255,13 @@ function onSortField(event: any) {
 }
 
 async function goToList() {
-  if (paymentId && paymentId !== '') {
-    await navigateTo(`/payment/form?id=${paymentId}`)
-  }
-  else {
-    await navigateTo('/payment')
-  }
+  await navigateTo(`/payment/form?id=${paymentId}`)
+  // if (paymentId && paymentId !== '') {
+  //   await navigateTo(`/payment/form?id=${paymentId}`)
+  // }
+  // else {
+  //   await navigateTo('/payment')
+  // }
 }
 
 watch(payloadOnChangePage, (newValue) => {
@@ -292,7 +294,16 @@ onMounted(async () => {
                     <span class="p-inputgroup-addon p-0 m-0">
                       <Button
                         icon="pi pi-file-import" severity="secondary" class="w-2rem h-2rem p-0 m-0"
+                        :disabled="loadingSaveAll"
                         @click="fileUpload.click()"
+                      />
+                    </span>
+                    <span class="p-inputgroup-addon p-0 m-0 ml-1">
+                      <Button
+                        v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
+                        :loading="options.loading"
+                        :disabled="uploadComplete || !inputFile"
+                        @click="importFileDetail"
                       />
                     </span>
                   </div>
@@ -321,14 +332,7 @@ onMounted(async () => {
         </template>
       </DynamicTable>
 
-      <div class="flex align-items-end justify-content-end mt-2">
-        <Button
-          v-tooltip.top="'Import file'" class="w-3rem mx-2" icon="pi pi-check"
-          :loading="options.loading"
-          :disabled="uploadComplete || !inputFile"
-          @click="importFileDetail"
-        />
-      </div>
+      <div class="flex align-items-end justify-content-end mt-2" />
     </div>
   </div>
 </template>

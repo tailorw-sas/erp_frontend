@@ -159,20 +159,19 @@ async function getList() {
         value: '0',
         logicalOperation: 'OR'
       },
-    // {
-    //   key: 'dueAmount',
-    //   operator: 'GREATER_THAN',
-    //   value: '0',
-    //   logicalOperation: 'AND'
-    // }
+      {
+        key: 'dueAmount',
+        operator: 'GREATER_THAN',
+        value: '0',
+        logicalOperation: 'AND'
+      }
     ]
 
     payload.value.filter = [...payload.value.filter, ...staticPayload]
     listItems.value = []
     clickedItem.value = []
     const newListItems = []
-    const response = await GenericService.sendList(confApi.moduleApi, confApi.uriApi, payload.value)
-    console.log('response', response)
+    const response = await GenericService.search(confApi.moduleApi, confApi.uriApi, payload.value)
 
     const { data: dataList, page, size, totalElements, totalPages } = response
     pagination.value.page = page
@@ -228,6 +227,7 @@ async function getList() {
       life: 2000 // Duración del toast en milisegundos
     })
   }
+  console.log('listItems.value', listItems.value)
 }
 
 async function getAgencyList(query: string = '') {
@@ -267,7 +267,7 @@ async function getAgencyList(query: string = '') {
     const payload = {
       filter: filters,
       query: '',
-      pageSize: 20,
+      pageSize: 50,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -312,7 +312,7 @@ async function getHotelList(query: string = '') {
         }
       ],
       query: '',
-      pageSize: 20,
+      pageSize: 50,
       page: 0,
       sortBy: 'createdAt',
       sortType: ENUM_SHORT_TYPE.DESC
@@ -570,7 +570,7 @@ watch(payloadOnChangePage, (newValue) => {
 onMounted(async () => {
   filterToSearch.value.criteria = ENUM_FILTER[0]
   // loadInvoiceType()
-  await searchAndFilter()
+  // await searchAndFilter()
 })
 </script>
 

@@ -3,7 +3,6 @@ import dayjs from 'dayjs'
 import { z } from 'zod'
 import { useRoute } from 'vue-router'
 import type { PageState } from 'primevue/paginator'
-import { filter, get } from 'lodash'
 import { formatNumber, formatToTwoDecimalPlaces } from './utils/helperFilters'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 import type { FieldDefinition, FieldDefinitionType } from '~/components/form/EditFormV2'
@@ -14,8 +13,12 @@ import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailFor
 import PaymentAttachmentDialog, { type FileObject } from '~/components/payment/PaymentAttachmentDialog.vue'
 import type { TransactionItem } from '~/components/payment/interfaces'
 import { generateStyledPDF } from '~/components/payment/utils'
+import ImportDetail from '~/pages/payment/import-detail.vue'
+import { copyListFromColumns } from '~/pages/payment/utils/clipboardUtilsList'
+import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 
 const route = useRoute()
+const highlightBookingId = ref<string | null>(null)
 const toast = useToast()
 const confirm = useConfirm()
 const authStore = useAuthStore()
@@ -65,6 +68,9 @@ const actionOfModal = ref<'new-detail' | 'edit-detail' | 'deposit-transfer' | 's
 const showReverseTransaction = ref(false)
 const showCanceledDetails = ref(false)
 
+const showImportModal = ref(false)
+const loadingReverseTransaction = ref(false)
+
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
   applyPayment: false,
@@ -84,7 +90,7 @@ interface SubTotals {
   depositAmount: number
 }
 const subTotals = ref<SubTotals>({ depositAmount: 0 })
-
+const manualFilter = ref('')
 const attachmentDialogOpen = ref<boolean>(false)
 const attachmentList = ref<any[]>([])
 
@@ -179,16 +185,16 @@ const allMenuListItems = ref([
 const openDialogApplyPayment = ref(false)
 const applyPaymentList = ref<any[]>([])
 const applyPaymentColumns = ref<IColumn[]>([
-  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: true },
-  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '90px', maxWidth: '90px', sortable: true, showFilter: true },
-  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'checkIn', header: 'Check-In', type: 'date', width: '90px', sortable: true, showFilter: true },
-  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '90px', sortable: true, showFilter: true },
-  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: true },
-  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: true },
+  { field: 'invoiceId', header: 'Invoice Id', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'bookingId', header: 'Booking Id', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'invoiceNo', header: 'Invoice No', type: 'text', width: '40px', sortable: true, showFilter: false },
+  { field: 'fullName', header: 'Full Name', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'couponNumber', header: 'Coupon No', type: 'text', width: '80px', maxWidth: '90px', sortable: true, showFilter: false },
+  { field: 'hotelBookingNumber', header: 'Reservation No', type: 'text', width: '50px', sortable: true, showFilter: false },
+  { field: 'checkIn', header: 'Check-In', type: 'date', width: '50px', sortable: true, showFilter: false },
+  { field: 'checkOut', header: 'Check-Out', type: 'date', width: '50px', sortable: true, showFilter: false },
+  { field: 'bookingAmount', header: 'Booking Amount', type: 'text', width: '90px', sortable: true, showFilter: false },
+  { field: 'bookingBalance', header: 'Booking Balance', type: 'text', width: '90px', sortable: true, showFilter: false },
 ])
 const applyPaymentOptions = ref({
   tableName: 'Apply Payment',
@@ -203,9 +209,9 @@ const applyPaymentOptions = ref({
 const applyPaymentPayload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 500,
   page: 0,
-  sortBy: 'dueAmount',
+  sortBy: 'invoice.invoiceNo',
   sortType: ENUM_SHORT_TYPE.ASC
 })
 const applyPaymentPagination = ref<IPagination>({
@@ -264,7 +270,8 @@ const historyPagination = ref<IPagination>({
   search: ''
 })
 const histotyPayloadOnChangePage = ref<PageState>()
-// ----------------------------------
+
+// -MODAL---------------------------------
 
 // PRINT
 const openPrint = ref(false)
@@ -431,6 +438,10 @@ const formTitle = computed(() => {
   return idItem.value ? 'Edit Payment' : 'New Payment'
 })
 
+useHead({
+  title: computed(() => idItem.value ? 'Edit Payment' : 'New Payment')
+})
+
 const decimalSchema = z.object(
   {
     amount: z
@@ -518,7 +529,7 @@ const fields: Array<FieldDefinitionType> = [
     field: 'paymentStatus',
     header: 'Status',
     dataType: 'select',
-    disabled: true,
+    disabled: false,
     class: 'field col-12 md:col-1 required',
     validation: validateEntityStatus('payment status'),
     tabIndex: 3
@@ -851,7 +862,7 @@ const payloadOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
   filter: [],
   query: '',
-  pageSize: 50,
+  pageSize: 500,
   page: 0,
   sortBy: 'createdAt',
   sortType: ENUM_SHORT_TYPE.DESC
@@ -927,7 +938,6 @@ function openDialogPaymentDetails(event: any) {
     onOffDialogPaymentDetail.value = true
   }
   actionOfModal.value = 'new-detail'
-
   const decimalSchema = z.object(
     {
       amount: z
@@ -1058,10 +1068,10 @@ function openDialogPaymentDetailsByAction(idDetail: any = null, action: 'new-det
             oldAmount = objToEditTemp.amount ? Math.abs(Number.parseFloat(objToEditTemp.amount)) : 0
           }
 
-          const childrenTotalValue = itemDetails.value.childrenTotalValue
+          const childrenTotalValue = itemDetails.value.applyDepositValue
 
           // const minValueToApply = (oldAmount - childrenTotalValue - 0.01).toFixed(2)
-          const minValueToApply = (oldAmount - childrenTotalValue).toFixed(2)
+          const minValueToApply = (childrenTotalValue).toFixed(2)
 
           const minValueToApplyFormatted = formatNumber(minValueToApply) // Creada solo para mostrar para que el separador de miles no cause problemas
           const oldAmountFormatted = formatNumber(oldAmount) // Solo para mostrar
@@ -1233,7 +1243,7 @@ async function createItem(item: { [key: string]: any }) {
       // paymentId
       idItem.value = response.payment.id
       toast.add({ severity: 'info', summary: 'Confirmed', detail: `The payment Id ${response.payment.paymentId} was created successfully`, life: 10000 })
-      goToForm(idItem.value)
+      // goToForm(idItem.value)
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
@@ -1265,8 +1275,6 @@ async function saveItem(item: { [key: string]: any }) {
     }
     catch (error: any) {
       // successOperation = false
-      // console.log(error)
-
       toast.add({ severity: 'error', summary: 'Error', detail: error?.data?.data?.error?.errorMessage, life: 10000 })
     }
   }
@@ -1318,297 +1326,180 @@ function disabledFields(objItem: { [key: string]: any }, fields: FieldDefinition
   else {
     updateFieldProperty(fields, 'bankAccount', 'disabled', false)
   }
+  if (!objItem.paymentStatus.applied) {
+    updateFieldProperty(fields, 'hotel', 'disabled', false)
+  }
 }
 
 async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      if (response) {
-        item.value.id = id
-        item.value.paymentId = response.paymentId
-        item.value.reference = response.reference
-        item.value.transactionDate = response.transactionDate
-        const newDate = new Date(response.transactionDate)
-        newDate.setDate(newDate.getDate() + 1)
-        item.value.transactionDate = newDate || null
+  if (!id) { return }
 
-        // item.value.paymentAmount = formatToTwoDecimalPlaces(response.paymentAmount)
-        item.value.paymentAmount = response.paymentAmount
-        item.value.paymentBalance = formatToTwoDecimalPlaces(response.paymentBalance)
-        item.value.depositAmount = formatToTwoDecimalPlaces(response.depositAmount)
-        item.value.depositBalance = formatToTwoDecimalPlaces(response.depositBalance)
-        item.value.otherDeductions = formatToTwoDecimalPlaces(response.otherDeductions)
-        item.value.identified = formatToTwoDecimalPlaces(response.identified)
-        item.value.notIdentified = formatToTwoDecimalPlaces(response.notIdentified)
-        item.value.remark = response.remark
-        isExistPaymentDetail.value = response.existDetails
+  idItem.value = id
+  loadingSaveAll.value = true
 
-        const clientTemp = response.client
-          ? {
-              id: response.client.id,
-              name: `${response.client.code} - ${response.client.name}`,
-              status: response.client.status
-            }
-          : null
-        clientList.value = [clientTemp]
-        item.value.client = clientTemp
+  try {
+    const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
+    if (!response) { return }
 
-        const agencyTemp = response.agency
-          ? {
-              id: response.agency.id,
-              name: `${response.agency.code} - ${response.agency.name}`,
-              status: response.agency.status
-            }
-          : null
-        agencyList.value = [agencyTemp]
-        item.value.agency = agencyTemp
+    // Extraer solo los valores necesarios en una sola línea
+    const {
+      paymentId,
+      reference,
+      transactionDate,
+      paymentAmount,
+      paymentBalance,
+      depositAmount,
+      depositBalance,
+      otherDeductions,
+      identified,
+      notIdentified,
+      remark,
+      existDetails,
+      client,
+      agency,
+      hotel,
+      bankAccount,
+      attachmentStatus,
+      paymentStatus,
+      paymentSource
+    } = response
 
-        const hotelTemp = response.hotel
-          ? {
-              id: response.hotel.id,
-              name: `${response.hotel?.code} - ${response.hotel?.name}`,
-              status: response.hotel?.status,
-              applyByTradingCompany: response.hotel?.applyByTradingCompany,
-              manageTradingCompany: response.hotel?.manageTradingCompany
-
-            }
-          : null
-        hotelList.value = [hotelTemp]
-        item.value.hotel = hotelTemp
-
-        const bankAccountTemp = response.bankAccount
-          ? {
-              id: response.bankAccount.id,
-              name: `${response.bankAccount.nameOfBank} - ${response.bankAccount.accountNumber}`,
-              status: response.bankAccount.status
-            }
-          : null
-        bankAccountList.value = [bankAccountTemp]
-        item.value.bankAccount = bankAccountTemp
-        // bankAccountList.value = typeof response.bankAccount === 'object' ? [{ id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status }] : []
-        // item.value.bankAccount = typeof response.bankAccount === 'object' ? { id: response.bankAccount.id, name: response.bankAccount.accountNumber, status: response.bankAccount.status } : response.bankAccount
-
-        const attachmentStatusTemp = response.attachmentStatus
-          ? {
-              id: response.attachmentStatus.id,
-              name: `${response.attachmentStatus.code} - ${response.attachmentStatus.name}`,
-              status: response.attachmentStatus.status
-            }
-          : null
-        attachmentStatusList.value = [attachmentStatusTemp]
-        item.value.attachmentStatus = attachmentStatusTemp
-
-        const paymentStatusTemp = response.paymentStatus
-          ? {
-              id: response.paymentStatus.id,
-              name: `${response.paymentStatus.code} - ${response.paymentStatus.name}`,
-              code: response.paymentStatus.code,
-              originalName: response.paymentStatus.name,
-              status: response.paymentStatus.status,
-              applied: response.paymentStatus.applied,
-              confirmed: response.paymentStatus.confirmed,
-              cancelled: response.paymentStatus.cancelled
-            }
-          : null
-        paymentStatusList.value = [paymentStatusTemp]
-        item.value.paymentStatus = paymentStatusTemp
-        if (paymentStatusTemp) {
-          paymentStatusOfGetById.value = paymentStatusTemp
-        }
-
-        if (response.paymentStatus && response.paymentStatus.cancelled === true) {
-          isCancelledPayment.value = response.paymentStatus.cancelled
-        }
-
-        const paymentSourceTemp = response.paymentSource
-          ? {
-              id: response.paymentSource.id,
-              name: `${response.paymentSource.code} - ${response.paymentSource.name}`,
-              status: response.paymentSource.status
-            }
-          : null
-        paymentSourceList.value = [paymentSourceTemp]
-        item.value.paymentSource = paymentSourceTemp
-
-        if (response?.paymentSource && response?.paymentSource?.expense) {
-          const decimalSchema = z.object(
-            {
-              bankAccount: z
-                .object({}).nullable(),
-            },
-          )
-          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3')
-        }
-        else {
-          const decimalSchema = z.object(
-            {
-              bankAccount: validateEntityStatus('bank account'),
-            },
-          )
-          updateFieldProperty(fields, 'bankAccount', 'validation', decimalSchema.shape.bankAccount)
-          updateFieldProperty(fields, 'bankAccount', 'class', 'field col-12 md:col-3 required')
-        }
-      }
-      // debugger
-      // item.value = { ...formatNumbersInObject(item.value, ['paymentAmount', 'depositAmount', 'otherDeductions', 'identified', 'notIdentified']) }
-
-      fields[0].disabled = true
-
-      disabledFields(item.value, fields)
-
-      formReload.value += 1
-
-      await getListPaymentDetail()
+    // Asignaciones directas sin repetición
+    item.value = {
+      id,
+      paymentId,
+      reference,
+      transactionDate: transactionDate ? new Date(transactionDate) : null,
+      paymentAmount,
+      paymentBalance: formatToTwoDecimalPlaces(paymentBalance),
+      depositAmount: formatToTwoDecimalPlaces(depositAmount),
+      depositBalance: formatToTwoDecimalPlaces(depositBalance),
+      otherDeductions: formatToTwoDecimalPlaces(otherDeductions),
+      identified: formatToTwoDecimalPlaces(identified),
+      notIdentified: formatToTwoDecimalPlaces(notIdentified),
+      remark
     }
-    catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
-      }
-    }
-    finally {
-      loadingSaveAll.value = false
-    }
+
+    // Manejo de listas optimizado (en paralelo con Promise.all)
+    const clientList = client ? [{ id: client.id, name: `${client.code} - ${client.name}`, status: client.status }] : []
+    const agencyList = agency ? [{ id: agency.id, name: `${agency.code} - ${agency.name}`, status: agency.status }] : []
+    const hotelList = hotel ? [{ id: hotel.id, name: `${hotel.code} - ${hotel.name}`, status: hotel.status }] : []
+    const bankAccountList = bankAccount ? [{ id: bankAccount.id, name: `${bankAccount.nameOfBank} - ${bankAccount.accountNumber}`, status: bankAccount.status }] : []
+    const attachmentStatusList = attachmentStatus ? [{ id: attachmentStatus.id, name: `${attachmentStatus.code} - ${attachmentStatus.name}`, status: attachmentStatus.status }] : []
+    const paymentSourceList = paymentSource ? [{ id: paymentSource.id, name: `${paymentSource.code} - ${paymentSource.name}`, status: paymentSource.status }] : []
+    const paymentStatusList = paymentStatus
+      ? [{
+          id: paymentStatus.id,
+          name: `${paymentStatus.code} - ${paymentStatus.name}`,
+          code: paymentStatus.code,
+          originalName: paymentStatus.name,
+          status: paymentStatus.status,
+          applied: paymentStatus.applied,
+          confirmed: paymentStatus.confirmed,
+          cancelled: paymentStatus.cancelled
+        }]
+      : []
+
+    // Asignar listas a sus respectivas variables
+    item.value.client = clientList[0] || null
+    item.value.agency = agencyList[0] || null
+    item.value.hotel = hotelList[0] || null
+    item.value.bankAccount = bankAccountList[0] || null
+    item.value.attachmentStatus = attachmentStatusList[0] || null
+    item.value.paymentSource = paymentSourceList[0] || null
+    item.value.paymentStatus = paymentStatusList[0] || null
+
+    if (paymentStatus?.cancelled) { isCancelledPayment.value = true }
+
+    // Si existe paymentSource.expense, aplicar validaciones
+    updateBankAccountValidation(paymentSource?.expense)
+
+    // Deshabilitar campos y actualizar el formulario
+    fields[0].disabled = true
+    disabledFields(item.value, fields)
+    formReload.value += 1
+
+    // Llamar `getListPaymentDetail()` solo si es necesario
+    // if (existDetails) { getListPaymentDetail() } // Sin await
   }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
+  }
+  finally {
+    loadingSaveAll.value = false
+  }
+}
+
+function update() {
+  if (idItem.value) {
+    getListPaymentDetail()
+    getItemById(idItem.value)
+  }
+  else {
+    clearForm()
+  }
+}
+
+// Función optimizada para actualizar la validación del campo 'bankAccount'
+function updateBankAccountValidation(expense: boolean) {
+  updateFieldProperty(
+    fields,
+    'bankAccount',
+    'validation',
+    expense
+      ? z.object({ bankAccount: z.object({}).nullable() }).shape.bankAccount
+      : z.object({ bankAccount: validateEntityStatus('bank account') }).shape.bankAccount
+  )
+
+  updateFieldProperty(fields, 'bankAccount', 'class', `field col-12 md:col-3 ${expense ? '' : 'required'}`)
 }
 
 const somePaymenWithApplyPayment = computed(() => {
   return paymentDetailsList.value.some(item => item.applyPayment)
 })
 
-async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, cancel: boolean } = { reverse: false, cancel: false }) {
+async function getListPaymentDetail() {
   const count: SubTotals = { depositAmount: 0 }
+
   if (options.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
     return
   }
+
   try {
     options.value.loading = true
     paymentDetailsList.value = []
-    const newListItems = []
+    const newListItems: any[] = []
 
+    // Función reutilizable para añadir o actualizar filtros
+    const addOrUpdateFilter = (key: string, value: any, logicalOperation: string) => {
+      const existing = payload.value.filter.find(item => item.key === key)
+      if (existing) {
+        existing.value = value
+        existing.logicalOperation = logicalOperation
+      }
+      else {
+        payload.value.filter.push({ key, operator: 'EQUALS', value, logicalOperation })
+      }
+    }
+
+    // Filtros reverso y cancelado
     if (showReverseTransaction.value && showCanceledDetails.value) {
-      const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-      if (objFilterForReverseFalse) {
-        objFilterForReverseFalse.value = true
-        objFilterForReverseFalse.logicalOperation = 'OR'
-      }
-      else {
-        payload.value.filter.push({
-          key: 'reverseTransaction',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'OR'
-        })
-      }
-
-      const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-      if (objFilterForCanceledFalse) {
-        objFilterForCanceledFalse.value = true
-        objFilterForCanceledFalse.logicalOperation = 'OR'
-      }
-      else {
-        payload.value.filter.push({
-          key: 'canceledTransaction',
-          operator: 'EQUALS',
-          value: true,
-          logicalOperation: 'OR'
-        })
-      }
+      addOrUpdateFilter('reverseTransaction', true, 'OR')
+      addOrUpdateFilter('canceledTransaction', true, 'OR')
     }
     else {
-      if (showReverseTransaction.value) {
-        // aplicar el filtro
-        const objFilterForReverseFalse = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-        if (objFilterForReverseFalse) {
-          objFilterForReverseFalse.value = true
-          objFilterForReverseFalse.logicalOperation = 'OR'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'reverseTransaction',
-            operator: 'EQUALS',
-            value: true,
-            logicalOperation: 'OR'
-          })
-        }
-      }
-      else {
-        // filtrar para que no aparezca el de reversado
-        const objFilterForReverseTrue = payload.value.filter.find(item => item.key === 'reverseTransaction')
-
-        if (objFilterForReverseTrue) {
-          objFilterForReverseTrue.value = false
-          objFilterForReverseTrue.logicalOperation = 'AND'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'reverseTransaction',
-            operator: 'EQUALS',
-            value: false,
-            logicalOperation: 'AND'
-          })
-        }
-      }
-
-      if (showCanceledDetails.value) {
-        // aplicar el filtro
-        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-        if (objFilterForCanceledFalse) {
-          objFilterForCanceledFalse.value = true
-          objFilterForCanceledFalse.logicalOperation = 'OR'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'canceledTransaction',
-            operator: 'EQUALS',
-            value: true,
-            logicalOperation: 'OR'
-          })
-        }
-      }
-      else {
-        // filtrar para que no aparezca el de reversado
-        const objFilterForCanceledFalse = payload.value.filter.find(item => item.key === 'canceledTransaction')
-
-        if (objFilterForCanceledFalse) {
-          objFilterForCanceledFalse.value = false
-          objFilterForCanceledFalse.logicalOperation = 'AND'
-        }
-        else {
-          payload.value.filter.push({
-            key: 'canceledTransaction',
-            operator: 'EQUALS',
-            value: false,
-            logicalOperation: 'AND'
-          })
-        }
-      }
+      addOrUpdateFilter('reverseTransaction', showReverseTransaction.value, showReverseTransaction.value ? 'OR' : 'AND')
+      addOrUpdateFilter('canceledTransaction', showCanceledDetails.value, showCanceledDetails.value ? 'OR' : 'AND')
     }
 
-    const objFilter = payload.value.filter.find(item => item.key === 'payment.id')
+    // Filtro por id de pago
+    addOrUpdateFilter('payment.id', idItem.value, 'AND')
 
-    if (objFilter) {
-      objFilter.value = idItem.value
-    }
-    else {
-      payload.value.filter.push({
-        key: 'payment.id',
-        operator: 'EQUALS',
-        value: idItem.value,
-        logicalOperation: 'AND'
-      })
-    }
-
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    // console.log(response)
+    const response = await GenericService.search(
+      options.value.moduleApi,
+      options.value.uriApi,
+      payload.value
+    )
 
     const { data: dataList, page, size, totalElements, totalPages } = response
 
@@ -1618,76 +1509,73 @@ async function getListPaymentDetail(showReverseAndCancel: { reverse: boolean, ca
     pagination.value.totalPages = totalPages
 
     const existingIds = new Set(paymentDetailsList.value.map(item => item.id))
-    // reverseFromParentId
-    for (const iterator of dataList) {
-      if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
-        count.depositAmount += iterator.amount
-        iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')
-          ? Number.parseFloat(iterator.amount)
-          : 0
+    const highlightId = route?.query?.highlightBooking?.toString() || null
 
-        // iterator.amount = formatNumber(iterator.amount)
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
+    for (const iterator of dataList) {
+      if (existingIds.has(iterator.id)) { continue }
+
+      // Monto
+      iterator.amount = iterator.amount ? Number.parseFloat(iterator.amount) : 0
+      count.depositAmount += iterator.amount
+
+      // Estado
+      if (iterator.status !== undefined) {
         iterator.status = statusToBoolean(iterator.status)
       }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionDate')) {
-        iterator.transactionDate = iterator.transactionDate ? dayjs(iterator.transactionDate).format('YYYY-MM-DD') : null
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'parentId')) {
-        iterator.parentId = iterator.parentId ? iterator.parentId.toString() : ''
-      }
-      if (Object.prototype.hasOwnProperty.call(iterator, 'transactionType')) {
+
+      // Fecha
+      iterator.transactionDate = iterator.transactionDate
+        ? dayjs(iterator.transactionDate).format('YYYY-MM-DD')
+        : null
+
+      // ID padre
+      iterator.parentId = iterator.parentId?.toString()
+
+      // Tipo de transacción
+      if (iterator.transactionType) {
         iterator.deposit = iterator.transactionType.deposit
         iterator.transactionType.name = `${iterator.transactionType.code} - ${iterator.transactionType.name}`
-
         if (iterator.deposit) {
-          iterator.rowClass = 'row-deposit' // Clase CSS para las transacciones de tipo deposit
+          iterator.rowClass = 'row-deposit'
         }
       }
 
-      if (Object.prototype.hasOwnProperty.call(iterator, 'manageBooking')) {
-        iterator.adults = iterator.manageBooking?.adults?.toString()
-        iterator.childrens = iterator.manageBooking?.children?.toString()
-        iterator.couponNumber = iterator.manageBooking?.couponNumber?.toString()
-        iterator.fullName = iterator.manageBooking?.fullName
-        iterator.reservationNumber = iterator.manageBooking?.reservationNumber?.toString()
+      // Booking
+      if (iterator.manageBooking) {
+        iterator.adults = iterator.manageBooking.adults?.toString()
+        iterator.childrens = iterator.manageBooking.children?.toString()
+        iterator.couponNumber = iterator.manageBooking.couponNumber?.toString()
+        iterator.fullName = iterator.manageBooking.fullName
+        iterator.reservationNumber = iterator.manageBooking.reservationNumber?.toString()
+        iterator.bookingId = iterator.manageBooking.bookingId?.toString()
+        iterator.invoiceNumber = iterator.manageBooking.invoice?.invoiceNumber?.toString()
 
-        if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && iterator?.transactionType?.cash) {
-          iterator.bookingId = iterator.manageBooking?.bookingId?.toString()
-          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber?.toString()
-        }
-        else if (iterator?.manageBooking?.invoice?.invoiceType === 'CREDIT' && !iterator?.transactionType?.cash) {
-          iterator.bookingId = iterator?.manageBooking?.parentResponse?.bookingId?.toString()
-          iterator.invoiceNumber = iterator?.manageBooking?.invoice?.parent?.invoiceNumber?.toString()
-          iterator.bookingId = iterator?.manageBooking.parentResponse?.bookingId
-          iterator.invoiceNumber = iterator?.manageBooking.invoice?.parent?.invoiceNumber
-        }
-        else {
-          iterator.bookingId = iterator.manageBooking?.bookingId
-          iterator.invoiceNumber = iterator.manageBooking?.invoice?.invoiceNumber
+        // 🔶 Resaltar si coincide con el ID de booking en URL
+        if (iterator.bookingId && iterator.bookingId === highlightId) {
+          iterator.rowClass = 'row-highlight'
         }
       }
 
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      }
+      newListItems.push({ ...iterator })
+      existingIds.add(iterator.id)
     }
-
     paymentDetailsList.value = [...paymentDetailsList.value, ...newListItems]
-    // if (paymentDetailsList.value.length === 0 && item.value?.paymentStatus?.confirmed === true) {
-    //   updateFieldProperty(fields, 'paymentStatus', 'disabled', false)
-    // }
   }
   catch (error) {
-    console.error(error)
+    console.error('Error al obtener detalles del pago:', error)
   }
   finally {
     options.value.loading = false
     subTotals.value = { ...count }
   }
+}
+
+function copiarDatos() {
+  copyListFromColumns(columns, paymentDetailsList.value, toast)
+}
+
+function copiarDatosApplyPayment() {
+  copyTableToClipboard(applyPaymentColumns.value, applyPaymentList.value, toast)
 }
 
 function hasDepositTransaction(mainId: string, items: TransactionItem[]): boolean {
@@ -1906,6 +1794,7 @@ async function updateItem(item: { [key: string]: any }) {
 }
 
 async function saveAndReload(item: { [key: string]: any }) {
+  toast.add({ severity: 'info', summary: 'Confirmed', detail: `The detail was created successfully`, life: 5000 })
   if (item?.amount && item?.amount !== '' && item?.amount !== undefined && typeof item?.amount === 'string') {
     item.amount = Number(item.amount.replace(/,/g, ''))
   }
@@ -1937,10 +1826,12 @@ async function saveAndReload(item: { [key: string]: any }) {
         await createPaymentDetails(item)
       }
       itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
+      await getListPaymentDetail()
       await getItemById(idItem.value)
     }
     catch (error: any) {
       toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+      loadingSaveAll.value = false
     }
   }
 }
@@ -2042,8 +1933,40 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   agencyList.value = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
-async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+// 1) Extiende el tipo de queryObj para que acepte page/pageSize
+interface QueryParams {
+  query: string
+  keys: string[]
+  page?: number
+  pageSize?: number
+}
+
+async function getAgencyListTemp(
+  moduleApi: string,
+  uriApi: string,
+  queryObj: QueryParams,
+  filter?: FilterCriteria[]
+) {
+  const {
+    query,
+    keys,
+    page = 0, // valor por defecto
+    pageSize = 1000 // hasta 1000 filas
+  } = queryObj
+
+  return await getDataList<DataListItem, ListItem>(
+    moduleApi,
+    uriApi,
+    filter,
+    { query, keys },
+    mapFunction,
+    {
+      page,
+      pageSize,
+      sortBy: 'name',
+      sortType: ENUM_SHORT_TYPE.ASC
+    }
+  )
 }
 
 interface DataListItemHotel {
@@ -2257,6 +2180,7 @@ function onCloseDialog($event: any) {
     actionOfModal.value = 'new-detail'
     payloadToApplyPayment.value.applyPayment = false
     payloadToApplyPayment.value.booking = ''
+    getListPaymentDetail()
   }
   itemDetails.value = JSON.parse(JSON.stringify(itemDetailsTemp.value))
   dialogPaymentDetailFormReload.value += 1
@@ -2348,12 +2272,13 @@ async function applyUndoApplication(event: any) {
       await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
       if (route?.query?.id) {
         const id = route.query.id.toString()
+        await getListPaymentDetail()
         await getItemById(id)
       }
     }
   }
   catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
@@ -2377,19 +2302,23 @@ function reverseTransaction(event: any) {
 async function applyReverseTransaction(event: any) {
   try {
     if (objItemSelectedForRightClickReverseTransaction.value?.id) {
+      options.value.loading = true
       const payload = {
         paymentDetail: objItemSelectedForRightClickReverseTransaction.value?.id || '',
         employee: userData?.value?.user?.userId || ''
       }
       await GenericService.create(confApiPaymentDetailReverseTransaction.moduleApi, confApiPaymentDetailReverseTransaction.uriApi, payload)
+      toast.add({ severity: 'success', summary: 'Success', detail: 'The transaction was reversed successfully', life: 3000 })
+      options.value.loading = false
       if (route?.query?.id) {
         const id = route.query.id.toString()
+        await getListPaymentDetail()
         await getItemById(id)
       }
     }
   }
   catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 
@@ -2459,29 +2388,20 @@ async function historyGetList() {
 }
 
 async function applyPaymentGetList(amountComingOfForm: any = null) {
-  if (applyPaymentOptions.value.loading) {
-    // Si ya hay una solicitud en proceso, no hacer nada.
-    return
-  }
+  if (applyPaymentOptions.value.loading) { return }
+
   try {
-    // applyPaymentPayload.value.filter = []
     applyPaymentOptions.value.loading = true
     applyPaymentList.value = []
-    const newListItems = []
-    let validNumber = '0'
+    applyPaymentPayload.value.filter = []
 
-    if (typeof amountComingOfForm === 'string') {
-      validNumber = amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : '0'
-    }
-    else {
-      validNumber = amountComingOfForm
-    }
+    const validNumber = typeof amountComingOfForm === 'string'
+      ? (amountComingOfForm ? amountComingOfForm.replace(/,/g, '') : '0')
+      : amountComingOfForm ?? '0'
 
-    // Si existe un filtro con dueAmount, solo lo modificamos y si no existe se crea
-    const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'dueAmount' && item.type !== 'filterSearch')
-
-    if (objFilter) {
-      objFilter.value = Number.parseFloat(validNumber).toFixed(2)
+    const dueAmountFilter = applyPaymentPayload.value.filter.find(f => f.key === 'dueAmount' && f.type !== 'filterSearch')
+    if (dueAmountFilter) {
+      dueAmountFilter.value = Number.parseFloat(validNumber).toFixed(2)
     }
     else {
       applyPaymentPayload.value.filter.push({
@@ -2493,313 +2413,112 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
     }
 
     if (item.value?.client.status === 'ACTIVE') {
-      // Validacion para busar por por las agencias
-      const filter: FilterCriteria[] = [
+      // 🔵 Filtro de agencias
+      const agencies = await getAgencyListTemp(
+        objApis.value.agency.moduleApi,
+        objApis.value.agency.uriApi,
         {
-          key: 'client.id',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: item.value.client.id,
+          query: '',
+          keys: ['name', 'code'],
+          page: 0, // página inicial
+          pageSize: 1000 // hasta 1 000 registros
         },
-        {
-          key: 'status',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: 'ACTIVE',
-        },
-      ]
-      const objQueryToSearch = {
-        query: '',
-        keys: ['name', 'code'],
-      }
+        [
+          { key: 'client.id', operator: 'EQUALS', value: item.value.client.id, logicalOperation: 'AND' },
+          { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
+        ]
+      )
 
-      let listAgenciesForApplyPayment: any[] = []
-      listAgenciesForApplyPayment = await getAgencyListTemp(objApis.value.agency.moduleApi, objApis.value.agency.uriApi, objQueryToSearch, filter)
-
-      if (listAgenciesForApplyPayment.length > 0) {
-        const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.agency.id')
-
-        if (objFilter) {
-          objFilter.value = listAgenciesForApplyPayment.map(item => item.id)
+      if (agencies.length > 0) {
+        const agencyFilter = applyPaymentPayload.value.filter.find(f => f.key === 'invoice.agency.id')
+        if (agencyFilter) {
+          agencyFilter.value = agencies.map(a => a.id)
         }
         else {
           applyPaymentPayload.value.filter.push({
             key: 'invoice.agency.id',
             operator: 'IN',
-            value: listAgenciesForApplyPayment.map(item => item.id),
+            value: agencies.map(a => a.id),
             logicalOperation: 'AND'
           })
         }
-        // Validacion para bucsar por los hoteles
-        if (item.value.hotel && item.value.hotel.id) {
-          if (item.value?.hotel.status === 'ACTIVE') {
-            // El hotel que tiene la cabecera del payment debe pertenecer a la misma trading company
-            if (item.value.hotel.applyByTradingCompany) {
-              // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-              const filter: FilterCriteria[] = [
-                {
-                  key: 'manageTradingCompanies.id',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: item.value.hotel?.manageTradingCompany,
-                },
-                {
-                  key: 'applyByTradingCompany',
-                  logicalOperation: 'AND',
-                  operator: 'EQUALS',
-                  value: true,
-                },
+      }
+      if (item.value?.hotel?.id) {
+        const hotelFull = await GenericService.getById(
+          objApis.value.hotel.moduleApi,
+          objApis.value.hotel.uriApi,
+          item.value.hotel.id
+        )
+
+        if (hotelFull?.status === 'ACTIVE') {
+          let hotelIds: string[] = []
+
+          if (hotelFull.applyByTradingCompany && hotelFull.manageTradingCompanies?.id) {
+            const hotels = await getHotelListTemp(
+              objApis.value.hotel.moduleApi,
+              objApis.value.hotel.uriApi,
+              { query: '', keys: ['name', 'code'] },
+              [
+                { key: 'manageTradingCompanies.id', operator: 'EQUALS', value: hotelFull.manageTradingCompanies.id, logicalOperation: 'AND' },
+                { key: 'applyByTradingCompany', operator: 'EQUALS', value: true, logicalOperation: 'AND' },
+                { key: 'status', operator: 'EQUALS', value: 'ACTIVE', logicalOperation: 'AND' }
               ]
-              const objQueryToSearch = {
-                query: '',
-                keys: ['name', 'code'],
-              }
+            )
 
-              let listHotelsForApplyPayment: any[] = []
-              listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-              if (listHotelsForApplyPayment.length > 0) {
-                const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-                if (objFilter) {
-                  objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-                }
-                else {
-                  applyPaymentPayload.value.filter.push({
-                    key: 'invoice.hotel.id',
-                    operator: 'IN',
-                    value: listHotelsForApplyPayment.map(item => item.id),
-                    logicalOperation: 'AND'
-                  })
-                }
-
-                const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-                if (objFilterEnabledToApply) {
-                  objFilterEnabledToApply.value = true
-                }
-                else {
-                  applyPaymentPayload.value.filter.push(
-                    {
-                      key: 'invoice.manageInvoiceStatus.enabledToApply',
-                      operator: 'EQUALS',
-                      value: true,
-                      logicalOperation: 'AND'
-                    }
-                  )
-                }
-
-                const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-                const { data: dataList, page, size, totalElements, totalPages } = response
-
-                applyPaymentPagination.value.page = page
-                applyPaymentPagination.value.limit = size
-                applyPaymentPagination.value.totalElements = totalElements
-                applyPaymentPagination.value.totalPages = totalPages
-
-                const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-                for (const iterator of dataList) {
-                  iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                  iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                  iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                  iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                  iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                  // iterator.paymentStatus = iterator.status
-
-                  // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                  //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                  //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                  //   }
-                  // }
-
-                  // Verificar si el ID ya existe en la lista
-                  if (!existingIds.has(iterator.id)) {
-                    newListItems.push({
-                      ...iterator,
-                      invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                      loadingEdit: false,
-                      loadingDelete: false
-                    }
-                    )
-                    existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                  }
-                }
-
-                applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-              }
-            }
-            else {
-              const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-              if (objFilter) {
-                objFilter.value = item.value.hotel.id
-              }
-              else {
-                applyPaymentPayload.value.filter.push({
-                  key: 'invoice.hotel.id',
-                  operator: 'EQUALS',
-                  value: item.value.hotel.id,
-                  logicalOperation: 'AND'
-                })
-              }
-
-              const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-              if (objFilterEnabledToApply) {
-                objFilterEnabledToApply.value = true
-              }
-              else {
-                applyPaymentPayload.value.filter.push(
-                  {
-                    key: 'invoice.manageInvoiceStatus.enabledToApply',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                  }
-                )
-              }
-
-              const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-              const { data: dataList, page, size, totalElements, totalPages } = response
-
-              applyPaymentPagination.value.page = page
-              applyPaymentPagination.value.limit = size
-              applyPaymentPagination.value.totalElements = totalElements
-              applyPaymentPagination.value.totalPages = totalPages
-
-              const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-              for (const iterator of dataList) {
-                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                // iterator.paymentStatus = iterator.status
-
-                // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                //   }
-                // }
-
-                // Verificar si el ID ya existe en la lista
-                if (!existingIds.has(iterator.id)) {
-                  newListItems.push({
-                    ...iterator,
-                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                    loadingEdit: false,
-                    loadingDelete: false
-                  }
-                  )
-                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                }
-              }
-
-              applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-            }
+            hotelIds = hotels.map(h => h.id)
           }
-          else {
-            // Obtener los hoteles dado el id de la agencia del payment y ademas de eso que pertenezcan a la misma trading company del hotel seleccionado
-            const filter: FilterCriteria[] = [
-              {
-                key: 'manageTradingCompanies.id',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: item.value.hotel?.manageTradingCompany,
-              },
-              {
-                key: 'applyByTradingCompany',
-                logicalOperation: 'AND',
-                operator: 'EQUALS',
-                value: true,
-              },
-            ]
-            const objQueryToSearch = {
-              query: '',
-              keys: ['name', 'code'],
-            }
 
-            let listHotelsForApplyPayment: any[] = []
-            listHotelsForApplyPayment = await getHotelListTemp(objApis.value.hotel.moduleApi, objApis.value.hotel.uriApi, objQueryToSearch, filter)
-
-            if (listHotelsForApplyPayment.length > 0) {
-              const objFilter = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.hotel.id')
-
-              if (objFilter) {
-                objFilter.value = listHotelsForApplyPayment.map(item => item.id)
-              }
-              else {
-                applyPaymentPayload.value.filter.push({
-                  key: 'invoice.hotel.id',
-                  operator: 'IN',
-                  value: listHotelsForApplyPayment.map(item => item.id),
-                  logicalOperation: 'AND'
-                })
-              }
-
-              const objFilterEnabledToApply = applyPaymentPayload.value.filter.find(item => item.key === 'invoice.manageInvoiceStatus.enabledToApply')
-
-              if (objFilterEnabledToApply) {
-                objFilterEnabledToApply.value = true
-              }
-              else {
-                applyPaymentPayload.value.filter.push(
-                  {
-                    key: 'invoice.manageInvoiceStatus.enabledToApply',
-                    operator: 'EQUALS',
-                    value: true,
-                    logicalOperation: 'AND'
-                  }
-                )
-              }
-
-              const response = await GenericService.search(applyPaymentOptions.value.moduleApi, applyPaymentOptions.value.uriApi, applyPaymentPayload.value)
-
-              const { data: dataList, page, size, totalElements, totalPages } = response
-
-              applyPaymentPagination.value.page = page
-              applyPaymentPagination.value.limit = size
-              applyPaymentPagination.value.totalElements = totalElements
-              applyPaymentPagination.value.totalPages = totalPages
-
-              const existingIds = new Set(applyPaymentList.value.map(item => item.id))
-
-              for (const iterator of dataList) {
-                iterator.invoiceId = iterator.invoice?.invoiceId.toString()
-                iterator.checkIn = iterator.checkIn ? dayjs(iterator.checkIn).format('YYYY-MM-DD') : null
-                iterator.checkOut = iterator.checkOut ? dayjs(iterator.checkOut).format('YYYY-MM-DD') : null
-                iterator.bookingAmount = iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount?.toString()) : 0
-                iterator.bookingBalance = iterator.dueAmount ? formatNumber(iterator.dueAmount?.toString()) : 0
-                // iterator.paymentStatus = iterator.status
-
-                // if (Object.prototype.hasOwnProperty.call(iterator, 'employee')) {
-                //   if (iterator.employee.firstName && iterator.employee.lastName) {
-                //     iterator.employee = { id: iterator.employee?.id, name: `${iterator.employee?.firstName} ${iterator.employee?.lastName}` }
-                //   }
-                // }
-
-                // Verificar si el ID ya existe en la lista
-                if (!existingIds.has(iterator.id)) {
-                  newListItems.push({
-                    ...iterator,
-                    invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
-                    loadingEdit: false,
-                    loadingDelete: false
-                  }
-                  )
-                  existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-                }
-              }
-
-              applyPaymentList.value = [...applyPaymentList.value, ...newListItems]
-            }
+          if (!hotelIds.length) {
+            hotelIds = [hotelFull.id]
           }
+
+          applyPaymentPayload.value.filter.push({
+            key: 'invoice.hotel.id',
+            operator: hotelIds.length > 1 ? 'IN' : 'EQUALS',
+            value: hotelIds.length > 1 ? hotelIds : hotelIds[0],
+            logicalOperation: 'AND'
+          })
         }
       }
+
+      // 🔵 Filtro obligatorio de EnabledToApply
+      if (!applyPaymentPayload.value.filter.find(f => f.key === 'invoice.manageInvoiceStatus.enabledToApply')) {
+        applyPaymentPayload.value.filter.push({
+          key: 'invoice.manageInvoiceStatus.enabledToApply',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        })
+      }
+
+      applyPaymentPayload.value = removeDuplicateFilters(applyPaymentPayload.value)
+
+      const response = await GenericService.search(
+        applyPaymentOptions.value.moduleApi,
+        applyPaymentOptions.value.uriApi,
+        applyPaymentPayload.value
+      )
+
+      const { data: dataList, page, size, totalElements, totalPages } = response
+
+      applyPaymentPagination.value.page = page
+      applyPaymentPagination.value.limit = size
+      applyPaymentPagination.value.totalElements = totalElements
+      applyPaymentPagination.value.totalPages = totalPages
+
+      const existingIds = new Set(applyPaymentList.value.map(item => item.id))
+
+      const mappedItems = dataList.map(iterator => ({
+        ...iterator,
+        invoiceNo: `${iterator.invoice?.manageInvoiceType?.code}-${iterator.invoice?.invoiceNo}`,
+        invoiceId: iterator.invoice?.invoiceId?.toString() ?? '',
+        bookingAmount: iterator.invoiceAmount ? formatNumber(iterator.invoiceAmount.toString()) : 0,
+        bookingBalance: iterator.dueAmount ? formatNumber(iterator.dueAmount.toString()) : 0,
+        loadingEdit: false,
+        loadingDelete: false
+      })).filter(iterator => !existingIds.has(iterator.id))
+
+      applyPaymentList.value = [...applyPaymentList.value, ...mappedItems]
     }
   }
   catch (error) {
@@ -2811,12 +2530,34 @@ async function applyPaymentGetList(amountComingOfForm: any = null) {
   }
 }
 
+function removeDuplicateFilters(request: IQueryRequest): IQueryRequest {
+  const uniqueFilters = request.filter.reduce((acc: IFilter[], current: IFilter) => {
+    const isDuplicate = acc.some(item =>
+      item.key === current.key
+      && item.operator === current.operator
+      && JSON.stringify(item.value) === JSON.stringify(current.value)
+      && item.logicalOperation === current.logicalOperation
+    )
+
+    if (!isDuplicate) {
+      acc.push(current)
+    }
+    return acc
+  }, [])
+
+  return {
+    ...request,
+    filter: uniqueFilters
+  }
+}
+
 async function openDialogStatusHistory() {
   openDialogHistory.value = true
   await historyGetList()
 }
 
 async function openModalApplyPayment($event: any) {
+  manualFilter.value = ''
   if ('originalEvent' in $event) {
     isApplyPaymentFromTheForm.value = false
   }
@@ -2839,7 +2580,7 @@ async function openModalApplyPayment($event: any) {
 
 async function openDialogImportExcel(idItem: string) {
   if (idItem) {
-    navigateTo({ path: '/payment/import-detail', query: { paymentId: idItem } })
+    showImportModal.value = true
   }
 }
 
@@ -2888,6 +2629,114 @@ function onSortFieldApplyPayment(event: any) {
     applyPaymentPayload.value.sortType = event.sortOrder
     applyPaymentParseDataTableFilter(event.filter)
   }
+}
+
+const filteredInvoices = computed(() => {
+  const terms = manualFilter.value
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+
+  if (!terms.length || !terms[0]) {
+    return applyPaymentList.value
+  }
+
+  return applyPaymentList.value.filter(inv =>
+    terms.some((term) => {
+      const fields = [
+        inv.invoiceNo,
+        inv.invoiceId,
+        inv.bookingId,
+        inv.couponNumber,
+        inv.hotelBookingNumber,
+        inv.invoiceAmount,
+        inv.dueAmount,
+        inv.fullName
+      ]
+
+      return fields.some(k =>
+        String(k || '')
+          .toLowerCase()
+          .includes(term)
+      )
+    })
+  )
+})
+
+async function onManualSearch() {
+  // 1. Construye tu filtro LIKE único (o varios términos con OR/AND)
+  const searchTerm = manualFilter.value.trim()
+  applyPaymentPayload.value.page = 0 // arrancas siempre en la primera página
+  applyPaymentPayload.value.filter = [
+    {
+      key: 'invoiceNo', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'fullName', // o el campo que quieras buscar
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'bookingId',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'couponNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'hotelBookingNumber',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'invoiceAmount',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    },
+    {
+      key: 'dueAmount',
+      operator: 'LIKE',
+      value: `%${searchTerm}%`,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }
+  ]
+
+  // 2. Pides al servidor sólo las filas que coinciden
+  const response = await GenericService.search(
+    applyPaymentOptions.value.moduleApi,
+    applyPaymentOptions.value.uriApi,
+    applyPaymentPayload.value
+  )
+
+  // 3. Actualizas tu lista (y la paginación vendrá ya acorde al total de coincidencias)
+  applyPaymentList.value = response.data
+  applyPaymentPagination.value.totalElements = response.totalElements
+  applyPaymentPagination.value.totalPages = response.totalPages
 }
 
 async function historyParseDataTableFilter(payloadFilter: any) {
@@ -3002,6 +2851,7 @@ async function deleteItem(id: string) {
     toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
     if (route?.query?.id) {
       const id = route.query.id.toString()
+      await getListPaymentDetail()
       await getItemById(id)
     }
   }
@@ -3253,6 +3103,7 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
         toast.add({ severity: 'success', summary: 'Successful', detail: 'Payment has been applied successfully', life: 3000 })
         if (route?.query?.id) {
           const id = route.query.id.toString()
+          await getListPaymentDetail()
           await getItemById(id)
         }
       }
@@ -3266,9 +3117,6 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
 function closeModalApplyPayment() {
   detailItemForApplyPayment.value = null
   openDialogApplyPayment.value = false
-  // payloadToApplyPayment.value = {
-
-  // }
 }
 
 function disableAgency(data: any) {
@@ -3321,6 +3169,7 @@ watch(() => hasBeenEdited.value, async (newValue) => {
     if (route?.query?.id) {
       const id = route.query.id.toString()
       await getItemById(id)
+      await getListPaymentDetail()
     }
   }
 })
@@ -3329,14 +3178,11 @@ watch(() => hasBeenCreated.value, async (newValue) => {
   if (newValue) {
     if (route?.query?.id) {
       const id = route.query.id.toString()
+      // await getListPaymentDetail()
       await getItemById(id)
     }
   }
 })
-
-// const updateDepositSummaryAction = debounce((newValue) => {
-//   enableDepositSummaryAction.value = hasDepositSummaryTransaction(newValue)
-// }, 300) // Ajusta el tiempo de debounce según sea necesario
 
 // Watcher
 watch(() => paymentDetailsList.value, (newValue) => {
@@ -3351,36 +3197,33 @@ watch(() => paymentDetailsList.value, (newValue) => {
   }
 })
 
-watch(() => route?.query?.id, async (newValue) => {
-  if (newValue) {
-    const id = newValue.toString()
-    await getItemById(id)
+watch(applyPaymentOnChangePage, async (newValue) => {
+  const newPageSize = newValue?.rows ?? 10
+  const newPage = newValue?.page ?? 0
+
+  applyPaymentPayload.value.pageSize = newPageSize
+  applyPaymentPayload.value.page = newPage
+
+  await applyPaymentGetList(amountOfDetailItem.value)
+
+  const totalPages = applyPaymentPagination.value.totalPages ?? 1
+  if (applyPaymentPayload.value.page >= totalPages) {
+    applyPaymentPayload.value.page = Math.max(totalPages - 1, 0)
+    await applyPaymentGetList(amountOfDetailItem.value)
   }
 })
 
-watch(applyPaymentOnChangePage, (newValue) => {
-  applyPaymentPayload.value.page = newValue?.page ? newValue?.page : 0
-  applyPaymentPayload.value.pageSize = newValue?.rows ? newValue.rows : 10
-  applyPaymentGetList(amountOfDetailItem.value)
-})
-
 onMounted(async () => {
-  const filterForEmployee: FilterCriteria[] = [
-    {
-      key: 'status',
-      logicalOperation: 'AND',
-      operator: 'EQUALS',
-      value: 'ACTIVE',
-    },
-  ]
-  await getEmployeeList(objApis.value.employee.moduleApi, objApis.value.employee.uriApi, {
-    query: '',
-    keys: ['name', 'code'],
-  }, filterForEmployee)
-
   if (route?.query?.id) {
     const id = route.query.id.toString()
     await getItemById(id)
+    await getListPaymentDetail()
+
+    // 🟡 Resaltar booking si viene en la URL
+    if (route?.query?.highlightBooking) {
+      const bookingIdToHighlight = route.query.highlightBooking.toString()
+      highlightBookingId.value = bookingIdToHighlight
+    }
   }
   else {
     clearForm()
@@ -3390,11 +3233,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div style="max-height: 100vh; height: 90vh">
-    <div class="font-bold text-lg px-4 bg-primary custom-card-header">
+  <div style="max-height: 100vh; height: 80vh">
+    <div class="font-bold text-lg px-4 -mt-2 bg-primary custom-card-header">
       {{ formTitle }}
     </div>
-    <div class="card px-2 pb-2 pt-4 m-0">
+    <div class="card px-2 pb-2 pt-3.5 m-0">
       <EditFormV2
         :key="formReload"
         ref="refForm"
@@ -3774,78 +3617,69 @@ onMounted(async () => {
         </template>
       </EditFormV2>
     </div>
-    <!-- <div class="flex align-items-center mb-2">
-      <Checkbox
-        id="showReverseTransaction"
-        v-model="showReverseTransaction"
-        :binary="true"
-        @update:model-value="($event) => {
-          getListPaymentDetail($event)
+    <div class="-mt-3 card p-1">
+      <DynamicTable
+        :data="paymentDetailsList"
+        :columns="columns"
+        :options="options"
+        :pagination="pagination"
+        @on-change-pagination="payloadOnChangePage = $event"
+        @update:clicked-item="rowSelected($event)"
+        @on-change-filter="parseDataTableFilter"
+        @on-sort-field="onSortField"
+        @on-row-right-click="($event) => {
+          if (isCancelledPayment) {
+            return
+          }
+          onRowContextMenu($event)
         }"
-      />
-      <label for="showReverseTransaction" class="ml-2 font-bold text-primary"> Show Reverse Transaction </label>
-    </div> -->
-    <DynamicTable
-      :data="paymentDetailsList"
-      :columns="columns"
-      :options="options"
-      :pagination="pagination"
-      @on-change-pagination="payloadOnChangePage = $event"
-      @update:clicked-item="rowSelected($event)"
-      @on-change-filter="parseDataTableFilter"
-      @on-sort-field="onSortField"
-      @on-row-right-click="($event) => {
-        if (isCancelledPayment) {
-          return
-        }
-        onRowContextMenu($event)
-      }"
-      @on-row-double-click="openDialogPaymentDetailsEdit($event)"
-    >
-      <template #datatable-footer>
-        <ColumnGroup type="footer" class="flex align-items-center">
-          <Row>
-            <Column footer="" :colspan="14" footer-style="text-align:right; font-weight: bold;">
-              <template #footer>
-                <div class="flex align-items-center gap-4">
-                  <div class="flex align-items-center">
-                    <Checkbox
-                      id="showReverseTransaction"
-                      v-model="showReverseTransaction"
-                      :disabled="route?.query?.id ? false : true"
-                      :binary="true"
-                      :pt="{ box: { class: 'custom-checkbox' } }"
-                      @update:model-value="($event) => {
-                        getListPaymentDetail($event)
-                      }"
-                    />
-                    <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
-                    <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+        @on-row-double-click="openDialogPaymentDetailsEdit($event)"
+      >
+        <template #datatable-footer>
+          <ColumnGroup type="footer" class="flex align-items-center">
+            <Row>
+              <Column footer="" :colspan="14" footer-style="text-align:right; font-weight: bold;">
+                <template #footer>
+                  <div class="flex align-items-center gap-4">
+                    <div class="flex align-items-center">
+                      <Checkbox
+                        id="showReverseTransaction"
+                        v-model="showReverseTransaction"
+                        :disabled="route?.query?.id ? false : true"
+                        :binary="true"
+                        :pt="{ box: { class: 'custom-checkbox' } }"
+                        @update:model-value="($event) => {
+                          getListPaymentDetail($event)
+                        }"
+                      />
+                      <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
+                      <label for="showReverseTransaction" class="ml-2 font-bold"> Show Reverse Transaction </label>
+                    </div>
+                    <div class="flex align-items-center">
+                      <Checkbox
+                        id="showCanceledDetails"
+                        v-model="showCanceledDetails"
+                        :disabled="route?.query?.id ? false : true"
+                        :binary="true"
+                        :pt="{ box: { class: 'custom-checkbox' } }"
+                        @update:model-value="($event) => {
+                          getListPaymentDetail($event)
+                        }"
+                      />
+                      <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
+                    </div>
                   </div>
-                  <div class="flex align-items-center">
-                    <Checkbox
-                      id="showCanceledDetails"
-                      v-model="showCanceledDetails"
-                      :disabled="route?.query?.id ? false : true"
-                      :binary="true"
-                      :pt="{ box: { class: 'custom-checkbox' } }"
-                      @update:model-value="($event) => {
-                        getListPaymentDetail($event)
-                      }"
-                    />
-                    <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>
-                  </div>
-                </div>
-              </template>
-            </Column>
+                </template>
+              </Column>
             <!-- <Column footer="Totals:" :colspan="0" footer-style="text-align:right; font-weight: bold;" />
             <Column :footer="formatNumber(Math.round((subTotals.depositAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: bold;" />
             <Column :colspan="4" /> -->
-          </Row>
-        </ColumnGroup>
-      </template>
-    </DynamicTable>
-    <div class="flex justify-content-end align-items-center mt-3 card p-2 bg-surface-500">
+            </Row>
+          </ColumnGroup>
+        </template>
+      </DynamicTable>
+    </div>
+    <div class="flex justify-content-end align-items-center -mt-8 pt-1 card bg-surface-500">
       <IfCan :perms="idItem ? ['PAYMENT-MANAGEMENT:EDIT'] : ['PAYMENT-MANAGEMENT:CREATE']">
         <Button v-tooltip.top="'Save'" class="w-3rem" icon="pi pi-save" :disabled="isCancelledPayment" :loading="loadingSaveAll" @click="forceSave = true" />
       </IfCan>
@@ -3878,7 +3712,7 @@ onMounted(async () => {
       </IfCan>
       <IfCan :perms="['PAYMENT-MANAGEMENT:PRINT-DETAIL']">
         <Button v-tooltip.top="'Print'" class="w-3rem ml-1" icon="pi pi-print" :disabled="idItem === null || idItem === undefined || idItem === ''" @click="openPrint = true" />
-        <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
+      <!-- :disabled="!paymentDetailsList || paymentDetailsList.length === 0" -->
       </IfCan>
       <!-- <Button v-tooltip.top="'Payment to Print'" class="w-3rem ml-1" disabled icon="pi pi-print" @click="openPrint = true" /> -->
       <IfCan :perms="['PAYMENT-MANAGEMENT:ATTACHMENT']">
@@ -3910,6 +3744,16 @@ onMounted(async () => {
       <IfCan :perms="['PAYMENT-MANAGEMENT:DELETE-DETAIL']">
         <Button v-tooltip.top="'Annular'" class="w-3rem ml-1" outlined severity="danger" :disabled="disabledBtnDelete" :loading="loadingDelete" icon="pi pi-ban" @click="requireConfirmationToDelete($event)" />
       </IfCan>
+      <Button
+        v-tooltip.top="'Update'" class="w-3rem mx-1" icon="pi pi-replay" :loading="loadingSaveAll"
+        @click="update"
+      />
+      <Button
+        v-tooltip.top="'Copy Table'"
+        class="w-3rem mx-1"
+        icon="pi pi-copy"
+        @click="copiarDatos"
+      />
       <Button v-tooltip.top="'Cancel'" class="w-3rem ml-3" icon="pi pi-times" severity="secondary" @click="goToList" />
     </div>
     <div v-show="onOffDialogPaymentDetail">
@@ -3996,9 +3840,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="openDialogHistory = false"
     >
@@ -4044,7 +3888,7 @@ onMounted(async () => {
       modal
       class="mx-3 sm:mx-0"
       content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '80%' }"
+      :style="{ width: '90vw', maxHeight: '100vh' }"
       :pt="{
         root: {
           class: 'custom-dialog-history',
@@ -4052,9 +3896,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="closeModalApplyPayment()"
     >
@@ -4071,10 +3915,27 @@ onMounted(async () => {
         </div>
       </template>
       <template #default>
+        <div class="flex align-items-center gap-0 p-fluid pt-3 -mt-3 -mb-3">
+          <Button
+            v-if="manualFilter"
+            v-tooltip.top="'Clear'"
+            class="p-button-text p-button-rounded p-button-sm my-0"
+            style="height:2.2rem"
+            icon="pi pi-filter-slash"
+            aria-label="Clear"
+            @click="manualFilter = ''"
+          />
+          <InputText
+            v-model="manualFilter"
+            placeholder="Search data by Invoice Id, Booking Id, Invoice No, Full Name, Coupon No, Reservation No, Booking Amount, Booking Balance"
+            class="flex-grow-1 my-0"
+            style="height:2.2rem; padding-top:0.25rem"
+          />
+        </div>
         <div class="p-fluid pt-3">
           <DynamicTable
             class="card p-0"
-            :data="applyPaymentList"
+            :data="filteredInvoices"
             :columns="applyPaymentColumns"
             :options="applyPaymentOptions"
             :pagination="applyPaymentPagination"
@@ -4082,6 +3943,13 @@ onMounted(async () => {
             @on-change-filter="applyPaymentParseDataTableFilter"
             @on-sort-field="onSortFieldApplyPayment"
             @on-row-double-click="onRowDoubleClickInDataTableApplyPayment"
+          />
+          <Button
+            v-tooltip.top="'Copy Table'"
+            class="p-button-lg w-1rem h-2rem"
+            style="margin-left: 1150px; margin-top: -20px"
+            icon="pi pi-copy"
+            @click="copiarDatosApplyPayment"
           />
         </div>
       </template>
@@ -4101,9 +3969,9 @@ onMounted(async () => {
         header: {
           style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
         },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
+      // mask: {
+      //   style: 'backdrop-filter: blur(5px)',
+      // },
       }"
       @hide="openPrint = false"
     >
@@ -4199,11 +4067,27 @@ onMounted(async () => {
             </template>
             <template #form-footer="props">
               <Button v-tooltip.top="'Print'" :loading="loadingPrintDetail" class="w-3rem ml-1 sticky" icon="pi pi-print" @click="props.item.submitForm($event)" />
-              <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
+            <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem ml-3 sticky" icon="pi pi-times" @click="closeDialogPrint" /> -->
             </template>
           </EditFormV2>
         </div>
       </template>
+    </Dialog>
+    <Dialog
+      v-model:visible="showImportModal"
+      header="Import Payment Detail"
+      :modal="true"
+      :style="{
+        'width': '90vw',
+        'height': '90vh', // Altura al 90% del viewport
+        'max-height': '800px', // Altura máxima fija
+      }"
+      :closable="true"
+    >
+      <ImportDetail
+        :payment-id="idItem"
+        @close="showImportModal = false"
+      />
     </Dialog>
 
     <ContextMenu ref="contextMenu" :model="allMenuListItems">
@@ -4234,6 +4118,10 @@ onMounted(async () => {
 }
 .custom-checkbox {
   border-color: white;
+}
+.row-highlight {
+  background-color: #e0d8f7 !important;
+  border-left: 4px solid #fcbf49;
 }
 // .p-checkbox.p-component > .p-checkbox-box {
 //   border-color: white;

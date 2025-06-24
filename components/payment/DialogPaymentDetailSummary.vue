@@ -42,7 +42,7 @@ const columnsExpandTable: IColumn[] = [
 const columns: IColumn[] = [
   { field: 'paymentDetailId', header: 'Id', width: '80px', type: 'text' },
   { field: 'transactionDate', header: 'Transaction Date', width: '200px', type: 'date' },
-  { field: 'createdAt', header: 'Create Date', width: '200px', type: 'date' },
+  { field: 'createdAt', header: 'Created Date', width: '200px', type: 'date' },
   // { field: 'paymentId', header: 'Payment Id', width: '200px', type: 'text' },
 
   // { field: 'amount', header: 'Deposit Amount', width: '200px', type: 'text', tooltip: 'Deposit Amount', },
@@ -134,6 +134,10 @@ async function getListPaymentDetailSummary() {
     const existingIds = new Set(paymentDetailSummaryList.value.map(item => item.id))
 
     for (const iterator of dataList) {
+      if (iterator.canceledTransaction) {
+        continue // Si canceledTransaction es true, salta a la siguiente iteración
+      }
+
       if (Object.prototype.hasOwnProperty.call(iterator, 'amount')) {
         count.amount += Number.parseFloat(iterator.amount)
         iterator.amount = (!Number.isNaN(iterator.amount) && iterator.amount !== null && iterator.amount !== '')

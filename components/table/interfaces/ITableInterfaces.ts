@@ -1,5 +1,4 @@
 import type { CALENDAR_MODE } from '~/utils/Enums'
-import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 
 export interface IColumn {
   field: string
@@ -8,6 +7,7 @@ export interface IColumn {
   tooltip?: string
   widthTruncate?: string
   sortable?: boolean
+  data?: any
   columnClass?: string
   showFilter?: boolean
   frozen?: boolean
@@ -16,6 +16,7 @@ export interface IColumn {
   maxWidth?: string
   icon?: string
   editable?: boolean
+  objKey?: string
   badge?: {
     color: string
   }
@@ -49,22 +50,110 @@ export interface IProps {
   calendarMode?: CALENDAR_MODE
   maxDate?: Date
 }
+export interface PrintItem {
+  invoiceId: string;
+  invoiceAmount: string;
+  dueAmount: string;
+  loadingEdit: boolean;
+  loadingDelete: boolean;
+  agencyCd: string;
+  hasAttachments: boolean;
+  aging: number;
+  dueAmountFormatted: string;
+  invoiceAmountFormatted: string;
+  invoiceNumber: string;
+  hotel: {
+    code: string;
+    name: string;
+  };
+  manageInvoiceType: {
+    code: string;
+    name: string;
+  };
+}
+interface Item {
+  id: number; // Ajusta según la estructura de tus datos
+  name: string;
+}
 
 export interface IPagination {
-  limit: number
   page: number
-  totalElements: number
+  limit: number
+  totalElements: number // ✅ Nombre correcto
   totalPages: number
   search: string
 }
 
+
+declare global {
+  interface GlobalComponents {
+    Column: typeof import('primevue/column')['default']
+    Badge: typeof import('primevue/badge')['default']
+  }
+}
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    totalItemsCount: Ref<number>
+  }
+}
+interface PrintPayload {
+  invoiceIds: string[];
+  invoiceType: string[];
+  groupByClient: boolean;
+  metadata?: {
+    requestDate: string;
+    [key: string]: any;
+  }
+  
+}export interface IFilter {
+  key: string;
+  operator: string;
+  value: any;
+  logicalOperation: string;
+  type: string;
+}
+export interface IQueryRequest {
+  filter: IFilter[];
+  page?: number;
+  size?: number;
+  sort?: string;
+  [key: string]: any}
+
+
+export interface SearchResponse<T = any> {
+  data: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+export interface InvoicePayload {
+  filter: IFilter[]
+  page?: number
+  size?: number
+  sort?: string
+  [key: string]: any
+}
 export interface PaginationEvent {
   page: number
   first: number
   rows: number
   pageCount: number
 }
-
+export interface Payload {
+  page: number
+  pageSize: number
+  filter: any[]
+  query: string
+  sortBy: string
+  sortType: string
+}
+export interface PageState {
+  page: NumberConstructor
+  rows: number
+  pageCount?: number
+  first: number
+}
 export interface IFilters {
   search: string
   [key: string]: any

@@ -31,6 +31,7 @@ import SendByFtpDialog from '~/pages/invoice/sendInvoice-ftp.vue'
 import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
 import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
 import UndoImportDialog from '~/pages/invoice/undo-import.vue'
+import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
@@ -147,7 +148,7 @@ const hotelTemp = ref<any[]>([])
 const statusList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
-const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 3, client: 3, hotel: 3})
+const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 1, client: 2, hotel: 3})
 
 const confclientListApi = reactive({
   moduleApi: 'settings',
@@ -1041,12 +1042,12 @@ async function getList() {
         })
         existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
       }
-
       totalInvoiceAmount.value += iterator.invoiceAmount
       totalDueAmount.value += iterator.dueAmount ? Number(iterator?.dueAmount) : 0
     }
     listItems.value = [...listItems.value, ...newListItems]
     return listItems
+    
   }
   
   catch (error) {
@@ -1132,6 +1133,10 @@ async function getPrintList() {
     optionsToPrint.value.loading = false;
   }
 }
+function copiarDatos() {
+  copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
+}
+
 
 async function openEditDialog (item: any, type: string) {  
   switch (type) {
@@ -1624,9 +1629,10 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
-  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
+  agencyTemp = await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction2, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC, pageSize: 1600 })
   agencyTemp = [...new Set(agencyTemp)];
   agencyList.value = [...agencyTemp]
+  console.log(agencyList.value);
 }
 async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
@@ -1889,6 +1895,7 @@ async function parseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)  
 
   if (parseFilter && parseFilter?.length > 0) {
+    console.log('parseFilter', parseFilter)
     for (let i = 0; i < parseFilter?.length; i++) {
 
       if (parseFilter[i]?.key === 'agencyCd') {
@@ -1904,11 +1911,11 @@ async function parseDataTableFilter(payloadFilter: any) {
       }
 
       if (parseFilter[i]?.key === 'invoiceAmount') {
-        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+         parseFilter[i].key = 'invoiceAmount'
       }
 
       if (parseFilter[i]?.key === 'dueAmount') {
-        parseFilter[i].value = parseFilter[i].value ? parseFilter[i].value.toString() : 0
+         parseFilter[i].key = 'dueAmount'
       }
     }
   }
@@ -2084,28 +2091,34 @@ function onRowRightClick(event: any) {
     
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
-      && event?.data?.dueAmount === event?.data?.invoiceAmount && event.data?.isInCloseOperation) {  
+      && event?.data?.dueAmount === event?.data?.invoiceAmount) {  
       if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
         findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
       }      
     }
+    console.log(invoiceContextMenuItems.value)
   }
 
-  //Change Agency
-  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
-    && event?.data.dueAmount === event?.data.invoiceAmount) {
+  // Change Agency
+if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
+  && event?.data.dueAmount === event?.data.invoiceAmount) {
+
+  let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency');
+
+  if (changeAgencyItem) {
     if (event.data.status === InvoiceStatus.PROCESSED) {
-      if (event.data.isInCloseOperation) {
-        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
-        changeAgencyItem.showItem = true
-      }
-    } else {
-      if (event?.data.hotel?.virtual) {
-        let changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
-        changeAgencyItem.showItem = true
-      }
+       //if (event.data.status === InvoiceStatus.PROCESSED && event.data.isInCloseOperation) {
+      changeAgencyItem.showItem = true;
+    } 
+    // else if (event.data.status === InvoiceStatus.RECONCILED && event.data.isInCloseOperation) {
+    //   changeAgencyItem.showItem = true;
+    // }
+    if (event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) 
+    || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+      changeAgencyItem.showItem = true;
     }
   }
+}
 
   
   const changeSelectedInvoiceTitleItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Selected Invoice:')
@@ -2250,6 +2263,7 @@ watch(filterToSearch, () => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
+  document.title = 'Invoice Management' 
   isFirstTimeInOnMounted.value = true
   filterToSearch.value.criterial = ENUM_FILTER[0]
   await getStatusListTemp()
@@ -2399,7 +2413,8 @@ const legend = ref(
                         id="autocomplete"
                         field="name"
                         item-value="id"
-                        class="w-full"
+                        class="w-full"                        
+                        :filterFields="['name','code']"
                         :max-selected-labels="maxSelectedLabels.client"
                         :model="filterToSearch.client"
                         :suggestions="[...clientList]"
@@ -2450,7 +2465,8 @@ const legend = ref(
                         id="autocomplete"
                         field="name"
                         item-value="id"
-                        class="w-full"
+                        class="w-full"                        
+                        :filterFields="['name','code']"
                         :max-selected-labels="maxSelectedLabels.agency"
                         :model="filterToSearch.agency"
                         :suggestions="[...agencyList]"
@@ -2463,25 +2479,38 @@ const legend = ref(
                           }
                         }"
                         @load="async($event) => {
+                          const filter: FilterCriteria[] = [];
                           let ids = []
                           if (filterToSearch.client.length > 0) {
                             ids = filterToSearch.client.map((element: any) => element?.id)
-                          }
-
-                          const filter: FilterCriteria[] = [
-                            {
+                            filter.push({
                               key: 'client.id',
                               logicalOperation: 'AND',
                               operator: 'IN',
                               value: ids,
-                            },
-                            {
-                              key: 'status',
-                              logicalOperation: 'AND',
-                              operator: 'EQUALS',
-                              value: 'ACTIVE',
-                            },
-                          ]
+                            });
+                          }
+                          filter.push({
+                            key: 'status',
+                            logicalOperation: 'AND',
+                            operator: 'EQUALS',
+                            value: 'ACTIVE',
+                          });
+
+                          // const filter: FilterCriteria[] = [
+                          //   {
+                          //     key: 'client.id',
+                          //     logicalOperation: 'AND',
+                          //     operator: 'IN',
+                          //     value: ids,
+                          //   },
+                          //   {
+                          //     key: 'status',
+                          //     logicalOperation: 'AND',
+                          //     operator: 'EQUALS',
+                          //     value: 'ACTIVE',
+                          //   },
+                          // ]
                           await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
                             query: $event,
                             keys: ['name', 'code'],
@@ -2520,6 +2549,7 @@ const legend = ref(
                         <DebouncedMultiSelectComponent
                           id="autocomplete"
                           class="w-full"
+                          :filterFields="['name','code']"
                           field="name"
                           item-value="id"
                           :max-selected-labels="3"
@@ -2713,6 +2743,12 @@ const legend = ref(
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
+              <Button
+                v-tooltip.top="'Copiar tabla'"
+                class="p-button-lg w-1rem h-2rem pt-2 -ml-3 mt-4" 
+                icon="pi pi-copy"
+                @click="copiarDatos"
+              />
               <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
             </div> -->
               <!-- <div class="col-12 md:col-5 flex justify-content-end">

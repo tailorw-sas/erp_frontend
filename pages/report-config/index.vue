@@ -138,8 +138,8 @@ const fields: Array<FieldDefinitionType> = [
     field: 'description',
     header: 'Description',
     dataType: 'textarea',
-    class: 'field col-12 required',
-    validation: z.string().trim().min(1, 'The description field is required').max(50, 'Maximum 50 characters')
+    class: 'field col-12',
+    validation: z.string().trim().max(50, 'Maximum 50 characters')
   },
   {
     field: 'file',
@@ -439,21 +439,7 @@ async function saveItem(item: { [key: string]: any }) {
 }
 
 function requireConfirmationToSave(item: any) {
-  const { event } = item
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
+  saveItem(item)
 }
 function requireConfirmationToDelete(event: any) {
   confirm.require({
@@ -589,6 +575,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Report'
   }
 })
 // -------------------------------------------------------------------------------------------------------

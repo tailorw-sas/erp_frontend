@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePrimeVue } from 'primevue/config'
 import { useAuthStore } from '@/stores/authStore'
+import { useAuth } from '#imports'
 
 const { signOut, data } = useAuth()
 
@@ -124,6 +125,29 @@ async function onConfirmSignOut() {
     dialogConfirmSingOut.value = false
   }
 }
+
+// // Código para el cierre de sesión automático =============
+// const timeoutId = ref(null)
+// const inactivityTimeout = 10 * 60 * 1000 // 15 minutos
+// const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
+
+// function resetTimer() {
+//   if (timeoutId.value) { clearTimeout(timeoutId.value) }
+//   timeoutId.value = setTimeout(logout, inactivityTimeout)
+// }
+
+// async function logout() {
+//   await signOut({ callbackUrl: '/auth/login' })
+// }
+// onMounted(() => {
+//   activityEvents.forEach(event => window.addEventListener(event, resetTimer))
+//   resetTimer() // Iniciar temporizador inicial
+// })
+
+// onBeforeUnmount(() => {
+//   activityEvents.forEach(event => window.removeEventListener(event, resetTimer))
+//   if (timeoutId.value) { clearTimeout(timeoutId.value) }
+// })
 </script>
 
 <template>

@@ -418,6 +418,7 @@ onMounted(() => {
   filterToSearch.value.criterial = ENUM_FILTER[0]
   if (useRuntimeConfig().public.loadTableData) {
     getList()
+    document.title = 'Manage Invoice Attachment Type'
   }
 })
 // -------------------------------------------------------------------------------------------------------
