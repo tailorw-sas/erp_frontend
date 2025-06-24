@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface IManageBookingService {
 
-    ManageBookingDto create(ManageBookingDto dto);
+    UUID create(ManageBookingDto dto);
 
     UUID insert(ManageBookingDto dto);
 

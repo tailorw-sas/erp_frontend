@@ -159,7 +159,7 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
 
         before = Instant.now();
         Map<UUID, ManageInvoiceDto> invoiceDtoMap = incomes.stream()
-                        .collect(Collectors.toMap(ManageInvoiceDto::getId, income -> income));
+                .collect(Collectors.toMap(ManageInvoiceDto::getId, income -> income));
 
         command.getCreateIncomeCommands().forEach(createIncomeCommand -> {
             ManageInvoiceDto income = invoiceDtoMap.get(createIncomeCommand.getId());
