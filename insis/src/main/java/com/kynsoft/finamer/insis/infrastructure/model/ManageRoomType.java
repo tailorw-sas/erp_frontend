@@ -39,7 +39,7 @@ public class ManageRoomType implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "hotel_id")
-    private ManageHotel manageHotel;
+    private ManageHotel hotel;
 
     public ManageRoomType(ManageRoomTypeDto dto){
         this.id = dto.getId();
@@ -48,7 +48,7 @@ public class ManageRoomType implements Serializable {
         this.status = dto.getStatus();
         this.deleted = dto.isDeleted();
         this.updatedAt = dto.getUpdatedAt();
-        this.manageHotel = new ManageHotel(dto.getManageHotel());
+        this.hotel = new ManageHotel(dto.getHotel());
     }
 
     public ManageRoomTypeDto toAggregate(){
@@ -59,7 +59,7 @@ public class ManageRoomType implements Serializable {
                 status,
                 deleted,
                 updatedAt,
-                manageHotel != null ? manageHotel.toAggregate() : null
+                hotel != null ? hotel.toAggregate() : null
         );
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -84,7 +85,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
 
     @Override
     public ManageRoomTypeDto findByCodeAndHotel(String code, UUID hotel) {
-        Optional<ManageRoomType> roomType = readRepository.findByCodeAndManageHotel_Id(code, hotel);
+        Optional<ManageRoomType> roomType = readRepository.findByCodeAndHotel_Id(code, hotel);
         return roomType.
                 map(ManageRoomType::toAggregate)
                 .orElse(null);
@@ -105,6 +106,16 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
                         row -> (String)row[0],
                         row -> (UUID)row[1]
                 ));
+    }
+
+    @Override
+    public List<ManageRoomTypeDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId) {
+        if(Objects.nonNull(hotelId)){
+            return readRepository.findByCodeInAndHotel_Id(codes, hotelId).stream()
+                    .map(ManageRoomType::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("Hotel Id must not be null");
     }
 
     @Override

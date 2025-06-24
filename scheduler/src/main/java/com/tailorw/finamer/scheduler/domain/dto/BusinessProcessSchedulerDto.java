@@ -35,4 +35,6 @@ public class BusinessProcessSchedulerDto {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
     private boolean allowsQueueing;
+    public LocalTime startTime;
+    public LocalTime endTime;
 }

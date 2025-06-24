@@ -440,6 +440,7 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     CHECK_PAYMENT_DETAIL_IS_REVERSED(2025, Series.DOMAIN_ERROR, "The payment detail has already been reversed."),
     HOTEL_ACCESS(2100, Series.DOMAIN_ERROR,"The employee does not have access to the hotel."),
     AGENCY_ACCESS(2101, Series.DOMAIN_ERROR,"The employee does not have access to the agency."),
+    BUSINESS_PROCESS_SCHEDULER_START_END_TIME_FORMAT_IS_NOT_VALID(2026, Series.DOMAIN_ERROR, "Start or End Time format is not valid"),
     ;
 
     private static final DomainErrorMessage[] VALUES;
