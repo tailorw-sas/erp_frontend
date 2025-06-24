@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ResourceTypeDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IManageResourceTypeService {
@@ -26,4 +27,6 @@ public interface IManageResourceTypeService {
     Long countByDefaultsAndNotId(UUID id);
 
     ResourceTypeDto findByDefaults();
+
+    Map<UUID, ResourceTypeDto> getMapById(List<UUID> ids);
 }

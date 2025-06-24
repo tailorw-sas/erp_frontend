@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.payment.infrastructure.excel.validators.detail;
 
 import com.kynsof.share.core.application.excel.validator.IValidatorFactory;
+import com.kynsoft.finamer.payment.domain.excel.Cache;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.AntiToIncomeRow;
 import com.kynsoft.finamer.payment.domain.excel.bean.detail.PaymentDetailRow;
 import com.kynsoft.finamer.payment.domain.excel.error.PaymentDetailRowError;
@@ -39,9 +40,13 @@ public class PaymentDetailAntiValidatorFactory extends IValidatorFactory<Payment
 
     @Override
     public void createValidators() {
+        //TODO Implementar la cache
+        Cache cache = new Cache();
         paymentDetailExistPaymentValidator=new PaymentDetailExistPaymentValidator(applicationEventPublisher,paymentService);
-        paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher, paymentDetailService, paymentImportCacheRepository);
-        paymentTransactionIdValidator = new PaymentTransactionIdValidator(paymentDetailService, applicationEventPublisher);
+        paymentImportAmountValidator = new PaymentImportAmountValidator(applicationEventPublisher);
+        //TODO Implementar la validacion de los montos
+        //TODO Implementar la cache
+        paymentTransactionIdValidator = new PaymentTransactionIdValidator(cache, applicationEventPublisher);
     }
 
     @Override

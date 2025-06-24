@@ -37,9 +37,6 @@ public class ProducerReplicateManageInvoiceService {
     @Async
     public void create(ManageInvoiceDto entity, UUID attachmentDefault, UUID employee) {
         try {
-            if (entity.getInvoiceType().compareTo(EInvoiceType.INCOME) == 0){
-                entity = this.invoiceService.findById(entity.getId());
-            }
             List<ManageBookingKafka> bookingKafkas = new ArrayList<>();
             if (entity.getBookings() != null) {
                 for (ManageBookingDto booking : entity.getBookings()) {

@@ -14,13 +14,13 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageEmployee;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageEmployeeWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -74,16 +74,36 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
     }
 
     @Override
-    public String getEmployeeFullName(String employee) {
-        String employeeFullName = "";
-        try {
-            ManageEmployeeDto employeeDto = findById(UUID.fromString(employee));
-            employeeFullName = employeeDto.getFirstName() + " " + employeeDto.getLastName();
-        } catch (Exception e) {
-            e.printStackTrace();
-            employeeFullName = employee;
+    public String getEmployeeFullName(String employeeId) {
+        Optional<ManageEmployee> employee = repositoryQuery.findByIdWithoutRelations(UUID.fromString(employeeId));
+        if(employee.isPresent()){
+            ManageEmployeeDto employeeDto = employee.get().toAggregate();
+            return employeeDto.getFirstName() + " " + employeeDto.getLastName();
         }
-        return employeeFullName;
+
+        return employeeId;
+    }
+
+    @Override
+    public List<ManageEmployeeDto> findAllByIdsWithoutRelations(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw new IllegalArgumentException("The employee ID list must not be null or empty");
+        }
+
+        return this.repositoryQuery.findAllByIdWithoutRelations(ids).stream()
+                .map(ManageEmployee::toAggregate)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<UUID, String> getEmployeeFullNameMapByIds(List<UUID> ids) {
+        if(Objects.isNull(ids) || ids.isEmpty()){
+            throw new IllegalArgumentException("The employee ID list must not be null or empty");
+        }
+
+        return this.findAllByIdsWithoutRelations(ids).stream()
+                .collect(Collectors.toMap(ManageEmployeeDto::getId,
+                        manageEmployeeDto -> manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

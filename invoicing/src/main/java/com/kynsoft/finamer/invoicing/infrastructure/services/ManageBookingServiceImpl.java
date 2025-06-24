@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBook
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
@@ -30,13 +31,16 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     private final ManageBookingWriteDataJpaRepository repositoryCommand;
     private final ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository;
     private final ManageBookingReadDataJPARepository repositoryQuery;
+    private final IManageRoomRateService roomRateService;
 
     public ManageBookingServiceImpl(
             ManageBookingWriteDataJpaRepository repositoryCommand,ManageRoomRateReadDataJPARepository manageRoomRateReadDataJPARepository,
-            ManageBookingReadDataJPARepository repositoryQuery) {
+            ManageBookingReadDataJPARepository repositoryQuery,
+            IManageRoomRateService roomRateService) {
         this.repositoryCommand = repositoryCommand;
         this.manageRoomRateReadDataJPARepository = manageRoomRateReadDataJPARepository;
         this.repositoryQuery = repositoryQuery;
+        this.roomRateService = roomRateService;
 
     }
 
@@ -104,6 +108,30 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     public UUID create(ManageBookingDto dto) {
         Booking entity = new Booking(dto);
         return repositoryCommand.saveAndFlush(entity).getId();
+    }
+
+    @Override
+    public UUID insert(ManageBookingDto dto) {
+        Booking booking = new Booking(dto);
+        this.insert(booking);
+
+        dto.setId(booking.getId());
+        dto.setReservationNumber(booking.getReservationNumber());
+        dto.setBookingId(booking.getBookingId());
+
+        if(Objects.nonNull(dto.getRoomRates()) && !dto.getRoomRates().isEmpty()){
+            dto.setRoomRates(this.roomRateService.insertAll(dto.getRoomRates()));
+        }
+
+        return booking.getId();
+    }
+
+    @Override
+    public List<ManageBookingDto> createAll(List<ManageBookingDto> bookingDtoList) {
+        for(ManageBookingDto bookingDto : bookingDtoList){
+            this.insert(bookingDto);
+        }
+        return bookingDtoList;
     }
 
     @Override
@@ -261,6 +289,69 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         if(Objects.nonNull(bookingList) && !bookingList.isEmpty()){
             List<Booking> bookings = bookingList.stream().map(Booking::new).collect(Collectors.toList());
             repositoryCommand.saveAll(bookings);
+        }
+    }
+
+    public void insert(Booking booking){
+        //this.repositoryCommand.insert(booking);
+        Map<String, Object> results = this.repositoryCommand.insertBooking(booking.getId(),
+                booking.getAdults(),
+                booking.getBookingDate(),
+                booking.getCheckIn(),
+                booking.getCheckOut(),
+                booking.getChildren(),
+                booking.getContract(),
+                booking.getCouponNumber(),
+                booking.isDeleteInvoice(),
+                booking.getDeleted(),
+                booking.getDeletedAt(),
+                booking.getDescription(),
+                booking.getDueAmount(),
+                booking.getFirstName(),
+                booking.getFolioNumber(),
+                booking.getFullName(),
+                booking.getHotelAmount(),
+                booking.getHotelBookingNumber(),
+                booking.getHotelCreationDate(),
+                booking.getHotelInvoiceNumber(),
+                booking.getInvoiceAmount(),
+                booking.getLastName(),
+                booking.getNights(),
+                booking.getRateAdult(),
+                booking.getRateChild(),
+                booking.getRoomNumber(),
+                booking.getUpdatedAt(),
+                booking.getInvoice() != null ? booking.getInvoice().getId() : null,
+                booking.getNightType() != null ? booking.getNightType().getId() : null,
+                booking.getParent() != null ? booking.getParent().getId() : null,
+                booking.getRatePlan() != null ? booking.getRatePlan().getId() : null,
+                booking.getRoomCategory() != null ? booking.getRoomCategory().getId() : null,
+                booking.getRoomType() != null ? booking.getRoomType().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID bookingId = (UUID)results.get("o_id");
+                booking.setId(bookingId);
+            }
+            if(results.containsKey("o_reservation_number")){
+                Integer reservationNumber = (Integer) results.get("o_reservation_number");
+                booking.setReservationNumber(reservationNumber.longValue());
+            }
+            if(results.containsKey("o_bookingid")){
+                Integer bookingGenId = (Integer) results.get("o_bookingid");
+                booking.setBookingId(bookingGenId.longValue());
+            }
+        }
+
+        if(booking.getRoomRates() != null && !booking.getRoomRates().isEmpty()){
+            this.roomRateService.createAll(booking.getRoomRates());
+        }
+    }
+
+    @Override
+    public void insertAll(List<Booking> bookins) {
+        for (Booking booking : bookins){
+            this.insert(booking);
         }
     }
 }

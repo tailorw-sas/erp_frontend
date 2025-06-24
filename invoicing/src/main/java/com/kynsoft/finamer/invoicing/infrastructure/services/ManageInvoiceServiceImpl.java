@@ -24,12 +24,16 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.excel.ExportInvoiceRow;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
+import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageInvoiceService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Invoice;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.ManageInvoiceSearchProjection;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageBookingWriteDataJpaRepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageInvoiceWriteDataJPARepository;
+import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageInvoiceReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.AgencyCouponFormatUtils;
 import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUtils;
@@ -57,6 +61,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.event.update.sequence.Update
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageEmployeeReadDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.importInnsist.response.undoImport.ProducerResponseUndoImportInnsistService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ManageInvoiceServiceImpl implements IManageInvoiceService {
@@ -75,13 +80,16 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     private final ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
+    private final IManageBookingService bookingService;
+
     public ManageInvoiceServiceImpl(ManageInvoiceWriteDataJPARepository repositoryCommand,
             ManageInvoiceReadDataJPARepository repositoryQuery,
             IInvoiceCloseOperationService closeOperationService,
             ApplicationEventPublisher applicationEventPublisher,
             IHotelInvoiceNumberSequenceService hotelInvoiceNumberSequenceService,
             ProducerResponseUndoImportInnsistService producerResponseUndoImportInnsistService,
-            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
+            ManageEmployeeReadDataJPARepository employeeReadDataJPARepository,
+                                    IManageBookingService bookingService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.closeOperationService = closeOperationService;
@@ -89,6 +97,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
         this.hotelInvoiceNumberSequenceService = hotelInvoiceNumberSequenceService;
         this.producerResponseUndoImportInnsistService = producerResponseUndoImportInnsistService;
         this.employeeReadDataJPARepository = employeeReadDataJPARepository;
+        this.bookingService = bookingService;
     }
 
     public Long getInvoiceNumberSequence(String invoiceNumber) {
@@ -156,6 +165,75 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         Invoice invoice = this.repositoryCommand.saveAndFlush(entity);
         return invoice.toAggregate();
+    }
+
+    @Override
+    //@Transactional
+    public UUID insert(ManageInvoiceDto dto) {
+        Invoice invoice = new Invoice(dto);
+        //this.repositoryCommand.insert(invoice);
+        Map<String, Object> results = this.repositoryCommand.insertInvoice(invoice.getId(),
+                invoice.getAging(),
+                invoice.getAutoRec(),
+                invoice.isCloneParent(),
+                invoice.getCredits(),
+                invoice.isDeleteInvoice(),
+                invoice.getDueAmount(),
+                invoice.getDueDate(),
+                invoice.getHasAttachments(),
+                invoice.getImportType().name(),
+                invoice.getInvoiceAmount(),
+                invoice.getInvoiceDate(),
+                invoice.getInvoiceStatus().name(),
+                invoice.getInvoiceType().name(),
+                invoice.getIsCloned(),
+                invoice.getIsManual(),
+                invoice.getOriginalAmount(),
+                invoice.getReSend(),
+                invoice.getReSendDate(),
+                invoice.getSendStatusError(),
+                invoice.getUpdatedAt(),
+                invoice.getAgency() != null ? invoice.getAgency().getId() : null,
+                invoice.getHotel() != null ? invoice.getHotel().getId() : null,
+                invoice.getManageInvoiceStatus() != null ? invoice.getManageInvoiceStatus().getId() : null,
+                invoice.getManageInvoiceType() != null ? invoice.getManageInvoiceType().getId() : null,
+                invoice.getParent() != null ? invoice.getParent().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID invoiceId = (UUID)results.get("o_id");
+                invoice.setId(invoiceId);
+            }
+            if(results.containsKey("o_invoice_no")){
+                Long invoiceNo = (Long)results.get("o_invoice_no");
+                invoice.setInvoiceNo(invoiceNo);
+            }
+            if(results.containsKey("o_invoicenumber")){
+                String invoiceNumber = (String)results.get("o_invoicenumber");
+                invoice.setInvoiceNumber(invoiceNumber);
+            }
+            if(results.containsKey("o_invoicenumberprefix")){
+                String invoiceNumberPrefix = (String)results.get("o_invoicenumberprefix");
+                invoice.setInvoiceNumberPrefix(invoiceNumberPrefix);
+            }
+            if(results.containsKey("o_invoiceid")){
+                Integer invoiceGenId = (Integer)results.get("o_invoiceid");
+                invoice.setInvoiceId(invoiceGenId.longValue());
+            }
+        }
+
+        dto.setId(invoice.getId());
+        dto.setInvoiceNo(invoice.getInvoiceNo());
+        dto.setInvoiceNumber(invoice.getInvoiceNumber());
+        dto.setInvoiceNumberPrefix(invoice.getInvoiceNumberPrefix());
+        dto.setInvoiceId(invoice.getInvoiceId());
+
+        if(Objects.nonNull(invoice.getBookings()) && !invoice.getBookings().isEmpty()){
+            this.bookingService.insertAll(invoice.getBookings());
+            dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRates).collect(Collectors.toList()));
+        }
+
+        return invoice.getId();
     }
 
     @Override

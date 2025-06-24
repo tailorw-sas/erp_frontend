@@ -2,6 +2,8 @@ package com.kynsoft.finamer.invoicing.application.command.income.create;
 
 import com.kynsof.share.core.domain.bus.command.ICommandMessage;
 import java.util.UUID;
+
+import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import lombok.Getter;
 import lombok.Setter;
 

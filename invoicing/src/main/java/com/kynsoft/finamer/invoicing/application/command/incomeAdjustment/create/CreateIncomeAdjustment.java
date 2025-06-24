@@ -1,17 +1,20 @@
 package com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create;
 
-import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
 @Setter
-public class NewIncomeAdjustmentRequest {
+@AllArgsConstructor
+@NoArgsConstructor
+public class CreateIncomeAdjustment {
 
     private UUID transactionType;
     private Double amount;
-    private LocalDate date;
+    private String date;
     private String remark;
 }

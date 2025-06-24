@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagerB2BPartnerDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import jakarta.persistence.Column;
@@ -60,7 +61,9 @@ public class ManageB2BPartner implements Serializable {
 
     @Column(nullable = true, updatable = true)
     private LocalDateTime updateAt;
+
     @OneToMany(mappedBy = "sentB2BPartner", fetch = FetchType.EAGER)
+    @JsonBackReference
     private List<ManageAgency> agencies;
 
     public ManageB2BPartner(ManagerB2BPartnerDto dto) {

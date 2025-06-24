@@ -28,7 +28,10 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@Table(name = "payment_detail")
+@Table(name = "payment_detail",
+        indexes = {
+                @Index(name = "idx_payment_detail_gen_id", columnList = "payment_detail_gen_id")
+        })
 @EntityListeners(AuditEntityListener.class)
 @RemoteAudit(name = "payment_detail",id="7b2ea5e8-e34c-47eb-a811-25a54fe2c604")
 public class PaymentDetail implements Serializable {

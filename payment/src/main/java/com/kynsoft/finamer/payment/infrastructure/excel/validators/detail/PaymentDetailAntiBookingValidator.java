@@ -19,9 +19,7 @@ public class PaymentDetailAntiBookingValidator extends ExcelListRuleValidator<Pa
 
     private final Cache cache;
 
-    public PaymentDetailAntiBookingValidator(ApplicationEventPublisher applicationEventPublisher,
-                                             Cache cache){
-        super(applicationEventPublisher);
+    public PaymentDetailAntiBookingValidator(Cache cache){
         this.cache = cache;
     }
 

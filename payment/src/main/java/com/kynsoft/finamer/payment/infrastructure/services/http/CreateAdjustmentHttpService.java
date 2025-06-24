@@ -3,7 +3,7 @@ package com.kynsoft.finamer.payment.infrastructure.services.http;
 import com.kynsof.share.core.domain.exception.BusinessNotFoundException;
 import com.kynsof.share.core.domain.exception.DomainErrorMessage;
 import com.kynsof.share.core.domain.exception.GlobalBusinessException;
-import com.kynsof.share.core.domain.http.entity.income.ajustment.CreateIncomeAdjustmentRequest;
+import com.kynsof.share.core.domain.http.entity.income.adjustment.CreateAntiToIncomeAdjustmentRequest;
 import com.kynsof.share.core.domain.response.ErrorField;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -28,14 +28,14 @@ public class CreateAdjustmentHttpService {
         this.restTemplate = restTemplate;
     }
 
-    public String sendCreateIncomeRequest(CreateIncomeAdjustmentRequest request) {
+    public String sendCreateIncomeRequest(CreateAntiToIncomeAdjustmentRequest request) {
         try {
             String url = serviceUrl + "/api/income-adjustment";
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<CreateIncomeAdjustmentRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<CreateAntiToIncomeAdjustmentRequest> entity = new HttpEntity<>(request, headers);
 
             // Realizar la solicitud POST
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);

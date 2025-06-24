@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
@@ -31,4 +32,6 @@ public interface IManageHotelService {
     List<ManageHotelDto> findAll();
 
     void clearManageHotelCache();
+
+    Map<UUID, ManageHotelDto> getMapById(List<UUID> hotelIds);
 }

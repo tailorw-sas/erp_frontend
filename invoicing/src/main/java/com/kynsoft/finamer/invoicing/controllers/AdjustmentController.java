@@ -37,8 +37,6 @@ public class AdjustmentController {
         CreateAdjustmentCommand createCommand = CreateAdjustmentCommand.fromRequest(request);
         CreateAdjustmentMessage response = mediator.send(createCommand);
 
-       
-
         return ResponseEntity.ok(response);
     }
 

@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import jakarta.persistence.*;
@@ -62,6 +64,7 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manage_invoice", nullable = true)
+    @JsonBackReference
     private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -81,6 +84,7 @@ public class Booking {
     private ManageRoomCategory roomCategory;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "booking")
+    @JsonManagedReference
     private List<ManageRoomRate> roomRates;
 
     @Column(nullable = true)
@@ -181,7 +185,7 @@ public class Booking {
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 null,
                 this.nights,
-                null,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
                 this.contract,
                 this.deleteInvoice,
                 this.updatedAt
@@ -220,7 +224,7 @@ public class Booking {
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 Objects.nonNull(this.roomRates) ? this.roomRates.stream().map(ManageRoomRate::toAggregateSimple).collect(Collectors.toList()) : null,
                 this.nights,
-                null,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
                 this.contract,
                 this.deleteInvoice,
                 this.updatedAt

@@ -4,6 +4,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManagePaymentTransactionTypeDto;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
@@ -22,4 +23,8 @@ public interface IManagePaymentTransactionTypeService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     ManagePaymentTransactionTypeDto findByDefaults();
+
+    List<ManagePaymentTransactionTypeDto> findAllByIds(List<UUID> ids);
+
+    Map<UUID, ManagePaymentTransactionTypeDto> getMapById(List<UUID> ids);
 }

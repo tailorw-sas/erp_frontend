@@ -3,6 +3,7 @@ package com.kynsoft.finamer.payment.domain.excel;
 import com.kynsof.share.core.application.excel.validator.ICache;
 import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalTime;
@@ -25,6 +26,9 @@ public class Cache implements ICache {
     private Map<Long, PaymentDetailDto> paymentDetailsByPaymentDetailIdMap;
     private Map<UUID, List<UUID>> agencysByEmployeeMap;
     private Map<UUID, List<UUID>> hotelsByEmpoyeeMap;
+
+    @Getter
+    private ManageEmployeeDto employeeDto;
 
     //Constructor de Cache para PaymentImportDetails
     public Cache(List<ManagePaymentTransactionTypeDto> managePaymentTransactionTypeList,
@@ -58,6 +62,14 @@ public class Cache implements ICache {
         this.setPaymentDetailsByPaymentsMap(paymentDetailList);
         this.setBookingsByCouponMap(bookingList);
         this.setCloseOperationsByHotelMap(closeOperationList);
+    }
+
+    public Cache(List<PaymentDetailDto> paymentDetails,
+                 ManageEmployeeDto employeeDto){
+        setPaymentDetailsByPaymentDetailIdMap(paymentDetails);
+        this.employeeDto = employeeDto;
+        this.setAgencysByEmployeeMap(employeeDto);
+        this.setHotelsByEmployeeMap(employeeDto);
     }
 
     /// Setters de los mapas
@@ -232,13 +244,5 @@ public class Cache implements ICache {
 
     public PaymentDetailDto getPaymentDetailByPaymentDetailId(Long paymentDetailId){
         return paymentDetailsByPaymentDetailIdMap.get(paymentDetailId);
-    }
-
-    public List<UUID> getAgencysByEmpoyee(UUID employeeId){
-        return this.agencysByEmployeeMap.get(employeeId);
-    }
-
-    public List<UUID> getHotelsByEmpoyee(UUID employeeId){
-        return this.hotelsByEmpoyeeMap.get(employeeId);
     }
 }

@@ -20,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
@@ -90,6 +87,20 @@ public class ManageInvoiceTypeServiceImpl implements IManageInvoiceTypeService {
         Page<ManageInvoiceType> data = this.repositoryQuery.findAll(specifications, pageable);
 
         return getPaginatedResponse(data);
+    }
+
+    @Override
+    public ManageInvoiceTypeDto findByCode(String code) {
+        if(Objects.isNull(code)){
+            throw new IllegalArgumentException("The code is necessary for searching ManageInvoiceType.");
+        }
+
+        Optional<ManageInvoiceType> invoiceType = this.repositoryQuery.findByCode(code);
+        if(invoiceType.isPresent()){
+            return invoiceType.get().toAggregate();
+        }
+
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_INVOICE_TYPE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_INVOICE_TYPE_NOT_FOUND.getReasonPhrase())));
     }
 
     private void filterCriteria(List<FilterCriteria> filterCriteria) {

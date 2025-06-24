@@ -20,9 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceTypeServiceImpl implements IManageResourceTypeService {
@@ -97,6 +96,15 @@ public class ResourceTypeServiceImpl implements IManageResourceTypeService {
     @Override
     public ResourceTypeDto findByDefaults() {
         return this.repositoryQuery.findByDefaults().map(ManageResourceType::toAggregate).orElse(null);
+    }
+
+    @Override
+    public Map<UUID, ResourceTypeDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The ReourceType ID list must not be null");
+        }
+
+        return this.repositoryQuery.findByIdIn(ids).stream().collect(Collectors.toMap(ManageResourceType::getId, ManageResourceType::toAggregate));
     }
 
     private PaginatedResponse getPaginatedResponse(Page<ManageResourceType> data) {
