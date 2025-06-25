@@ -57,9 +57,9 @@ public class ConsumerReplicateGroupedRatesService {
             ObjectMapper mapper = new ObjectMapper();
             GroupedRatesKafka objKafka = mapper.readValue(message, new TypeReference<GroupedRatesKafka>() {});
 
-            createLog(objKafka.getLogId(), objKafka.getHotelCode(), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), objKafka.getProcessId());
+            this.createLog(objKafka.getLogId(), objKafka.getHotelCode(), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER), objKafka.getProcessId());
 
-            UUID hotelId = getHotelIdFromCode(objKafka.getHotelCode());
+            UUID hotelId = this.getHotelIdFromCode(objKafka.getHotelCode());
 
             processNewRatePlans(objKafka.getManageRateKafkaList(), hotelId);
             processNewRoomTypes(objKafka.getManageRateKafkaList(), hotelId);
@@ -77,7 +77,7 @@ public class ConsumerReplicateGroupedRatesService {
 
             setLogAsCompleted(objKafka.getLogId(), objKafka.getHotelCode());
         }catch (Exception ex){
-            Logger.getLogger(ConsumerReplicateGroupedRatesService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ConsumerReplicateGroupedRatesService.class.getName()).log(Level.SEVERE, "Error at processing topic: finamer-replicate-grouped-rate from kafka. ", ex);
         }
     }
 
@@ -209,7 +209,7 @@ public class ConsumerReplicateGroupedRatesService {
     }
 
     private CreateRoomRateCommand rateKafkaToCommand(ManageRateKafka objKafka){
-        return  new CreateRoomRateCommand(
+        return new CreateRoomRateCommand(
                 objKafka.getHotelCode(),
                 objKafka.getAgencyCode(),
                 LocalDate.parse(objKafka.getCheckInDate(), DATE_FORMATTER),
