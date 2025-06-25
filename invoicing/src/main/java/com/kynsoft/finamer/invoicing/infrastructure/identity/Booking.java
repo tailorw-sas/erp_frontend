@@ -185,7 +185,7 @@ public class Booking {
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 null,
                 this.nights,
-                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                null,
                 this.contract,
                 this.deleteInvoice,
                 this.updatedAt
@@ -224,7 +224,7 @@ public class Booking {
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 Objects.nonNull(this.roomRates) ? this.roomRates.stream().map(ManageRoomRate::toAggregateSimple).collect(Collectors.toList()) : null,
                 this.nights,
-                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                null,
                 this.contract,
                 this.deleteInvoice,
                 this.updatedAt
