@@ -8,10 +8,13 @@ import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageRoomRateResponse;
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAdjustmentDto;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.domain.services.IManageAdjustmentService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAdjustment;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageRoomRate;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.command.ManageRoomRateWriteDataJPARepository;
 import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageBookingReadDataJPARepository;
@@ -22,10 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class ManageRoomRateServiceImpl implements IManageRoomRateService {
@@ -38,11 +38,15 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
 
     private final ManageBookingReadDataJPARepository manageBookingReadDataJPARepository;
 
+    private final IManageAdjustmentService adjustmentService;
+
     public ManageRoomRateServiceImpl(ManageRoomRateWriteDataJPARepository repositoryCommand, ManageRoomRateReadDataJPARepository repositoryQuery,
-                                     ManageBookingReadDataJPARepository manageBookingReadDataJPARepository) {
+                                     ManageBookingReadDataJPARepository manageBookingReadDataJPARepository,
+                                     IManageAdjustmentService adjustmentService) {
         this.repositoryCommand = repositoryCommand;
         this.repositoryQuery = repositoryQuery;
         this.manageBookingReadDataJPARepository = manageBookingReadDataJPARepository;
+        this.adjustmentService = adjustmentService;
     }
 
     @Override
@@ -78,6 +82,28 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
     public UUID create(ManageRoomRateDto dto) {
         ManageRoomRate entity = new ManageRoomRate(dto);
         return repositoryCommand.saveAndFlush(entity).getId();
+    }
+
+    @Override
+    public UUID insert(ManageRoomRateDto dto){
+        ManageRoomRate roomRate = new ManageRoomRate(dto);
+        this.insert(roomRate);
+
+        dto.setRoomRateId(roomRate.getRoomRateId());
+        dto.setId(roomRate.getId());
+
+        if(dto.getAdjustments() != null && !dto.getAdjustments().isEmpty()){
+            dto.setAdjustments(this.adjustmentService.insertAll(dto.getAdjustments()));
+        }
+        return roomRate.getId();
+    }
+
+    @Override
+    public List<ManageRoomRateDto> insertAll(List<ManageRoomRateDto> roomRateList) {
+        for(ManageRoomRateDto roomRateDto : roomRateList){
+            this.insert(roomRateDto);
+        }
+        return roomRateList;
     }
 
     @Override
@@ -126,14 +152,16 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
 
     @Override
     public ManageRoomRateDto findById(UUID id) {
+        return this.findById(id, false);
+    }
+
+    @Override
+    public ManageRoomRateDto findById(UUID id, boolean includeAdjustments) {
         Optional<ManageRoomRate> optionalEntity = repositoryQuery.findById(id);
-
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregate();
+        if(optionalEntity.isPresent()){
+            return includeAdjustments ? optionalEntity.get().toAggregateWithAdjustments() : optionalEntity.get().toAggregate();
         }
-
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.ROOM_RATE_NOT_FOUND_, new ErrorField("id", "The Room Rate not found.")));
-
     }
 
     @Override
@@ -143,6 +171,50 @@ public class ManageRoomRateServiceImpl implements IManageRoomRateService {
         entity.setUpdatedAt(LocalDateTime.now());
 
         repositoryCommand.save(entity);
+    }
+
+    private void insert(ManageRoomRate roomRate){
+        //this.repositoryCommand.insert(roomRate);
+        Map<String, Object> results = this.repositoryCommand.insertRoomRate(roomRate.getId(),
+                roomRate.getAdults(),
+                roomRate.getCheckIn(),
+                roomRate.getCheckOut(),
+                roomRate.getChildren(),
+                roomRate.isDeleteInvoice(),
+                roomRate.getDeleted(),
+                roomRate.getDeletedAt(),
+                roomRate.getHotelAmount(),
+                roomRate.getInvoiceAmount(),
+                roomRate.getNights(),
+                roomRate.getRateAdult(),
+                roomRate.getRateChild(),
+                roomRate.getRemark(),
+                roomRate.getRoomNumber(),
+                roomRate.getUpdatedAt(),
+                roomRate.getBooking() != null ? roomRate.getBooking().getId() : null);
+
+        if(results != null){
+            if(results.containsKey("o_id")){
+                UUID roomRateId = (UUID)results.get("o_id");
+                roomRate.setId(roomRateId);
+            }
+
+            if(results.containsKey("o_room_rate_gen_id")){
+                Integer roomRateGenId = (Integer)results.get("o_room_rate_gen_id");
+                roomRate.setRoomRateId(roomRateGenId.longValue());
+            }
+        }
+
+        if(roomRate.getAdjustments() != null && !roomRate.getAdjustments().isEmpty()){
+            this.adjustmentService.createAll(roomRate.getAdjustments());
+        }
+    }
+
+    @Override
+    public void createAll(List<ManageRoomRate> roomRates) {
+        for(ManageRoomRate roomRate : roomRates){
+            this.insert(roomRate);
+        }
     }
 
     @Override

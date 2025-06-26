@@ -5,6 +5,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,4 +27,6 @@ public interface IInvoiceCloseOperationService {
     List<InvoiceCloseOperationDto> findByHotelIds(List<UUID> hotelIds);
 
     InvoiceCloseOperationDto findActiveByHotelId(UUID hotelId);
+
+    LocalDateTime getCloseOperationDate(UUID hotelId);
 }

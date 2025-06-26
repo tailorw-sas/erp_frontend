@@ -25,4 +25,6 @@ public interface IManageInvoiceService {
     List<ManageInvoiceDto> findSortedInvoicesByIdIn(List<UUID> ids);
 
     List<ManageInvoiceDto> findInvoicesByGenId(List<Long> ids);
+
+    void createAll(List<ManageInvoiceDto> invoiceDtoList);
 }

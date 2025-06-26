@@ -116,4 +116,15 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void createAll(List<ManageInvoiceDto> invoiceDtoList) {
+        if(Objects.isNull(invoiceDtoList)){
+            throw new IllegalArgumentException("The ManageInvoiceDto list must not be null");
+        }
+        List<Invoice> invoices = invoiceDtoList.stream()
+                .map(Invoice::new)
+                .collect(Collectors.toList());
+        this.repositoryCommand.saveAll(invoices);
+    }
+
 }

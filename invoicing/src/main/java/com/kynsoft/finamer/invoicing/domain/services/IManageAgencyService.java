@@ -6,6 +6,7 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
 
@@ -30,4 +31,6 @@ public interface IManageAgencyService {
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 
     void clearManageHotelCache();
+
+    Map<UUID, ManageAgencyDto> getMapById(List<UUID> agencyIds);
 }

@@ -1,5 +1,7 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsof.share.utils.BankerRounding;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageInvoiceDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
@@ -95,6 +97,7 @@ public class Invoice {
     private ImportType importType;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Booking> bookings;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "invoice", cascade = CascadeType.MERGE)
@@ -286,5 +289,4 @@ public class Invoice {
         }
         this.hasAttachments = (Objects.nonNull(this.attachments) && !this.attachments.isEmpty());
     }
-
 }

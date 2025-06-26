@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,4 +28,6 @@ public interface ManageAttachmentTypeReadDataJPARepository extends JpaRepository
     Optional<ManageAttachmentType> findManageAttachmentTypeByCode(String code);
 
     Optional<ManageAttachmentType> findManageAttachmentTypeByAttachInvDefault(boolean defaultValue);
+
+    List<ManageAttachmentType> findByIdIn(List<UUID> ids);
 }

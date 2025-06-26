@@ -7,6 +7,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IManageInvoiceStatusService {
@@ -39,4 +40,6 @@ public interface IManageInvoiceStatusService {
     Long countByProcessStatusAndNotId(UUID id);
 
     ManageInvoiceStatusDto findByCanceledStatus();
+
+    Map<UUID, ManageInvoiceStatusDto> getMapById(List<UUID> ids);
 }

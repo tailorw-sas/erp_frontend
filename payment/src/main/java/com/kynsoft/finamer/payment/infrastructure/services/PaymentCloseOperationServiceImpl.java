@@ -7,8 +7,10 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.payment.application.query.objectResponse.PaymentCloseOperationResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.Status;
 import com.kynsoft.finamer.payment.domain.services.IPaymentCloseOperationService;
 import com.kynsoft.finamer.payment.infrastructure.identity.PaymentCloseOperation;
@@ -20,10 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -154,6 +156,25 @@ public class PaymentCloseOperationServiceImpl implements IPaymentCloseOperationS
     @Override
     public void clearCache() {
         System.out.println("Clearing closeOperationByHotel cache");
+    }
+
+    @Override
+    public Map<UUID, PaymentCloseOperationDto> getMapByHotelId(List<UUID> hotelIds) {
+        if(Objects.isNull(hotelIds)){
+            throw new IllegalArgumentException("The hotel ID list must not be null");
+        }
+        return this.findByHotelId(hotelIds).stream()
+                .collect(Collectors.toMap(closeOperationDto -> closeOperationDto.getHotel().getId(), closeOperation -> closeOperation));
+    }
+
+    @Override
+    public OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperationDto) {
+        ZoneId zone = ZoneId.systemDefault();
+
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return OffsetDateTime.now(zone);
+        }
+        return closeOperationDto.getEndDate().atTime(LocalTime.now()).atZone(zone).toOffsetDateTime();
     }
 
 }

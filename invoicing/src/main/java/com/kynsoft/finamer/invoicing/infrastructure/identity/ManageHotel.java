@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.identity;
 
-import com.kynsoft.finamer.invoicing.domain.dto.ManageCurrencyDto;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageHotelDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -75,6 +75,7 @@ public class ManageHotel implements Serializable {
     private String address;
 
     @OneToOne(mappedBy = "hotel", cascade = CascadeType.REMOVE)
+    @JsonManagedReference
     private InvoiceCloseOperation closeOperation;  // Relación uno a uno con InvoiceCloseOperation
 
     @ManyToOne(fetch = FetchType.EAGER)

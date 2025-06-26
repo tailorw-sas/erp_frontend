@@ -1,6 +1,7 @@
 package com.tailorw.finamer.scheduler.domain.dto;
 
 import com.tailorw.finamer.scheduler.infrastructure.model.enums.*;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

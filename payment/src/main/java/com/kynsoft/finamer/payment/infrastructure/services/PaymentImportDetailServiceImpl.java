@@ -78,9 +78,9 @@ public class PaymentImportDetailServiceImpl implements IPaymentImportDetailServi
             return;
         }
         try {
-            if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())) {
+            /*if (EImportPaymentType.ANTI.equals(request.getImportPaymentType())) {
                 ((PaymentImportAntiIncomeHelperServiceImpl) paymentImportHelperService).createAttachment(request);
-            }
+            }*/
             paymentImportHelperService.readPaymentCacheAndSave(request);
         } catch (BusinessRuleValidationException e) {
             e.printStackTrace();
