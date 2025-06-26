@@ -35,6 +35,11 @@ const onOffDialogPaymentDetailSummary = ref(false)
 
 // Attachments for Invoice
 const attachmentDialogOpenInvoice = ref<boolean>(false)
+// Change Agency
+const changeAgencyDialogOpen = ref<boolean>(false)
+const selectedInvoice = ref('')
+const selectedInvoiceObj = ref<any>()
+const invoiceContextMenuItems = ref<any[]>([])
 
 // Attachments
 const attachmentDialogOpen = ref<boolean>(false)
@@ -179,7 +184,20 @@ const allMenuListItemsInvoice = ref([
     disabled: false,
     visible: true
   },
+  {
+    label: 'Change Agency',
+    icon: 'pi pi-arrow-right-arrow-left',
+    width: '24px',
+    height: '24px',
+    iconSvg: '',
+    command: () => {
+      openDialogChangeAgency()
+    },
+    default: true,
+    showItem: false,
+  }
 ])
+
 const allDefaultItem = { id: 'All', name: 'All', code: 'All' }
 const activeTab = ref(0)
 const allDefault = { id: 'All', name: 'All' }
@@ -526,7 +544,6 @@ const columnsAgency: IColumn[] = [
   { field: 'emailContact', header: 'Email Contact', type: 'text' },
 
 ]
-console.log('Último ítem a guardar:', listItemsInvoice.value[0]?.hotel)
 // Debe mostrar: { name: "DRELM-Dreams Las Mareas Costa Rica", ... }
 // -------------------------------------------------------------------------------------------------------
 
@@ -657,6 +674,10 @@ function handlePrint() {
   CollectionToPrintDialogVisible.value = true
 }
 
+function setMenuOptions() {
+  invoiceContextMenuItems.value = [...allMenuListItemsInvoice.value.filter((item: any) => item?.default).map(item => ({ ...item }))]
+}
+
 function extractPaymentStatus(originalObject: any) {
   return {
     paymentStatus: {
@@ -698,6 +719,39 @@ function savePrint() {
   setTimeout(() => {
     loadingSavePrint.value = false
   }, 3000)
+}
+
+async function onCloseChangeAgencyDialog(isCancel: boolean) {
+  changeAgencyDialogOpen.value = false
+  if (!isCancel) {
+    getList()
+  }
+}
+
+function onRowRightClick(event: any) {
+  selectedInvoice.value = event.data.id
+  selectedInvoiceObj.value = event.data
+  setMenuOptions()
+
+  // Change Agency
+  if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].includes(event?.data?.status)
+    && event?.data.dueAmount === event?.data.invoiceAmount) {
+    const changeAgencyItem = invoiceContextMenuItems.value.find((item: any) => item.label === 'Change Agency')
+
+    if (changeAgencyItem) {
+      if (event.data.status === InvoiceStatus.PROCESSED) {
+        // if (event.data.status === InvoiceStatus.PROCESSED && event.data.isInCloseOperation) {
+        changeAgencyItem.showItem = true
+      }
+      // else if (event.data.status === InvoiceStatus.RECONCILED && event.data.isInCloseOperation) {
+      //   changeAgencyItem.showItem = true;
+      // }
+      if (event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0)
+        || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+        changeAgencyItem.showItem = true
+      }
+    }
+  }
 }
 
 async function getPaymentData() {
@@ -1430,6 +1484,57 @@ function clearFilterToSearch() {
   // getPaymentData()
 }
 
+async function openDialogChangeAgency() {
+  try {
+    const agencyId = selectedInvoiceObj.value?.agency?.id
+    if (!agencyId) {
+      toast.add({ severity: 'warn', summary: 'Warning', detail: 'No agency selected', life: 5000 })
+      return
+    }
+    const payload = {
+      filter: [
+        {
+          key: 'id',
+          operator: 'EQUALS',
+          value: agencyId,
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'status',
+          operator: 'EQUALS',
+          value: 'ACTIVE',
+          logicalOperation: 'AND'
+        },
+        {
+          key: 'autoReconcile',
+          operator: 'EQUALS',
+          value: true,
+          logicalOperation: 'AND'
+        }
+      ],
+      page: 0,
+      pageSize: 1
+    }
+    const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
+    const agency = response?.data?.[0]
+    if (agency && agency.client) {
+      const objClient = {
+        id: agency.client.id,
+        code: agency.client.code,
+        name: agency.client.name,
+        description: agency.client.description,
+        isNightType: agency.client.isNightType,
+        status: agency.client.status
+      }
+      selectedInvoiceObj.value.agency.client = { ...objClient }
+      changeAgencyDialogOpen.value = true
+    }
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Error getting client', life: 10000 })
+  }
+}
+
 async function resetListItems() {
   payload.value.page = 0
   // getList()
@@ -1954,6 +2059,21 @@ const disabledSearch = computed(() => {
   return filterToSearch.value.client?.id === '' || filterToSearch.value.agency.length === 0 || filterToSearch.value.hotel.length === 0
 })
 
+function onRowContextMenuInvoice(event: any) {
+  if (event && event.data) {
+    objItemSelectedForRightClickInvoice.value = event.data
+    selectedInvoiceObj.value = event.data // <-- ASÍ lo asignas correctamente
+  }
+
+  const allHidden = allMenuListItemsInvoice.value.every(item => !item.visible)
+  if (!allHidden) {
+    contextMenuInvoice.value.show(event.originalEvent)
+  }
+  else {
+    contextMenuInvoice.value.hide()
+  }
+}
+
 async function checkAttachment(code: string) {
   const payload = {
     payment: objItemSelectedForRightClickNavigateToPayment.value ? objItemSelectedForRightClickNavigateToPayment.value.id : '',
@@ -2098,20 +2218,6 @@ function onRowContextMenu(event: any) {
   }
   else {
     contextMenu.value.hide()
-  }
-}
-
-function onRowContextMenuInvoice(event: any) {
-  if (event && event.data) {
-    objItemSelectedForRightClickInvoice.value = event.data
-  }
-
-  const allHidden = allMenuListItemsInvoice.value.every(item => !item.visible)
-  if (!allHidden) {
-    contextMenuInvoice.value.show(event.originalEvent)
-  }
-  else {
-    contextMenuInvoice.value.hide()
   }
 }
 
@@ -2798,7 +2904,9 @@ onMounted(() => {
             @on-change-filter="parseDataTableFilterForContactAgency"
             @on-list-item="resetListItems"
             @on-sort-field="onSortFieldContactAgency"
+            @on-row-right-click="onRowRightClick"
           >
+            >
             <template #emptyTable="{ data }">
               <div class="flex flex-column flex-wrap align-items-center justify-content-center py-3">
                 <span v-if="!optionsAgency?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -2979,7 +3087,13 @@ onMounted(() => {
       :document-option-has-been-used="true"
     />
   </div>
-
+  <div v-if="changeAgencyDialogOpen">
+    <CollectionChangeAgencyDialog
+      :open-dialog="changeAgencyDialogOpen"
+      :selected-invoice="selectedInvoiceObj"
+      @on-close-dialog="onCloseChangeAgencyDialog($event)"
+    />
+  </div>
   <DialogPaymentDetailSummary
     title="Transactions ANTI Summary"
     :visible="onOffDialogPaymentDetailSummary"
