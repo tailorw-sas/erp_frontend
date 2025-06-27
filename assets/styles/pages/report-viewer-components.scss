@@ -1,5 +1,5 @@
 /* ===================================================================
-   REPORT VIEWER - COMPONENT STYLES
+   REPORT VIEWER - COMPONENT STYLES - PROFESSIONAL ENTERPRISE GRADE
    Form fields, buttons, interactions, and component-specific styling
    Compatible with PrimeVue + PrimeFlex + Design System
    =================================================================== */
@@ -16,7 +16,7 @@ $report-viewer-field-height: 2.75rem;
 $report-viewer-field-height-mobile: 3rem;
 
 // Status colors
-$status-loading: #3b82f6;
+$status-loading: #3b82f6 !default;
 $status-success: $success-color;
 $status-warning: $warning-color;
 $status-error: $error-color;
@@ -111,7 +111,6 @@ $status-error: $error-color;
   --enhanced-form-field-height: #{$report-viewer-field-height};
   --enhanced-form-field-height-mobile: #{$report-viewer-field-height-mobile};
   --enhanced-form-field-height-compact: 2.25rem;
-  --enhanced-form-font-size: #{$font-size-base};
   --enhanced-form-font-size-compact: #{$font-size-small};
   --enhanced-form-border-radius: #{$border-radius-lg};
   --enhanced-form-border-radius-small: #{$border-radius};
@@ -125,7 +124,6 @@ $status-error: $error-color;
   --enhanced-form-error-border: #{$error-color};
   --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
   --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  --enhanced-form-dropdown-z: 1000;
   
   // ===============================
   // STATUS PROGRESS COMPONENTS
@@ -152,12 +150,14 @@ $status-error: $error-color;
   }
   
   // ===============================
-  // 🎯 HOMOLOGACIÓN TOTAL - TODOS LOS COMPONENTES USAN BaseField
+  // 🎯 ENHANCED FORMS - ENTERPRISE PROFESSIONAL LEVEL
   // ===============================
   
   &__parameters-content {
     
-    // ✅ ESTRUCTURA UNIFICADA - TODOS LOS COMPONENTES USAN BaseField
+    // ===============================
+    // ESTRUCTURA UNIFICADA - TODOS LOS COMPONENTES USAN BaseField
+    // ===============================
     .form-field {
       margin-bottom: 0 !important;
       
@@ -165,7 +165,7 @@ $status-error: $error-color;
         display: block !important;
         font-weight: 600 !important;
         color: $gray-800 !important;
-        margin: 0 0 0.375rem 0 !important; // ✅ 6px exactos - UNIFICADO TOTAL
+        margin: 0 0 0.375rem 0 !important; // 6px exactos - UNIFICADO TOTAL
         padding: 0 !important;
         font-size: 0.9rem !important;
         letter-spacing: 0.02em !important;
@@ -198,7 +198,7 @@ $status-error: $error-color;
       }
     }
     
-    // ✅ DEEP SELECTORS para máxima compatibilidad
+    // DEEP SELECTORS para máxima compatibilidad
     :deep(.form-field) {
       margin-bottom: 0 !important;
       
@@ -216,21 +216,21 @@ $status-error: $error-color;
     :deep(.form-field__label) {
       font-weight: 600 !important;
       color: $gray-800 !important;
-      margin: 0 0 0.375rem 0 !important; // ✅ SPACING UNIFORME TOTAL
+      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
       padding: 0 !important;
       font-size: 0.9rem !important;
       letter-spacing: 0.02em !important;
       line-height: 1.4 !important;
     }
     
-    // ✅ GRID SPACING OPTIMIZADO
+    // GRID SPACING OPTIMIZADO
     .grid {
       margin: 0 !important;
-      row-gap: 1.25rem !important; // ✅ Compensado para el spacing reducido
+      row-gap: 1.25rem !important; // Compensado para el spacing reducido
       column-gap: 1rem !important;
     }
     
-    // ✅ ELIMINAR MARGINS EXTRA DE CONTAINERS
+    // ELIMINAR MARGINS EXTRA DE CONTAINERS
     > .col-12,
     > div,
     .col-12 {
@@ -241,252 +241,13 @@ $status-error: $error-color;
         margin-bottom: 0 !important;
       }
     }
-  }
-  
-  // ===============================
-  // 📝 COMPONENT-SPECIFIC STYLES (Ya no necesitamos clases específicas)
-  // ===============================
-  
-  .select-field__component,
-  .local-select-dropdown,
-  .date-field__calendar {
-    width: 100% !important;
     
-    // Los estilos de label están manejados por BaseField arriba
-    // Solo necesitamos estilos específicos del componente si es necesario
+    // ===============================
+    // 🎯 ENHANCED FORM FIELDS - ENTERPRISE LEVEL
+    // ===============================
     
-    &.p-invalid {
-      // Error states son manejados por los estilos universales de formularios
-    }
-  }
-  
-  // ===============================
-  // 📅 DATE FIELD STYLES - SIMPLIFICADO
-  // ===============================
-  
-  .date-field__wrapper {
-    width: 100% !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: stretch !important;
-    box-sizing: border-box !important;
-    animation: fadeInUp 0.3s ease-out;
-    margin: 0 !important;
-    padding: 0 !important;
-    
-    // Los estilos de label están manejados por BaseField arriba
-    
-    &--error {
-      .date-field__calendar {
-        border-color: $error-color !important;
-        box-shadow: 0 0 0 1px $error-color !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-      }
-    }
-    
-    &--loading {
-      opacity: 0.7 !important;
-      pointer-events: none !important;
-      
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-      }
-    }
-  }
-  
-  // ===============================
-  // 📝 LOCAL SELECT FIELD STYLES - SIMPLIFICADO
-  // ===============================
-  
-  .local-select-field {
-    margin-bottom: 0 !important;
-    width: 100% !important;
-    animation: fadeInUp 0.3s ease-out !important;
-    
-    // ✅ SOLO PARA COMPATIBILIDAD LEGACY
-    // (El nuevo SelectField usa BaseField y no necesita estos estilos)
-    
-    .form-field__input-wrapper {
-      width: 100% !important;
-      position: relative !important;
-      display: flex !important;
-      align-items: stretch !important;
-      box-sizing: border-box !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .form-field__error-messages {
-      margin-top: 0.5rem !important;
-      
-      .form-field__error-message {
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.375rem !important;
-        color: $error-color !important;
-        font-size: 0.875rem !important;
-        line-height: 1.4 !important;
-        margin-bottom: 0.25rem !important;
-        
-        &:last-child {
-          margin-bottom: 0 !important;
-        }
-        
-        .pi {
-          font-size: 0.875rem !important;
-          flex-shrink: 0 !important;
-        }
-      }
-    }
-  }
-  
-  // ===============================
-  // 📅 DATE FIELD STYLES - SIMPLIFICADO
-  // ===============================
-  
-  .date-field__wrapper {
-    width: 100% !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: stretch !important;
-    box-sizing: border-box !important;
-    animation: fadeInUp 0.3s ease-out;
-    margin: 0 !important;
-    padding: 0 !important;
-    
-    // Los estilos de label están arriba en la sección de homologación
-    
-    &--error {
-      .date-field__calendar {
-        border-color: $error-color !important;
-        box-shadow: 0 0 0 1px $error-color !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-      }
-    }
-    
-    &--loading {
-      opacity: 0.7 !important;
-      pointer-events: none !important;
-      
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-      }
-    }
-  }
-  
-  .date-field__calendar {
-    width: 100% !important;
-    
-    &--inline {
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: $border-radius-lg !important;
-      overflow: hidden;
-    }
-    
-    &--mobile {
-      font-size: 1.1rem !important;
-      
-      .p-calendar-w-btn .p-inputtext {
-        font-size: 1rem !important;
-      }
-    }
-  }
-  
-  .date-field__header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0.75rem 1rem !important;
-    background: $gray-50 !important;
-    border-bottom: 1px solid $gray-200 !important;
-  }
-  
-  .date-field__today-btn {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    padding: 0.5rem 0.75rem !important;
-    background: $primary-color !important;
-    color: white !important;
-    border: none !important;
-    border-radius: $border-radius !important;
-    cursor: pointer !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
-    
-    &:hover {
-      background: $primary-hover !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 8px rgba($primary-color, 0.4) !important;
-    }
-    
-    &:focus {
-      outline: 2px solid rgba($primary-color, 0.3) !important;
-      outline-offset: 1px !important;
-    }
-    
-    &:active {
-      transform: translateY(0) !important;
-    }
-  }
-  
-  .date-field__footer {
-    padding: 0.75rem 1rem !important;
-    background: $gray-50 !important;
-    border-top: 1px solid $gray-200 !important;
-  }
-  
-  .date-field__selected-info {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    color: $success-color !important;
-    font-weight: 500 !important;
-    font-size: 0.875rem !important;
-    
-    .pi {
-      color: inherit !important;
-      animation: pulse 2s infinite !important;
-    }
-  }
-  
-  .date-field__date-cell {
-    &--weekend {
-      color: $error-color !important;
-      font-weight: 600 !important;
-      background: rgba($error-color, 0.1) !important;
-      border-radius: 50% !important;
-    }
-  }
-  
-  // ===============================
-  // 🎯 ENHANCED FORM FIELDS - UNIVERSAL STYLES
-  // ===============================
-  
-  &__parameters-content {
-    
-    // ✅ UNIVERSAL CLEAR BUTTON
+    // UNIVERSAL CLEAR BUTTON
     :deep(.p-calendar .p-calendar-clear-icon),
-    :deep(.p-dropdown .p-dropdown-clear-icon),
-    :deep(.p-multiselect .p-multiselect-clear-icon),
-    :deep(.p-autocomplete .p-autocomplete-clear-icon),
     :deep(.p-inputtext-clear-icon) {
       position: absolute !important;
       top: 50% !important;
@@ -539,19 +300,16 @@ $status-error: $error-color;
       }
     }
     
-    // ✅ CONTAINER STYLING
+    // CONTAINER STYLING
     :deep(.col-12) {
       margin-bottom: 0 !important;
       padding: 0 !important;
       width: 100% !important;
     }
     
-    // ✅ UNIVERSAL FIELD SIZING
+    // UNIVERSAL FIELD SIZING
     :deep(.p-inputtext),
-    :deep(.p-dropdown),
-    :deep(.p-multiselect),
     :deep(.p-calendar),
-    :deep(.p-autocomplete),
     :deep(.p-inputnumber),
     :deep(.p-password) {
       width: 100% !important;
@@ -562,7 +320,9 @@ $status-error: $error-color;
       min-height: var(--enhanced-form-field-height) !important;
     }
     
-    // ✅ CALENDAR/DATE FIELD STYLING
+    // ===============================
+    // CALENDAR/DATE FIELD STYLING - ENTERPRISE GRADE
+    // ===============================
     :deep(.p-calendar) {
       position: relative !important;
       border: var(--enhanced-form-border-width) solid $gray-200 !important;
@@ -658,7 +418,6 @@ $status-error: $error-color;
         border-bottom-color: transparent !important;
         border-color: var(--enhanced-form-focus-border) !important;
         box-shadow: var(--enhanced-form-focus-shadow) !important;
-        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
         transform: translateY(-1px) !important;
       }
       
@@ -673,402 +432,10 @@ $status-error: $error-color;
         }
       }
     }
-    
-    // ✅ DROPDOWN STYLING
-    :deep(.p-dropdown) {
-      background: white !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      overflow: hidden !important;
-      
-      &:hover:not(.p-disabled):not(.p-dropdown-opened):not(.p-focus) {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: var(--enhanced-form-shadow-lg) !important;
-      }
-      
-      &.p-focus:not(.p-dropdown-opened) {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-dropdown-opened {
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border-bottom-color: transparent !important;
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      .p-dropdown-label,
-      .p-dropdown-trigger,
-      .p-inputtext {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-      
-      .p-dropdown-label {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        padding: 0 1rem !important;
-        line-height: normal !important;
-        display: flex !important;
-        align-items: center !important;
-        font-size: var(--enhanced-form-font-size) !important;
-        color: $gray-700 !important;
-        background: transparent !important;
         
-        &.p-placeholder {
-          color: $gray-400 !important;
-          font-style: italic !important;
-        }
-      }
-      
-      .p-dropdown-trigger {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border-left: 1px solid $gray-200 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          background: $gray-50 !important;
-        }
-        
-        .p-icon {
-          color: $primary-color !important;
-          transition: transform 0.2s ease !important;
-        }
-      }
-      
-      &.p-dropdown-opened .p-dropdown-trigger .p-icon {
-        transform: rotate(180deg) !important;
-      }
-      
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-        
-        &:focus,
-        &.p-focus {
-          border-color: var(--enhanced-form-error-border) !important;
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-    }
-    
-    // ✅ MULTISELECT STYLING
-    :deep(.p-multiselect) {
-      min-height: var(--enhanced-form-field-height) !important;
-      background: white !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      overflow: hidden !important;
-      
-      &:hover:not(.p-disabled):not(.p-multiselect-opened):not(.p-focus) {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: var(--enhanced-form-shadow-lg) !important;
-      }
-      
-      &.p-focus:not(.p-multiselect-opened) {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-multiselect-opened {
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border-bottom-color: transparent !important;
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      .p-multiselect-label-container,
-      .p-multiselect-trigger {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-      
-      .p-multiselect-label-container {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        padding: 0.375rem 0.625rem !important;
-        padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important;
-        display: flex !important;
-        align-items: center !important;
-        flex-wrap: wrap !important;
-        gap: 0.25rem !important;
-      }
-      
-      .p-multiselect-trigger {
-        height: calc(var(--enhanced-form-field-height) - 4px) !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border-left: 1px solid $gray-200 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          background: $gray-50 !important;
-        }
-        
-        .p-icon {
-          color: $primary-color !important;
-        }
-      }
-      
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-        
-        &:focus,
-        &.p-focus {
-          border-color: var(--enhanced-form-error-border) !important;
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-    }
-
-    // ✅ AUTOCOMPLETE STYLING
-    :deep(.p-autocomplete) {
-      position: relative !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      background: white !important;
-      display: flex !important;
-      align-items: center !important;
-      overflow: hidden !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      
-      .p-inputtext,
-      .p-autocomplete-dropdown {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-      }
-      
-      .p-inputtext {
-        width: 100% !important;
-        height: 100% !important;
-        font-size: var(--enhanced-form-font-size) !important;
-        background: transparent !important;
-        color: $gray-700 !important;
-        padding: 0 1rem !important;
-        flex: 1 !important;
-        line-height: normal !important;
-        
-        &::placeholder {
-          color: $gray-400 !important;
-          font-style: italic !important;
-        }
-      }
-      
-      .p-autocomplete-dropdown {
-        height: 100% !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border-left: 1px solid $gray-200 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: $primary-color !important;
-        cursor: pointer !important;
-        flex-shrink: 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          background: rgba($primary-color, 0.05) !important;
-          color: $primary-hover !important;
-        }
-        
-        .p-icon {
-          color: inherit !important;
-          font-size: 1.1rem !important;
-        }
-      }
-      
-      &:hover:not(.p-disabled):not(.p-autocomplete-open):not(.p-focus) {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: var(--enhanced-form-shadow-lg) !important;
-      }
-      
-      &:focus-within:not(.p-autocomplete-open) {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-autocomplete-open {
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border-bottom-color: transparent !important;
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-        
-        &:focus-within {
-          border-color: var(--enhanced-form-error-border) !important;
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-    }
-    
-    // ✅ DROPDOWN PANELS
-    :deep(.p-dropdown-panel),
-    :deep(.p-multiselect-panel),
-    :deep(.p-autocomplete-panel) {
-      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
-      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
-      border-top: none !important;
-      box-shadow: var(--enhanced-form-shadow-lg) !important;
-      margin-top: 0 !important;
-      background: white !important;
-      z-index: var(--enhanced-form-dropdown-z) !important;
-      animation: slideDown 0.2s ease-out !important;
-      overflow: hidden !important;
-      
-      &::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--enhanced-form-focus-border);
-        z-index: 1;
-      }
-    }
-    
-    :deep(.p-dropdown-items),
-    :deep(.p-multiselect-items),
-    :deep(.p-autocomplete-items) {
-      padding: 0.5rem 0 !important;
-      max-height: 200px !important;
-      overflow-y: auto !important;
-      
-      &::-webkit-scrollbar {
-        width: 4px !important;
-      }
-      
-      &::-webkit-scrollbar-track {
-        background: $gray-100 !important;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background: $gray-300 !important;
-        border-radius: 2px !important;
-      }
-    }
-    
-    :deep(.p-dropdown-item),
-    :deep(.p-multiselect-item),
-    :deep(.p-autocomplete-item) {
-      padding: 0.625rem 1rem !important;
-      transition: var(--enhanced-form-transition-fast) !important;
-      color: $gray-700 !important;
-      font-size: var(--enhanced-form-font-size) !important;
-      margin: 0.125rem 0.5rem !important;
-      border-radius: $border-radius !important;
-      border: none !important;
-      
-      &:hover {
-        background: $gray-100 !important;
-        color: $gray-900 !important;
-        transform: translateX(2px) !important;
-      }
-      
-      &.p-highlight {
-        background: $primary-color !important;
-        color: white !important;
-        font-weight: 500 !important;
-        box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
-      }
-      
-      &:focus {
-        outline: 2px solid rgba($primary-color, 0.3) !important;
-        outline-offset: -2px !important;
-        background: $primary-light !important;
-      }
-    }
-
-    // ✅ TOKENS/CHIPS
-    :deep(.p-autocomplete-multiple-container) {
-      min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
-      padding: 0.375rem 0.625rem !important;
-      display: flex !important;
-      align-items: center !important;
-      flex-wrap: wrap !important;
-      gap: 0.25rem !important;
-    }
-
-    :deep(.p-autocomplete-token),
-    :deep(.p-multiselect-token) {
-      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
-      border: 1px solid rgba($primary-color, 0.2) !important;
-      color: $primary-color !important;
-      border-radius: 1rem !important;
-      padding: 0.25rem 0.75rem !important;
-      font-size: 0.8rem !important;
-      font-weight: 500 !important;
-      height: auto !important;
-      min-height: 1.5rem !important;
-      animation: chip-appear 0.2s ease-out !important;
-      transition: var(--enhanced-form-transition) !important;
-      
-      &:hover {
-        background: linear-gradient(135deg, $primary-color, $primary-hover) !important;
-        color: white !important;
-        transform: scale(1.05) !important;
-      }
-      
-      .p-autocomplete-token-icon,
-      .p-multiselect-token-icon {
-        margin-left: 0.5rem !important;
-        color: $primary-color !important;
-        border-radius: 50% !important;
-        width: 1rem !important;
-        height: 1rem !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          color: white !important;
-          background: $error-color !important;
-          transform: scale(1.1) !important;
-        }
-      }
-    }
-    
-    // ✅ DATE PICKER PANEL
+    // ===============================
+    // DATE PICKER PANEL - ENTERPRISE GRADE
+    // ===============================
     :deep(.p-datepicker) {
       border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
       border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
@@ -1076,7 +443,6 @@ $status-error: $error-color;
       margin-top: 0 !important;
       background: white !important;
       overflow: hidden !important;
-      z-index: var(--enhanced-form-dropdown-z) !important;
       animation: slideDown 0.2s ease-out !important;
       
       &::before {
@@ -1182,11 +548,13 @@ $status-error: $error-color;
       }
     }
     
-    // ✅ UNIVERSAL FORM LABELS - ARQUITECTURA UNIFICADA BaseField
+    // ===============================
+    // UNIVERSAL FORM LABELS - BEAUTIFUL UX
+    // ===============================
     :deep(.form-field__label) {
       font-weight: 600 !important;
       color: $gray-800 !important;
-      margin: 0 0 0.375rem 0 !important; // ✅ SPACING UNIFORME TOTAL
+      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
       padding: 0 !important;
       font-size: 0.9rem !important;
       letter-spacing: 0.02em !important;
@@ -1200,7 +568,7 @@ $status-error: $error-color;
       margin-left: 0.125rem !important;
     }
     
-    // ✅ WRAPPER CONTAINERS
+    // WRAPPER CONTAINERS
     :deep(.date-field__wrapper) {
       width: 100% !important;
       position: relative !important;
@@ -1216,9 +584,195 @@ $status-error: $error-color;
       box-sizing: border-box !important;
     }
     
-    // ✅ FOCUS STATES
+    // FOCUS STATES
     :deep(.form-field:focus-within) {
       animation: field-focus 0.3s ease-out !important;
+    }
+  }
+  
+  // ===============================
+  // 📝 COMPONENT-SPECIFIC STYLES (Ya no necesitamos clases específicas)
+  // ===============================
+  
+  .date-field__calendar {
+    width: 100% !important;
+    
+    // Los estilos de label están manejados por BaseField arriba
+    // Solo necesitamos estilos específicos del componente si es necesario
+  }
+  
+  // ===============================
+  // 📅 DATE FIELD STYLES - SIMPLIFICADO
+  // ===============================
+  
+  .date-field__wrapper {
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    animation: fadeInUp 0.3s ease-out;
+    margin: 0 !important;
+    padding: 0 !important;
+    
+    // Los estilos de label están manejados por BaseField arriba
+    
+    &--error {
+      .date-field__calendar {
+        border-color: $error-color !important;
+        box-shadow: 0 0 0 1px $error-color !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+      }
+    }
+    
+    &--loading {
+      opacity: 0.7 !important;
+      pointer-events: none !important;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+    }
+  }
+  
+  // ===============================
+  // 📝 LOCAL SELECT FIELD STYLES - SIMPLIFICADO
+  // ===============================
+  
+  .local-select-field {
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    animation: fadeInUp 0.3s ease-out !important;
+    
+    // SOLO PARA COMPATIBILIDAD LEGACY
+    // (El nuevo SelectField usa BaseField y no necesita estos estilos)
+    
+    .form-field__input-wrapper {
+      width: 100% !important;
+      position: relative !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .form-field__error-messages {
+      margin-top: 0.5rem !important;
+      
+      .form-field__error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.375rem !important;
+        color: $error-color !important;
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+        
+        .pi {
+          font-size: 0.875rem !important;
+          flex-shrink: 0 !important;
+        }
+      }
+    }
+  }
+  
+  .date-field__calendar {
+    width: 100% !important;
+    
+    &--inline {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: $border-radius-lg !important;
+      overflow: hidden;
+    }
+    
+    &--mobile {
+      font-size: 1.1rem !important;
+      
+      .p-calendar-w-btn .p-inputtext {
+        font-size: 1rem !important;
+      }
+    }
+  }
+  
+  .date-field__header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-bottom: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__today-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    background: $primary-color !important;
+    color: white !important;
+    border: none !important;
+    border-radius: $border-radius !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
+    
+    &:hover {
+      background: $primary-hover !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 8px rgba($primary-color, 0.4) !important;
+    }
+    
+    &:focus {
+      outline: 2px solid rgba($primary-color, 0.3) !important;
+      outline-offset: 1px !important;
+    }
+    
+    &:active {
+      transform: translateY(0) !important;
+    }
+  }
+  
+  .date-field__footer {
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-top: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__selected-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    color: $success-color !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    
+    .pi {
+      color: inherit !important;
+      animation: pulse 2s infinite !important;
+    }
+  }
+  
+  .date-field__date-cell {
+    &--weekend {
+      color: $error-color !important;
+      font-weight: 600 !important;
+      background: rgba($error-color, 0.1) !important;
+      border-radius: 50% !important;
     }
   }
   
@@ -1325,14 +879,11 @@ $status-error: $error-color;
     }
     
     &__parameters-content {
-      :deep(.grid) {
+      .grid {
         row-gap: 1.75rem !important;
       }
       
-      :deep(.p-calendar),
-      :deep(.p-dropdown),
-      :deep(.p-multiselect),
-      :deep(.p-autocomplete) {
+      :deep(.p-calendar) {
         height: var(--enhanced-form-field-height) !important;
         min-height: var(--enhanced-form-field-height) !important;
       }
@@ -1351,7 +902,7 @@ $status-error: $error-color;
     .local-select-field {
       .form-field__label {
         font-size: 1rem !important;
-        margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
         padding: 0 !important;
       }
       
@@ -1375,39 +926,23 @@ $status-error: $error-color;
     }
     
     &__parameters-content {
-      :deep(.grid) {
+      .grid {
         row-gap: 1.75rem !important;
       }
       
-      &__parameters-content {
-        .form-field .form-field__label {
-          font-size: 1rem !important;
-          margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
-          padding: 0 !important;
-        }
-        
-        :deep(.form-field__label) {
-          font-size: 1rem !important;
-          margin: 0 0 0.375rem 0 !important; // ✅ CONSISTENTE EN MOBILE
-          padding: 0 !important;
-        }
+      .form-field .form-field__label {
+        font-size: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
+        padding: 0 !important;
       }
       
-      :deep(.p-multiselect-token) {
-        padding: 0.375rem 1rem !important;
-        font-size: 0.9rem !important;
-        min-height: 2rem !important;
-        
-        .p-multiselect-token-icon {
-          width: 1.25rem !important;
-          height: 1.25rem !important;
-          margin-left: 0.75rem !important;
-        }
+      :deep(.form-field__label) {
+        font-size: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
+        padding: 0 !important;
       }
       
-      :deep(.p-dropdown-clear-icon),
-      :deep(.p-calendar-clear-icon),
-      :deep(.p-autocomplete-clear-icon) {
+      :deep(.p-calendar-clear-icon) {
         width: 1.5rem !important;
         height: 1.5rem !important;
         right: calc(var(--enhanced-form-field-height) + 10px) !important;
@@ -1418,35 +953,9 @@ $status-error: $error-color;
         }
       }
       
-      :deep(.p-calendar),
-      :deep(.p-dropdown),
-      :deep(.p-multiselect),
-      :deep(.p-autocomplete) {
+      :deep(.p-calendar) {
         height: var(--enhanced-form-field-height) !important;
         min-height: var(--enhanced-form-field-height) !important;
-      }
-      
-      :deep(.p-dropdown-panel),
-      :deep(.p-multiselect-panel),
-      :deep(.p-autocomplete-panel) {
-        max-height: 40vh !important;
-        
-        .p-dropdown-items,
-        .p-multiselect-items,
-        .p-autocomplete-items {
-          max-height: none !important;
-        }
-      }
-      
-      :deep(.p-dropdown-item),
-      :deep(.p-multiselect-item),
-      :deep(.p-autocomplete-item) {
-        padding: 0.75rem 1rem !important;
-        font-size: 1rem !important;
-        
-        &:hover {
-          transform: none !important;
-        }
       }
     }
   }
@@ -1455,17 +964,12 @@ $status-error: $error-color;
     --enhanced-form-field-height: 3.5rem;
     
     &__parameters-content {
-      :deep(.p-calendar),
-      :deep(.p-dropdown),
-      :deep(.p-multiselect),
-      :deep(.p-autocomplete) {
+      :deep(.p-calendar) {
         height: var(--enhanced-form-field-height) !important;
         min-height: var(--enhanced-form-field-height) !important;
       }
-      
-      :deep(.p-dropdown-clear-icon),
-      :deep(.p-calendar-clear-icon),
-      :deep(.p-autocomplete-clear-icon) {
+
+      :deep(.p-calendar-clear-icon) {
         width: 1.75rem !important;
         height: 1.75rem !important;
         right: calc(var(--enhanced-form-field-height) + 12px) !important;
@@ -1584,47 +1088,8 @@ $status-error: $error-color;
   @media (prefers-contrast: high) {
     --enhanced-form-border-width: 3px;
     
-    :deep(.p-dropdown),
-    :deep(.p-calendar),
-    :deep(.p-multiselect),
-    :deep(.p-autocomplete) {
+    :deep(.p-calendar) {
       border-width: 3px !important;
     }
   }
-  
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-  
-  @media print {
-    &__generate-btn {
-      display: none !important;
-    }
-  }
 }
-
-// ===============================
-// PERFORMANCE OPTIMIZATIONS
-// ===============================
-
-.report-viewer {
-  &__generate-btn {
-    will-change: transform;
-    transform: translateZ(0);
-  }
-  
-  :deep(.p-dropdown-panel),
-  :deep(.p-multiselect-panel),
-  :deep(.p-autocomplete-panel),
-  :deep(.p-datepicker) {
-    contain: layout style paint;
-  }
-}
-
-/* ===================================================================
-   END OF COMPONENT STYLES - COMPLETE
-   =================================================================== */

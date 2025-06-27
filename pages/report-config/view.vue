@@ -93,6 +93,7 @@ interface ReportParameter {
   readonly dataValueStatic?: string
   readonly filtersBase?: any[]
   readonly dependentField?: string
+  readonly filterKeyValue?: string // ✅ ADDED: Missing property
   readonly debounceTimeMs?: number
   readonly maxSelectedLabels?: number
   readonly required?: boolean
@@ -298,7 +299,12 @@ function mapBackendParameter(backendParam: BackendReportParameter): ReportParame
     Object.assign(mappedParam, { dependentField: backendParam.dependentField.trim() })
   }
 
-  // Map filterKeyValue to filtersBase structure
+  // ✅ ADDED: Map filterKeyValue directly
+  if (backendParam.filterKeyValue?.trim()) {
+    Object.assign(mappedParam, { filterKeyValue: backendParam.filterKeyValue.trim() })
+  }
+
+  // Map filterKeyValue to filtersBase structure (keep for compatibility)
   if (backendParam.filterKeyValue?.trim()) {
     Object.assign(mappedParam, {
       filtersBase: [{
@@ -353,8 +359,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
       }
     : undefined
 
-  Logger.log('- Generated apiConfig:', apiConfig)
-
   // Dynamic Arguments
   const kwArgs: DynamicFieldArgs = {
     filtersBase: param.filtersBase || [],
@@ -386,11 +390,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
     },
 
     select: (): ReportFormField => {
-      Logger.log('🔍 SELECT FIELD CONFIG:', {
-        module: param.module,
-        service: param.service
-      })
-
       return createDynamicField(
         param.paramName,
         'select',
@@ -487,20 +486,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
   }
 
   const generatedField = fieldConfigs[param.componentType]?.() || fieldConfigs.text()
-
-  Logger.log('🎯 GENERATED FIELD COMPLETE:', {
-    fieldName: param.paramName,
-    componentType: param.componentType,
-    config: {
-      apiConfig: generatedField.apiConfig,
-      objApi: generatedField.objApi,
-      kwArgs: generatedField.kwArgs,
-      dataType: generatedField.dataType,
-      multiple: generatedField.multiple,
-      filtersBase: generatedField.filtersBase,
-      debounceTimeMs: generatedField.debounceTimeMs
-    }
-  })
 
   return generatedField
 }
@@ -907,15 +892,6 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 
         // ✅ FIXED: Enhanced API configuration for dynamic fields using mutable interface
         if (['select', 'multiselect'].includes(param.componentType) && param.module && param.service) {
-          Logger.log('🔍 LOADING REPORT PARAMETERS:', {
-            field: param.paramName,
-            componentType: param.componentType,
-            module: param.module,
-            service: param.service,
-            dependentField: param.dependentField,
-            filtersBase: param.filtersBase
-          })
-
           fieldDef.objApi = {
             moduleApi: param.module,
             uriApi: param.service
@@ -924,7 +900,10 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
             ...param,
             filtersBase: param.filtersBase || [],
             dependentField: param.dependentField,
-            debounceTimeMs: param.debounceTimeMs || 300
+            filterKeyValue: param.filterKeyValue, // ✅ ADDED: Pass filterKeyValue to SelectField
+            debounceTimeMs: param.debounceTimeMs || 300,
+            // ✅ NEW: Add getter function for parent values
+            getParentValues: () => item.value
           }
         }
 
@@ -1030,17 +1009,60 @@ function clearForm() {
 }
 
 // ========== EVENT HANDLERS ==========
+// ✅ ENHANCED: Improved field update handler with better error handling
 function handleFieldUpdate(event: any) {
   const name = event.name || event.fieldName || event.field
   const value = event.value
 
+  const oldValue = item.value[name]
+
+  // Update the value FIRST
   item.value[name] = value
 
   // Clear validation error for this field
   if (formValidationErrors.value[name]) {
     delete formValidationErrors.value[name]
   }
+
+  // Handle dependency cascading AFTER the value is set
+  if (JSON.stringify(oldValue) !== JSON.stringify(value)) {
+    handleDependencyCascade(name, value, oldValue)
+  }
 }
+
+// ✅ ENHANCED: Improved dependency cascade with better error handling
+function handleDependencyCascade(changedFieldName: string, newValue: any, oldValue: any) {
+  // Skip if value didn't actually change
+  if (JSON.stringify(newValue) === JSON.stringify(oldValue)) {
+    return
+  }
+
+  // Find all fields that depend on the changed field
+  const dependentFields = fields.value.filter((field) => {
+    const dependentField = field.kwArgs?.dependentField
+    return dependentField === changedFieldName
+  })
+
+  if (dependentFields.length > 0) {
+    dependentFields.forEach((depField) => {
+      // Reset dependent field value IMMEDIATELY
+      if (depField.multiple) {
+        item.value[depField.name] = []
+      }
+      else {
+        item.value[depField.name] = null
+      }
+
+      // Trigger immediate reactive update
+      nextTick(() => {
+        // Force formReload to ensure SelectField remounts with new dependencies
+        formReload.value++
+      })
+    })
+  }
+}
+
+// ✅ ENHANCED: Improved field update handler
 
 function handleReactiveUpdate(values: FieldValues) {
   item.value = { ...values }
@@ -1050,24 +1072,61 @@ function handleCancel() {
   clearForm()
 }
 
+// ✅ ENHANCED: Improved validation error handler with better error checking
 function handleValidationErrors(event: any) {
-  // Handle FormValidationEvent properly
-  if (event && typeof event === 'object' && 'errors' in event) {
-    const errorRecord: Record<string, string[]> = {}
-    if (Array.isArray(event.errors)) {
-      event.errors.forEach((error: any) => {
-        if (error.path) {
-          if (!errorRecord[error.path]) {
-            errorRecord[error.path] = []
+  try {
+    // Handle FormValidationEvent properly with safe checking
+    if (event && typeof event === 'object' && 'errors' in event) {
+      const errorRecord: Record<string, string[]> = {}
+
+      if (Array.isArray(event.errors)) {
+        event.errors.forEach((error: any) => {
+          try {
+            if (error && typeof error === 'object' && error.path) {
+              if (!errorRecord[error.path]) {
+                errorRecord[error.path] = []
+              }
+
+              const message = error.message || error.msg || 'Validation error'
+              errorRecord[error.path].push(String(message))
+            }
           }
-          errorRecord[error.path].push(error.message)
+          catch (errorProcessingError) {
+            Logger.error('🔴 [VALIDATION ERRORS] Error processing individual error:', errorProcessingError)
+          }
+        })
+      }
+
+      formValidationErrors.value = errorRecord
+    }
+    else if (event && typeof event === 'object') {
+      // Handle direct error object
+      const errorRecord: Record<string, string[]> = {}
+
+      Object.keys(event).forEach((key) => {
+        try {
+          const value = event[key]
+          if (Array.isArray(value)) {
+            errorRecord[key] = value.map(v => String(v))
+          }
+          else if (value) {
+            errorRecord[key] = [String(value)]
+          }
+        }
+        catch (keyProcessingError) {
+          Logger.error('🔴 [VALIDATION ERRORS] Error processing key:', key, keyProcessingError)
         }
       })
+
+      formValidationErrors.value = errorRecord
     }
-    formValidationErrors.value = errorRecord
+    else {
+      formValidationErrors.value = {}
+    }
   }
-  else {
-    formValidationErrors.value = event || {}
+  catch (handlerError) {
+    Logger.error('🔴 [VALIDATION ERRORS] Critical error in validation handler:', handlerError)
+    formValidationErrors.value = {}
   }
 }
 
