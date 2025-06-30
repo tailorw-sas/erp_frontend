@@ -5,7 +5,6 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.insis.domain.dto.ManageRoomTypeDto;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +26,7 @@ public interface IManageRoomTypeService {
 
     List<ManageRoomTypeDto> findAll();
 
-    Map<String, UUID> findIdsByCodes(UUID hotelCode, List<String> codes);
+    Map<String, UUID> findIdsByCodes(List<String> codes, UUID hotelCode);
 
     List<ManageRoomTypeDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId);
 

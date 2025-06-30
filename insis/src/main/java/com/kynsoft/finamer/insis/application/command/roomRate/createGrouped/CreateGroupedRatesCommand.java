@@ -18,15 +18,18 @@ public class CreateGroupedRatesCommand implements ICommand {
     private String hotel;
     private LocalDate invoiceDate;
     private List<CreateRoomRateCommand> roomRateCommandList;
+    private String batchType;
 
     public CreateGroupedRatesCommand(UUID id,
                                      String hotel,
                                      LocalDate invoiceDate,
-                                     List<CreateRoomRateCommand> roomRateCommandList){
+                                     List<CreateRoomRateCommand> roomRateCommandList,
+                                     String batchType){
         this.id = id;
         this.hotel = hotel;
         this.invoiceDate = invoiceDate;
         this.roomRateCommandList = roomRateCommandList;
+        this.batchType = batchType;
     }
 
     @Override

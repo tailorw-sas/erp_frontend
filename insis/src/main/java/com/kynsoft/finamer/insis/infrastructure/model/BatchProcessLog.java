@@ -18,28 +18,45 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "log", schema = "batch")
+@Table(name = "batch_log")
 public class BatchProcessLog {
 
     @Id
     private UUID id;
 
+    @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private BatchType type;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private BatchStatus status;
 
+    @Column(name = "started_at")
     private LocalDateTime startedAt;
 
-    @Column(nullable = true)
+    @Column(name = "completed_at", nullable = true)
     private LocalDateTime completedAt;
+
     private String hotel;
+
+    @Column(name = "start_date")
     private LocalDate startDate;
+
+    @Column(name = "end_date")
     private LocalDate endDate;
+
+    @Column(name = "total_records_read")
     private int totalRecordsRead;
+
+    @Column(name = "total_records_processed")
     private int totalRecordsProcessed;
+
+    @Column(name = "process_id")
     private UUID processId;
+
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
 
     public BatchProcessLog(BatchProcessLogDto dto){
         this.id = dto.getId();
@@ -53,6 +70,7 @@ public class BatchProcessLog {
         this.totalRecordsRead = dto.getTotalRecordsRead();
         this.totalRecordsProcessed = dto.getTotalRecordsProcessed();
         this.processId = dto.getProcessId();
+        this.errorMessage = dto.getErrorMessage();
     }
 
     public BatchProcessLogDto toAggregate(){
@@ -67,7 +85,8 @@ public class BatchProcessLog {
                 this.endDate,
                 this.totalRecordsRead,
                 this.totalRecordsProcessed,
-                this.processId
+                this.processId,
+                this.errorMessage
         );
     }
 }
