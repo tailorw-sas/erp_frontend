@@ -100,7 +100,7 @@ public class Booking {
     @Column(nullable = true, updatable = true)
     private LocalDateTime deletedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Booking parent;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "manageBooking")
