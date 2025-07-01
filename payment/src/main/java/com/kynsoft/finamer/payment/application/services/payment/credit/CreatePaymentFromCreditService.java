@@ -509,9 +509,11 @@ public class CreatePaymentFromCreditService {
 
     private OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperation) {
         if (DateUtil.getDateForCloseOperation(closeOperation.getBeginDate(), closeOperation.getEndDate())) {
-            return OffsetDateTime.now(ZoneId.of("UTC"));
+            return OffsetDateTime.now();
         }
-        return OffsetDateTime.of(closeOperation.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+        ZoneId localZone = ZoneId.systemDefault();
+        return closeOperation.getEndDate().atTime(LocalTime.now()).atZone(localZone).toOffsetDateTime();
+
     }
 
     private String deleteHotelInfo(String input) {
