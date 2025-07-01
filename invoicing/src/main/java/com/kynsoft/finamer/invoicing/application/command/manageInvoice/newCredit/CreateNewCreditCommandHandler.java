@@ -120,7 +120,7 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 invoiceAmount, invoiceAmount, invoiceAmount, newBookings, attachments,
                 false, parentInvoice);
 
-        this.invoiceService.insert(invoiceDto);
+        ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
 
         UUID uuidEmployee = employeeData.getId();
 
@@ -133,17 +133,17 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
             }
         }
 
-        this.producerReplicateManageInvoiceService.create(invoiceDto, attachmentDefault, uuidEmployee);
+        this.producerReplicateManageInvoiceService.create(created, attachmentDefault, uuidEmployee);
 
-        command.setCredit(invoiceDto.getId());
-        command.setInvoiceId(invoiceDto.getInvoiceId());
-        command.setInvoiceNumber(invoiceDto.getInvoiceNumber());
+        command.setCredit(created.getId());
+        command.setInvoiceId(created.getInvoiceId());
+        command.setInvoiceNumber(created.getInvoiceNumber());
         parentInvoice.setCredits(Math.abs(credits) + Math.abs(invoiceAmount));
         this.invoiceService.update(parentInvoice);
         this.invoiceStatusHistoryService.create(
                 new InvoiceStatusHistoryDto(
                         UUID.randomUUID(),
-                        invoiceDto,
+                        created,
                         "The invoice data was inserted.",
                         null,
                         employeeData.getFullName(),
@@ -151,13 +151,13 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                         0L
                 )
         );
-        for (ManageAttachmentDto attachment : invoiceDto.getAttachments()) {
+        for (ManageAttachmentDto attachment : created.getAttachments()) {
             this.attachmentStatusHistoryService.create(
                     new AttachmentStatusHistoryDto(
                             UUID.randomUUID(),
                             "An attachment to the invoice was inserted. The file name: " + attachment.getFilename(),
                             attachment.getAttachmentId(),
-                            invoiceDto,
+                            created,
                             employeeData.getFullName(),
                             UUID.fromString(command.getEmployee()),
                             null,
