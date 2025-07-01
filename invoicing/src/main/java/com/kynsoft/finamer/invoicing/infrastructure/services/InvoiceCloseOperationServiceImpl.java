@@ -7,6 +7,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import com.kynsof.share.core.infrastructure.util.DateUtil;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.InvoiceCloseOperationResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.InvoiceCloseOperationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -121,6 +124,15 @@ public class InvoiceCloseOperationServiceImpl implements IInvoiceCloseOperationS
             return entity.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND, new ErrorField("id", DomainErrorMessage.INVOICE_CLOSE_OPERATION_NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public LocalDateTime getCloseOperationDate(UUID hotelId) {
+        InvoiceCloseOperationDto closeOperationDto = this.findActiveByHotelId(hotelId);
+        if (DateUtil.getDateForCloseOperation(closeOperationDto.getBeginDate(), closeOperationDto.getEndDate())) {
+            return LocalDateTime.now();
+        }
+        return LocalDateTime.of(closeOperationDto.getEndDate(), LocalTime.now());
     }
 
     @Override

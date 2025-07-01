@@ -68,7 +68,13 @@ public class Invoice {
         this.invoiceNumber = dto.getInvoiceNumber();
         this.invoiceType = dto.getInvoiceType();
         this.invoiceAmount = dto.getInvoiceAmount();
-        this.bookings = dto.getBookings() != null ? dto.getBookings().stream().map(Booking::new).collect(Collectors.toList()) : null;
+        this.bookings = dto.getBookings() != null ? dto.getBookings().stream()
+                .map(bookingDto -> {
+                    Booking booking = new Booking(bookingDto);
+                    booking.setInvoice(this);
+                    return booking;
+                })
+                .collect(Collectors.toList()) : null;
         this.invoiceNo = dto.getInvoiceNo();
         this.hasAttachment = dto.getHasAttachment();
         this.parent = dto.getParent() != null ? new Invoice(dto.getParent()) : null;
@@ -125,6 +131,7 @@ public class Invoice {
                 bookings != null ? bookings.stream().map(_booking -> {
                     ManageBookingDto bookingDto = _booking.toAggregateSimple();
                     bookingDto.setInvoice(_booking.getInvoice().toAggregateParent());
+                    if(_booking.getParent() != null) bookingDto.setParent(_booking.getParent().toAggregateSimple());
                     return bookingDto;
                 }).collect(Collectors.toList()) : null,
                 hasAttachment,

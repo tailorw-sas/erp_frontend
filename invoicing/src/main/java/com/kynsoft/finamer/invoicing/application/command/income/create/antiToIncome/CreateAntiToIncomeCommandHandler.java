@@ -1,21 +1,22 @@
 package com.kynsoft.finamer.invoicing.application.command.income.create.antiToIncome;
 
-import com.kynsof.share.core.domain.RulesChecker;
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeAttachmentRequest;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeAttachmentRequest;
+import com.kynsoft.finamer.invoicing.application.command.income.create.CreateIncomeCommand;
+import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
+import com.kynsoft.finamer.invoicing.domain.core.IncomeAdjustment;
+import com.kynsoft.finamer.invoicing.domain.core.ProcessCreateIncome;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
-import com.kynsoft.finamer.invoicing.domain.rules.income.CheckIfIncomeDateIsBeforeCurrentDateRule;
 import com.kynsoft.finamer.invoicing.domain.services.*;
-import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.manageInvoice.ProducerReplicateManageInvoiceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -32,7 +33,11 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
     private final IManageAttachmentService attachmentService;
     private final IAttachmentStatusHistoryService attachmentStatusHistoryService;
     private final IManageEmployeeService employeeService;
-    private final ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService;
+
+    private final IManagePaymentTransactionTypeService paymentTransactionTypeService;
+    private final IInvoiceCloseOperationService closeOperationService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public CreateAntiToIncomeCommandHandler(IManageAgencyService agencyService,
                                             IManageHotelService hotelService,
@@ -45,7 +50,8 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
                                             IManageAttachmentService attachmentService,
                                             IAttachmentStatusHistoryService attachmentStatusHistoryService,
                                             IManageEmployeeService employeeService,
-                                            ProducerReplicateManageInvoiceService producerReplicateManageInvoiceService) {
+                                            IManagePaymentTransactionTypeService paymentTransactionTypeService,
+                                            IInvoiceCloseOperationService closeOperationService) {
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.invoiceTypeService = invoiceTypeService;
@@ -57,55 +63,190 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         this.attachmentService = attachmentService;
         this.attachmentStatusHistoryService = attachmentStatusHistoryService;
         this.employeeService = employeeService;
-        this.producerReplicateManageInvoiceService = producerReplicateManageInvoiceService;
+        this.paymentTransactionTypeService = paymentTransactionTypeService;
+        this.closeOperationService = closeOperationService;
     }
 
     @Override
     public void handle(CreateAntiToIncomeCommand command) {
 
-        RulesChecker.checkRule(new CheckIfIncomeDateIsBeforeCurrentDateRule(command.getInvoiceDate().toLocalDate()));
-        ManageAgencyDto agencyDto = this.agencyService.findById(command.getAgency());
-        ManageHotelDto hotelDto = this.hotelService.findById(command.getHotel());
+        Map<UUID, InvoiceCloseOperationDto> closeOperationByHotelMap = new HashMap<>();
+        Map<UUID, ManageAgencyDto> agencyMap = new HashMap<>();
+        Map<UUID, ManageHotelDto> hotelMap = new HashMap<>();
+        Map<UUID, ManageInvoiceTypeDto> invoiceTypeMap = new HashMap<>();
+        Map<UUID, ManageInvoiceStatusDto> invoiceStatusMap = new HashMap<>();
+        Map<UUID, String> employeeFullNameMap = new HashMap<>();
+        Map<UUID, String> employeeFullNameMapByIncome = new HashMap<>();
+        Map<UUID, ManagePaymentTransactionTypeDto> paymentTransactionTypeMap = new HashMap<>();
+        ManageAttachmentTypeDto defaultAttachmentTypeDto = this.attachmentTypeService.findAttachInvDefault().orElse(null);
+        ResourceTypeDto defaultResourceTypeDto = this.resourceTypeService.findByDefaults();
 
-        ManageInvoiceTypeDto invoiceTypeDto = this.invoiceTypeService.findByEInvoiceType(EInvoiceType.INCOME);
+        Instant before = Instant.now();
+        this.getManagerMaps(command.getCreateIncomeCommands(),
+                closeOperationByHotelMap,
+                agencyMap,
+                hotelMap,
+                invoiceTypeMap,
+                invoiceStatusMap,
+                employeeFullNameMap,
+                paymentTransactionTypeMap);
+        Instant after = Instant.now();
+        System.out.println("********************* -> Get Maps: " + Duration.between(before, after).toMillis() + " ms");
 
-        ManageInvoiceStatusDto invoiceStatusDto = null;
-        try {
-            invoiceStatusDto = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.SENT);
-        } catch (Exception e) {
+        List<ManageInvoiceDto> incomes = new ArrayList<>();
+
+        before = Instant.now();
+        for(CreateIncomeCommand incomeCommand : command.getCreateIncomeCommands()){
+            InvoiceCloseOperationDto closeOperation = closeOperationByHotelMap.get(incomeCommand.getHotel());
+            ManageAgencyDto agencyDto = agencyMap.get(incomeCommand.getAgency());
+            ManageHotelDto hotelDto = hotelMap.get(incomeCommand.getHotel());
+            ManageInvoiceTypeDto invoiceTypeDto = invoiceTypeMap.get(incomeCommand.getInvoiceType());
+            ManageInvoiceStatusDto invoiceStatusDto = invoiceStatusMap.get(incomeCommand.getInvoiceStatus());
+            String employeeFullName = employeeFullNameMap.get(UUID.fromString(incomeCommand.getEmployee()));
+            List<IncomeAdjustment> incomeAdjustments = this.getIncomeAdjustmentList(incomeCommand.getAdjustments(), paymentTransactionTypeMap);
+
+            ProcessCreateIncome processCreateIncome = new ProcessCreateIncome(incomeCommand.getId(),
+                    closeOperation,
+                    incomeCommand.getInvoiceDate(),
+                    incomeCommand.getDueDate(),
+                    incomeCommand.getManual(),
+                    agencyDto,
+                    hotelDto,
+                    incomeCommand.getReSend(),
+                    incomeCommand.getReSendDate(),
+                    invoiceTypeDto,
+                    invoiceStatusDto,
+                    employeeFullName,
+                    incomeAdjustments);
+
+            ManageInvoiceDto income = processCreateIncome.process();
+
+            incomes.add(income);
+            employeeFullNameMapByIncome.put(income.getId(), employeeFullName);
+
+            if (incomeCommand.getAttachments() != null && !incomeCommand.getAttachments().isEmpty()) {
+                List<ManageAttachmentDto> attachmentDtoList = this.createManageAttachments(incomeCommand.getAttachments(),
+                        defaultAttachmentTypeDto,
+                        defaultResourceTypeDto);
+                income.setAttachments(attachmentDtoList);
+            }
+        }
+        after = Instant.now();
+        System.out.println("********************* -> Process Incomes: " + Duration.between(before, after).toMillis() + " ms");
+
+        for(ManageInvoiceDto income : incomes){
+            before = Instant.now();
+            this.manageInvoiceService.insert(income);
+            after = Instant.now();
+            System.out.println("********************* -> Saving Income: " + Duration.between(before, after).toMillis() + " ms");
+
+            before = Instant.now();
+            String employeeFullName = employeeFullNameMapByIncome.get(income.getId());
+            this.updateInvoiceStatusHistory(income, employeeFullName);
+            after = Instant.now();
+            System.out.println("********************* -> Updating InvoiceStatusHistory: " + Duration.between(before, after).toMillis() + " ms");
+
+            before = Instant.now();
+            this.attachmentService.create(income);
+            after = Instant.now();
+            System.out.println("********************* -> Creating attachments: " + Duration.between(before, after).toMillis() + " ms");
+
+            before = Instant.now();
+            this.updateAttachmentStatusHistory(income, income.getAttachments(), employeeFullName);
+            after = Instant.now();
+            System.out.println("********************* -> Updating attachment status history: " + Duration.between(before, after).toMillis() + " ms");
         }
 
-        ManageEmployeeDto employee = null;
-        String employeeFullName = "";
-        try {
-            employee = this.employeeService.findById(UUID.fromString(command.getEmployee()));
-            employeeFullName = employee.getFirstName() + " " + employee.getLastName();
-        } catch (Exception e) {
-            employeeFullName = command.getEmployee();
+        before = Instant.now();
+        Map<UUID, ManageInvoiceDto> invoiceDtoMap = incomes.stream()
+                .collect(Collectors.toMap(ManageInvoiceDto::getId, income -> income));
+
+        command.getCreateIncomeCommands().forEach(createIncomeCommand -> {
+            ManageInvoiceDto income = invoiceDtoMap.get(createIncomeCommand.getId());
+            createIncomeCommand.setInvoiceId(income.getInvoiceId());
+            createIncomeCommand.setInvoiceNo(income.getInvoiceNo().toString());
+            createIncomeCommand.setIncome(income);
+        });
+        after = Instant.now();
+        System.out.println("********************* -> Preparing response: " + Duration.between(before, after).toMillis() + " ms");
+    }
+
+    private void getManagerMaps(List<CreateIncomeCommand> createIncomeCommands,
+                                Map<UUID, InvoiceCloseOperationDto> closeOperationByHotelMap,
+                                Map<UUID, ManageAgencyDto> agencyMap,
+                                Map<UUID, ManageHotelDto> hotelMap,
+                                Map<UUID, ManageInvoiceTypeDto> invoiceTypeMap,
+                                Map<UUID, ManageInvoiceStatusDto> invoiceStatusMap,
+                                Map<UUID, String> employeeFullNameMap,
+                                Map<UUID, ManagePaymentTransactionTypeDto> paymentTransactionTypeMap){
+        Set<UUID> hotelSet = new HashSet<>();
+        Set<UUID> agencySet = new HashSet<>();
+        Set<UUID> invoiceTypeSet = new HashSet<>();
+        Set<UUID> invoiceStatusSet = new HashSet<>();
+        Set<UUID> employeeIdSet = new HashSet<>();
+        Set<UUID> paymentTransactionTypeSet = new HashSet<>();
+
+        for (CreateIncomeCommand command : createIncomeCommands){
+            hotelSet.add(command.getHotel());
+            agencySet.add(command.getAgency());
+            invoiceTypeSet.add(command.getInvoiceType());
+            invoiceStatusSet.add(command.getInvoiceStatus());
+            employeeIdSet.add(UUID.fromString(command.getEmployee()));
+            paymentTransactionTypeSet.addAll(command.getAdjustments().stream().map(CreateIncomeAdjustment::getTransactionType).toList());
         }
 
-        var invoiceUUID = UUID.randomUUID();
-        ManageInvoiceDto income = new ManageInvoiceDto(invoiceUUID, hotelDto, agencyDto, EInvoiceType.INCOME, invoiceTypeDto,
-                EInvoiceStatus.SENT, invoiceStatusDto, command.getInvoiceDate(), command.getManual(), 0.0, 0.0,
-                0.0, null, null, false,null);
+        closeOperationByHotelMap.putAll(this.getCloseOperationByHotelMap(new ArrayList<>(hotelSet)));
+        agencyMap.putAll(this.getManageAgencyMap(new ArrayList<>(agencySet)));
+        hotelMap.putAll(this.getManageHotelMap(new ArrayList<>(hotelSet)));
+        invoiceTypeMap.putAll(this.getManageInvoiceTypeMap(new ArrayList<>(invoiceTypeSet)));
+        invoiceStatusMap.putAll(this.getManageInvoiceStatusMap(new ArrayList<>(invoiceStatusSet)));
+        employeeFullNameMap.putAll(this.getEmployeeFullNameMap(new ArrayList<>(employeeIdSet)));
+        paymentTransactionTypeMap.putAll(this.getManagePaymentTransactionTypeMap(new ArrayList<>(paymentTransactionTypeSet)));
+    }
 
-        ManageInvoiceDto invoiceDto = this.manageInvoiceService.create(income);
-        command.setId(invoiceUUID);
-        command.setInvoiceId(invoiceDto.getInvoiceId());
-        command.setInvoiceNo(invoiceDto.getInvoiceNumber());
-
-        this.updateInvoiceStatusHistory(invoiceDto, employeeFullName);
-        if (command.getAttachments() != null) {
-            List<ManageAttachmentDto> attachmentDtoList = this.attachments(command.getAttachments(), invoiceDto);
-            invoiceDto.setAttachments(attachmentDtoList);
-            this.updateAttachmentStatusHistory(invoiceDto, attachmentDtoList, employeeFullName);
+    private Map<UUID, InvoiceCloseOperationDto> getCloseOperationByHotelMap(List<UUID> hotelIds){
+        if(Objects.isNull(hotelIds) || hotelIds.isEmpty()){
+            throw new IllegalArgumentException("The hotel ID list is null or empty for the search of close operations");
         }
+        return this.closeOperationService.findByHotelIds(hotelIds).stream()
+                .collect(Collectors.toMap(closeOperation -> closeOperation.getHotel().getId(),
+                        closeOperation -> closeOperation));
+    }
 
-        try {
-            this.producerReplicateManageInvoiceService.create(invoiceDto, null, null);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
+    private Map<UUID, ManageAgencyDto> getManageAgencyMap(List<UUID> agencyIds){
+        return this.agencyService.getMapById(agencyIds);
+    }
+
+    private Map<UUID, ManageHotelDto> getManageHotelMap(List<UUID> hotelIds){
+        return this.hotelService.getMapById(hotelIds);
+    }
+
+    private Map<UUID, ManageInvoiceTypeDto> getManageInvoiceTypeMap(List<UUID> invoiceTypeIds){
+        return this.invoiceTypeService.getMapById(invoiceTypeIds);
+    }
+
+    private Map<UUID, ManageInvoiceStatusDto> getManageInvoiceStatusMap(List<UUID> invoiceStatusIds){
+        return this.invoiceStatusService.getMapById(invoiceStatusIds);
+    }
+
+    private Map<UUID, String> getEmployeeFullNameMap(List<UUID> employeeIds){
+        return this.employeeService.getEmployeeFullNameMapByIds(employeeIds);
+    }
+
+    private Map<UUID, ManagePaymentTransactionTypeDto> getManagePaymentTransactionTypeMap(List<UUID> paymentTransactionTypeIds){
+        return this.paymentTransactionTypeService.getMapById(paymentTransactionTypeIds);
+    }
+
+    private List<IncomeAdjustment> getIncomeAdjustmentList(List<CreateIncomeAdjustment> newIncomeAdjustmentRequests, Map<UUID, ManagePaymentTransactionTypeDto> paymentTransactionTypeMap){
+        return newIncomeAdjustmentRequests.stream()
+                .map(newIncomeAdjustmentRequest -> {
+                    ManagePaymentTransactionTypeDto paymentTransactionTypeDto = paymentTransactionTypeMap.get(newIncomeAdjustmentRequest.getTransactionType());
+
+                    return new IncomeAdjustment(paymentTransactionTypeDto,
+                            newIncomeAdjustmentRequest.getAmount(),
+                            LocalDate.parse(newIncomeAdjustmentRequest.getDate(), formatter),
+                            newIncomeAdjustmentRequest.getRemark());
+                }).collect(Collectors.toList());
     }
 
     private void updateInvoiceStatusHistory(ManageInvoiceDto invoiceDto, String employee) {
@@ -124,47 +265,47 @@ public class CreateAntiToIncomeCommandHandler implements ICommandHandler<CreateA
         for (ManageAttachmentDto attachment : attachments) {
             AttachmentStatusHistoryDto attachmentStatusHistoryDto = new AttachmentStatusHistoryDto();
             attachmentStatusHistoryDto.setId(UUID.randomUUID());
-            attachmentStatusHistoryDto
-                    .setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
+            attachmentStatusHistoryDto.setDescription("An attachment to the invoice was inserted. The file name: " + attachment.getFile());
             attachmentStatusHistoryDto.setEmployee(employeeFullName);
-            //attachmentStatusHistoryDto.setEmployee(attachment.getEmployee());
             invoice.setAttachments(null);
             attachmentStatusHistoryDto.setInvoice(invoice);
             attachmentStatusHistoryDto.setEmployeeId(attachment.getEmployeeId());
-            try {
-                attachmentStatusHistoryDto.setAttachmentId(this.attachmentService.findById(attachment.getId()).getAttachmentId());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            attachmentStatusHistoryDto.setAttachmentId(attachment.getAttachmentId());
             this.attachmentStatusHistoryService.create(attachmentStatusHistoryDto);
         }
     }
 
-    private List<ManageAttachmentDto> attachments(List<CreateAntiToIncomeAttachmentRequest> attachments, ManageInvoiceDto invoiceDto) {
-        String filename = "detail.pdf";
+    private List<ManageAttachmentDto> createManageAttachments(List<CreateIncomeAttachmentRequest> attachments,
+                                                              ManageAttachmentTypeDto defaultAttachmentTypeDto,
+                                                              ResourceTypeDto defaultResourceTypeDto) {
         if (attachments == null || attachments.isEmpty()) {
             return null;
         }
-        ManageAttachmentTypeDto attachmentTypeDto = this.attachmentTypeService.findAttachInvDefault().orElse(null);
-//        ResourceTypeDto resourceTypeDto = null;
-        ResourceTypeDto resourceTypeDto = this.resourceTypeService.findByDefaults();
+        String defaultFilename = "detail.pdf";
+        String defaultRemark = "From payment.";
 
-        List<ManageAttachmentDto> attachment = new ArrayList<>();
-        attachment.add(new ManageAttachmentDto(
+        return attachments.stream().map(attachment -> {
+            return this.convertCreateIncomeAttachmentRequestToManageAttachmentDto(attachment, defaultAttachmentTypeDto, defaultResourceTypeDto, defaultFilename, defaultRemark);
+        }).collect(Collectors.toList());
+    }
+
+    private ManageAttachmentDto convertCreateIncomeAttachmentRequestToManageAttachmentDto(CreateIncomeAttachmentRequest incomeAttachmentRequest,
+                                                                                          ManageAttachmentTypeDto defaultAttachmentTypeDto,
+                                                                                          ResourceTypeDto defaultResourceTypeDto,
+                                                                                          String defaultFilename, String defaultRemark){
+        return new ManageAttachmentDto(
                 UUID.randomUUID(),
                 null,
-                filename,
-                attachments.get(0).getFile(),
-                "From payment.",
-                attachmentTypeDto != null ? attachmentTypeDto : null,
-                invoiceDto,
-                attachments.get(0).getEmployee(),
-                attachments.get(0).getEmployeeId(),
+                incomeAttachmentRequest.getFilename() != null ? incomeAttachmentRequest.getFilename() : defaultFilename,
+                incomeAttachmentRequest.getFile(),
+                incomeAttachmentRequest.getRemark() != null ? incomeAttachmentRequest.getRemark() : defaultRemark,
+                defaultAttachmentTypeDto,
                 null,
-                resourceTypeDto != null ? resourceTypeDto : null,
+                incomeAttachmentRequest.getEmployee(),
+                incomeAttachmentRequest.getEmployeeId(),
+                null,
+                defaultResourceTypeDto,
                 false
-        ));
-        this.attachmentService.create(attachment);
-        return attachment;
+        );
     }
 }

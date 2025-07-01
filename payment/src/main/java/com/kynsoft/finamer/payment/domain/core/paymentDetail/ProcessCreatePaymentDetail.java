@@ -94,8 +94,7 @@ public class ProcessCreatePaymentDetail {
         if (payment == null) throw new IllegalArgumentException("Payment must not be null");
         if (transactionDate == null) throw new IllegalArgumentException("transactionDate must not be null");
         if (employee == null) throw new IllegalArgumentException("employee must not be null");
-        if (paymentTransactionType == null
-        || (!paymentTransactionType.getCash() && !paymentTransactionType.getDeposit() && !paymentTransactionType.getApplyDeposit())) throw new IllegalArgumentException("paymentTransactionType must not be null");
+        if (paymentTransactionType == null) throw new IllegalArgumentException("paymentTransactionType must not be null");
         if (appliedPaymentStatus == null) throw new IllegalArgumentException("paymentStatus must not be null");
         if(!appliedPaymentStatus.getApplied()) throw new IllegalArgumentException("paymentStatus must be applied");
     }

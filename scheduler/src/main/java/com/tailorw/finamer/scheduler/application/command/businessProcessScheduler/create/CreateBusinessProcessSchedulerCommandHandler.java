@@ -81,7 +81,9 @@ public class CreateBusinessProcessSchedulerCommandHandler implements ICommandHan
                 businessProcessDto,
                 null,
                 null,
-                command.isAllowsQueueing()
+                command.isAllowsQueueing(),
+                LocalTime.MIDNIGHT,
+                LocalTime.of(23, 59, 59)
         );
 
         service.create(dto);

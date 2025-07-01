@@ -18,9 +18,8 @@ public class PaymentDetailOtherDeductionsValidator extends ExcelListRuleValidato
 
     private final Cache cache;
 
-    protected PaymentDetailOtherDeductionsValidator(ApplicationEventPublisher applicationEventPublisher,
-                                                    Cache cache) {
-        super(applicationEventPublisher);
+    protected PaymentDetailOtherDeductionsValidator(Cache cache) {
+        super();
         this.cache = cache;
     }
 

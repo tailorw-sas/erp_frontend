@@ -12,6 +12,7 @@ import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -22,17 +23,20 @@ public class UpdatePaymentService {
     private final IManageHotelService hotelService;
     private final IManageBankAccountService bankAccountService;
     private final IPaymentService paymentService;
+    private final IManagePaymentStatusService paymentStatusService;
 
     public UpdatePaymentService(IManageClientService clientService,
                                 IManageAgencyService agencyService,
                                 IManageHotelService hotelService,
                                 IManageBankAccountService bankAccountService,
-                                IPaymentService paymentService){
+                                IPaymentService paymentService,
+                                IManagePaymentStatusService paymentStatusService){
         this.clientService = clientService;
         this.agencyService = agencyService;
         this.hotelService = hotelService;
         this.bankAccountService = bankAccountService;
         this.paymentService = paymentService;
+        this.paymentStatusService = paymentStatusService;
     }
 
     @Transactional
@@ -41,11 +45,13 @@ public class UpdatePaymentService {
                        UUID agencyId,
                        UUID hotelId,
                        UUID bankAccountId,
-                       String remark){
+                       String remark,
+                       UUID paymentStatusId){
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(paymentId, "id", "Payment ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(clientId, "Client", "Client ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(agencyId, "Agency", "Agency ID cannot be null."));
         RulesChecker.checkRule(new ValidateObjectNotNullRule<>(hotelId, "Hotel", "Hotel ID cannot be null."));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(hotelId, "PaymentStatus", "Payment Status ID cannot be null."));
 
         PaymentDto paymentDto = this.paymentService.findById(paymentId);
 
@@ -58,23 +64,37 @@ public class UpdatePaymentService {
         ManageHotelDto hotelDto = this.hotelService.findById(hotelId);
         ManageAgencyDto agencyDto = this.agencyService.findById(agencyId);
         ManageBankAccountDto bankAccount = this.getBankAccount(bankAccountId, paymentDto.getPaymentSource());
+        ManagePaymentStatusDto paymentStatus = this.paymentStatusService.findById(paymentStatusId);
 
-        ProcessUpdatePayment updatePayment = new ProcessUpdatePayment(paymentDto, hotelDto, agencyDto, clientDto, bankAccount, remark);
+        ProcessUpdatePayment updatePayment = new ProcessUpdatePayment(
+                paymentDto,
+                hotelDto,
+                agencyDto,
+                clientDto,
+                bankAccount,
+                remark,
+                paymentStatus);
         updatePayment.update();
 
         this.saveChanges(paymentDto);
     }
 
     private ManageBankAccountDto getBankAccount(UUID bankAccountId, ManagePaymentSourceDto paymentSource){
-        try {
-            return this.bankAccountService.findById(bankAccountId);
-        }catch (BusinessNotFoundException businessNotFoundException){
-            if(!paymentSource.getExpense()){
-                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND,
-                        new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+        try{
+            if(Objects.nonNull(bankAccountId)){
+                return this.bankAccountService.findById(bankAccountId);
+            }else{
+                if(!paymentSource.getExpense()){
+                    throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+                }
+                return null;
             }
-
-            return null;
+        }catch (BusinessNotFoundException ex){
+            if(!paymentSource.getExpense()){
+                throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_BANK_ACCOUNT_NOT_FOUND.getReasonPhrase())));
+            }else{
+                return null;
+            }
         }
     }
 

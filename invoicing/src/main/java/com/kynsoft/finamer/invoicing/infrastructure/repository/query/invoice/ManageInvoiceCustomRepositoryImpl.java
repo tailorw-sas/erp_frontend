@@ -4,6 +4,7 @@ import com.kynsoft.finamer.invoicing.infrastructure.identity.*;
 import com.kynsoft.finamer.invoicing.infrastructure.interfacesEntity.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.domain.*;

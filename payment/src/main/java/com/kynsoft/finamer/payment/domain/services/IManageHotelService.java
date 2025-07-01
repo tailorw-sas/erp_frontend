@@ -6,6 +6,7 @@ import com.kynsoft.finamer.payment.domain.dto.ManageHotelDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IManageHotelService {
@@ -25,4 +26,6 @@ public interface IManageHotelService {
     ManageHotelDto findByCode(String hotelCode);
 
     List<ManageHotelDto> findByIds(List<UUID> ids);
+
+    Map<UUID, ManageHotelDto> getMapById(List<UUID> ids);
 }

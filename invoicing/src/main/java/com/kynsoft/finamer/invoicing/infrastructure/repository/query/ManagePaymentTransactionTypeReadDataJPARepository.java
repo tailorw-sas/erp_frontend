@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +21,6 @@ public interface ManagePaymentTransactionTypeReadDataJPARepository extends JpaRe
 
     @Query("SELECT b FROM ManagePaymentTransactionType b WHERE b.defaults = true AND b.status = 'ACTIVE'")
     Optional<ManagePaymentTransactionType> findByDefaults();
+
+    List<ManagePaymentTransactionType> findByIdIn(List<UUID> ids);
 }

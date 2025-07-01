@@ -21,9 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeService {
@@ -136,5 +135,14 @@ public class ManageAttachmentTypeServiceImpl implements IManageAttachmentTypeSer
             return defaultType.map(ManageAttachmentType::toAggregate);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Map<UUID, ManageAttachmentTypeDto> getMapById(List<UUID> ids) {
+        if(Objects.isNull(ids)){
+            throw new IllegalArgumentException("The ManageAttachmentType ID list must not be null");
+        }
+
+        return this.repositoryQuery.findByIdIn(ids).stream().collect(Collectors.toMap(ManageAttachmentType::getId, ManageAttachmentType::toAggregate));
     }
 }

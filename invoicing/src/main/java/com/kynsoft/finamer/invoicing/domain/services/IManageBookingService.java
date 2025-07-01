@@ -3,6 +3,7 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -11,7 +12,11 @@ import java.util.UUID;
 
 public interface IManageBookingService {
 
-    ManageBookingDto create(ManageBookingDto dto);
+    UUID create(ManageBookingDto dto);
+
+    UUID insert(ManageBookingDto dto);
+
+    List<ManageBookingDto> createAll(List<ManageBookingDto> bookingDtoList);
 
     void update(ManageBookingDto dto);
 
@@ -45,4 +50,6 @@ public interface IManageBookingService {
     ManageBookingDto findBookingId(Long bookingId);
 
     void updateAll(List<ManageBookingDto> bookingList);
+
+    void insertAll(List<Booking> bookins);
 }

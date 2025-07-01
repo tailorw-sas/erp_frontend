@@ -3,9 +3,12 @@ package com.kynsoft.finamer.payment.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.payment.domain.dto.PaymentCloseOperationDto;
+import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
 import org.springframework.data.domain.Pageable;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface IPaymentCloseOperationService {
@@ -30,4 +33,8 @@ public interface IPaymentCloseOperationService {
     PaymentCloseOperationDto findByHotelIdsCacheable(UUID hotel);
 
     void clearCache();
+
+    Map<UUID, PaymentCloseOperationDto> getMapByHotelId(List<UUID> hotelIds);
+
+    OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperationDto);
 }

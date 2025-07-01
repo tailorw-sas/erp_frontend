@@ -1,4 +1,4 @@
-package com.kynsof.share.core.domain.http.entity.income;
+package com.kynsof.share.core.domain.http.entity.income.attachment;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

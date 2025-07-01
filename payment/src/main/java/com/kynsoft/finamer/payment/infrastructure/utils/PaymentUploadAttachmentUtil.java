@@ -11,6 +11,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 @Component
 public class PaymentUploadAttachmentUtil {
@@ -31,23 +32,44 @@ public class PaymentUploadAttachmentUtil {
         LinkedHashMap<String,String> saveFileS3Message = (LinkedHashMap) apiResponse.getData();
         return saveFileS3Message;
     }
-
-    private HttpEntity<MultiValueMap<String, Object>> createBody(String fileName,byte[] fileContent){
+    
+    private HttpEntity<MultiValueMap<String, Object>> createBody(String fileName, byte[] fileContent) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, String> contentDispositionMap = new LinkedMultiValueMap<>();
-        ContentDisposition contentDisposition = ContentDisposition
-                .builder("form-data")
-                .name("file")
-                .filename(fileName)
-                .build();
-        contentDispositionMap.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString());
-        HttpEntity<byte[]> fileEntity = new HttpEntity<>(fileContent, contentDispositionMap);
+
+        MediaType mediaType = resolveMediaType(fileName);
+
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentType(mediaType);
+        fileHeaders.setContentDisposition(
+                ContentDisposition.builder("form-data")
+                        .name("file")
+                        .filename(fileName)
+                        .build()
+        );
+
+        HttpEntity<byte[]> fileEntity = new HttpEntity<>(fileContent, fileHeaders);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-
         body.add("file", fileEntity);
 
-        return  new HttpEntity<>(body, headers);
+        return new HttpEntity<>(body, headers);
     }
+
+    private MediaType resolveMediaType(String fileName) {
+        String extension = Optional.ofNullable(fileName)
+                .filter(f -> f.contains("."))
+                .map(f -> f.substring(fileName.lastIndexOf('.') + 1))
+                .map(String::toLowerCase)
+                .orElse("");
+
+        return switch (extension) {
+            case "pdf" -> MediaType.APPLICATION_PDF;
+            case "txt" -> MediaType.TEXT_PLAIN;
+            case "doc", "docx" -> MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            case "xls", "xlsx" -> MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            default -> MediaType.APPLICATION_OCTET_STREAM;
+        };
+    }
+
 }

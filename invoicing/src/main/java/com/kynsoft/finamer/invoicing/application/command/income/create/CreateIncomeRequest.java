@@ -1,6 +1,6 @@
 package com.kynsoft.finamer.invoicing.application.command.income.create;
 
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
+import com.kynsoft.finamer.invoicing.application.command.incomeAdjustment.create.CreateIncomeAdjustment;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,11 +20,12 @@ public class CreateIncomeRequest {
     private UUID invoiceType;
     private UUID invoiceStatus;
     private Double incomeAmount;
-    private Status status;
+    private String status;
     private Long invoiceNumber;
     private LocalDate dueDate;
     private Boolean reSend;
     private LocalDate reSendDate;
     private String employee;
     private List<CreateIncomeAttachmentRequest> attachments;
+    private List<CreateIncomeAdjustment> adjustments;
 }

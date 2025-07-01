@@ -1,7 +1,7 @@
 package com.kynsoft.finamer.invoicing.controllers;
 
-import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeRequest;
-import com.kynsof.share.core.domain.http.entity.income.CreateIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentMessage;
+import com.kynsof.share.core.domain.http.entity.income.CreateAntiToIncomeFromPaymentRequest;
 import com.kynsof.share.core.domain.request.PageableUtil;
 import com.kynsof.share.core.domain.request.SearchRequest;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
@@ -17,9 +17,7 @@ import com.kynsoft.finamer.invoicing.application.command.income.update.UpdateInc
 import com.kynsoft.finamer.invoicing.application.command.income.update.UpdateIncomeRequest;
 import com.kynsoft.finamer.invoicing.application.query.income.getById.FindIncomeByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.income.search.GetSearchIncomeQuery;
-import com.kynsoft.finamer.invoicing.application.query.manageInvoice.getById.FindInvoiceByIdQuery;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.IncomeResponse;
-import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageInvoiceResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +44,9 @@ public class IncomeController {
     }
 
     @PostMapping("/anti-to-income")
-    public ResponseEntity<CreateIncomeFromPaymentMessage> createAntiToIncome(@RequestBody CreateAntiToIncomeRequest request) {
+    public ResponseEntity<CreateAntiToIncomeFromPaymentMessage> createAntiToIncome(@RequestBody CreateAntiToIncomeFromPaymentRequest request) {
         CreateAntiToIncomeCommand createCommand = CreateAntiToIncomeCommand.fromRequest(request);
-        CreateIncomeFromPaymentMessage response = mediator.send(createCommand);
+        CreateAntiToIncomeFromPaymentMessage response = mediator.send(createCommand);
         return ResponseEntity.ok(response);
     }
 

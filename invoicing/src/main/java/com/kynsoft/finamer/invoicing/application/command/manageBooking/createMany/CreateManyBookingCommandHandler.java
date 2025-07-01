@@ -91,7 +91,7 @@ public class CreateManyBookingCommandHandler implements ICommandHandler<CreateMa
                     false,
                     null
             );
-            newBookingDto = bookingService.create(newBookingDto);
+            bookingService.create(newBookingDto);
 
             //TODO: aqui se envia el booking para payment
             try {
