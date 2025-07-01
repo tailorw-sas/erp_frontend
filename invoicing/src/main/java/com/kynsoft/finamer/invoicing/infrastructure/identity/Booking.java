@@ -185,7 +185,7 @@ public class Booking {
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 null,
                 this.nights,
-                null,
+                Objects.nonNull(this.getParent()) ? this.getParent().toAggregateSimple() : null,
                 this.contract,
                 this.deleteInvoice,
                 this.updatedAt
