@@ -121,7 +121,6 @@ public class CreateNewCreditCommandHandler implements ICommandHandler<CreateNewC
                 false, parentInvoice);
 
         ManageInvoiceDto created = this.invoiceService.create(invoiceDto);
-
         UUID uuidEmployee = employeeData.getId();
 
         UUID attachmentDefault = null;
