@@ -121,13 +121,15 @@ function createMemoize<T extends (...args: any[]) => any>(fn: T): T {
 }
 
 // ============================================================================
-// REACTIVE STATE
+// REACTIVE STATE - RESTORED WITH CORRECT PATTERN
 // ============================================================================
 const formContext = inject<FormContext>('formContext', {} as FormContext)
 const instance = ref()
 const internalSuggestions = ref<SuggestionItem[]>([])
-const internalValue = ref<unknown>(null)
 const hasInitialValueLoaded = ref(false)
+
+// 🎯 RESTORED LOCAL STATE LIKE DebouncedMultiSelectComponent
+const localValue = ref<unknown>(null)
 
 const componentState = reactive({
   isLoading: false,
@@ -135,12 +137,11 @@ const componentState = reactive({
   isFirstLoad: true,
   isInitialized: false,
   isDropdownOpen: false,
-  shouldReopen: true,
   errorState: null as string | null,
   searchQuery: '',
   lastParentValue: null as any,
   componentKey: 0,
-  // 🎯 NUEVAS PROPIEDADES PARA MULTISELECT MEJORADO
+  // 🎯 PROPIEDADES SIMPLIFICADAS PARA MULTISELECT
   multiselectElement: null as HTMLElement | null,
   panelElement: null as HTMLElement | null,
   panelObserver: null as MutationObserver | null,
@@ -152,8 +153,42 @@ const searchController = ref<AbortController | null>(null)
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
+
+/**
+ * 🎯 FUNCIÓN MEJORADA PARA FORZAR ACTUALIZACIÓN INMEDIATA - ESPECIAL PARA MULTISELECTS
+ */
 function forceComponentUpdate() {
+  // Incrementar key para forzar re-render
   componentState.componentKey++
+
+  // Para multiselect, forzar actualización del elemento DOM
+  if (isMultiple.value && instance.value) {
+    // Forzar actualización inmediata de PrimeVue
+    if (instance.value.$forceUpdate) {
+      instance.value.$forceUpdate()
+    }
+
+    nextTick(() => {
+      try {
+        // Trigger manual change detection en el DOM
+        const element = instance.value.$el
+        if (element) {
+          // Disparar múltiples eventos para asegurar detección
+          element.dispatchEvent(new Event('input', { bubbles: true }))
+          element.dispatchEvent(new Event('change', { bubbles: true }))
+
+          // Forzar re-render del panel si está abierto
+          const panel = document.querySelector('.p-multiselect-panel')
+          if (panel) {
+            panel.dispatchEvent(new Event('update', { bubbles: true }))
+          }
+        }
+      }
+      catch (error) {
+        Logger.warn('🔄 [FORCE UPDATE] Minor error in force update:', error)
+      }
+    })
+  }
 }
 
 // 🔧 MEMOIZACIÓN DE FUNCIONES COSTOSAS
@@ -176,7 +211,7 @@ const getDropdownLabelMemo = createMemoize((item: SuggestionItem) => {
   return String(item.id || '')
 })
 
-// 🎯 NUEVAS FUNCIONES PARA MULTISELECT MEJORADO
+// 🎯 FUNCIONES SIMPLIFICADAS PARA MULTISELECT
 /**
  * Aplica estilos de apertura consistentes con dropdown
  */
@@ -213,7 +248,7 @@ function removeMultiselectOpenStyles(): void {
 }
 
 /**
- * Inicializa el comportamiento mejorado del multiselect
+ * Inicializa el comportamiento SIMPLIFICADO del multiselect
  */
 function initializeMultiselectBehavior(): void {
   nextTick(() => {
@@ -339,16 +374,16 @@ const availableOptions = computed(() => {
   }
 
   // Priorizar valor actual para evitar "Loading..."
-  if (internalValue.value) {
-    if (isMultiple.value && Array.isArray(internalValue.value)) {
-      internalValue.value.forEach((item) => {
+  if (localValue.value) {
+    if (isMultiple.value && Array.isArray(localValue.value)) {
+      localValue.value.forEach((item) => {
         if (item && typeof item === 'object' && 'id' in item) {
           addUniqueOption(item as SuggestionItem)
         }
       })
     }
-    else if (!isMultiple.value && typeof internalValue.value === 'object') {
-      addUniqueOption(internalValue.value as SuggestionItem)
+    else if (!isMultiple.value && typeof localValue.value === 'object') {
+      addUniqueOption(localValue.value as SuggestionItem)
     }
   }
 
@@ -356,21 +391,6 @@ const availableOptions = computed(() => {
   [...internalSuggestions.value, ...props.suggestions].forEach(addUniqueOption)
 
   return Array.from(optionsMap.values())
-})
-
-const currentValue = computed({
-  get() {
-    return internalValue.value
-  },
-  set(newValue: unknown) {
-    Logger.log('🔄 [CURRENT VALUE SET]', {
-      fieldName: props.field?.name || props.name,
-      oldValue: internalValue.value,
-      newValue,
-      isMultiple: isMultiple.value
-    })
-    internalValue.value = newValue
-  }
 })
 
 const dependentFieldValue = computed(() => {
@@ -404,9 +424,37 @@ const placeholder = computed(() => {
 
 const componentClasses = computed(() => {
   const classes = ['select-field__component']
-  if (props.error && Array.isArray(props.error) && props.error.length > 0) {
-    classes.push('p-invalid')
+
+  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES - SOLO MARCAR COMO INVÁLIDO SI HAY ERRORES REALES
+  try {
+    let hasRealError = false
+
+    if (props.error) {
+      if (Array.isArray(props.error)) {
+        // Solo si hay errores en el array y no está vacío
+        hasRealError = props.error.length > 0 && props.error.some(error =>
+          error && (typeof error === 'string' ? error.trim() : true)
+        )
+      }
+      else if (typeof props.error === 'string') {
+        // Solo si el string no está vacío
+        hasRealError = props.error.trim().length > 0
+      }
+      else if (props.error && typeof props.error === 'object') {
+        // Solo si es un objeto de error válido
+        hasRealError = true
+      }
+    }
+
+    if (hasRealError) {
+      classes.push('p-invalid')
+    }
   }
+  catch (error) {
+    Logger.warn('🔍 [COMPONENT CLASSES] Error handling props.error:', error)
+    // No añadir clase de error si hay problemas procesando
+  }
+
   if (componentState.errorState) {
     classes.push('select-field__component--error')
   }
@@ -414,11 +462,17 @@ const componentClasses = computed(() => {
     classes.push('select-field__component--loading')
   }
   if (props.field?.ui?.className) {
-    const uiClasses = Array.isArray(props.field.ui.className)
-      ? props.field.ui.className
-      : [props.field.ui.className]
-    classes.push(...uiClasses)
+    try {
+      const uiClasses = Array.isArray(props.field.ui.className)
+        ? props.field.ui.className
+        : [props.field.ui.className]
+      classes.push(...uiClasses)
+    }
+    catch (error) {
+      Logger.warn('🔍 [COMPONENT CLASSES] Error handling ui.className:', error)
+    }
   }
+
   return classes
 })
 
@@ -427,14 +481,41 @@ const isDisabled = computed(() =>
   props.disabled || props.field?.ui?.readonly || props.readonly
 )
 
-const accessibilityProps = computed(() => ({
-  'aria-label': `${isMultiple.value ? 'MultiSelect' : 'Select'} for ${props.field?.label || props.label}`,
-  'aria-describedby': props.field?.helpText ? `${props.id}-help` : undefined,
-  'aria-invalid': !!(props.error && Array.isArray(props.error) && props.error.length > 0),
-  'aria-required': props.required,
-  'aria-expanded': componentState.isDropdownOpen,
-  'aria-multiselectable': isMultiple.value
-}))
+const accessibilityProps = computed(() => {
+  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES PARA ARIA
+  let hasRealError = false
+  try {
+    if (props.error) {
+      if (Array.isArray(props.error)) {
+        // Solo si hay errores reales en el array
+        hasRealError = props.error.length > 0 && props.error.some(error =>
+          error && (typeof error === 'string' ? error.trim() : true)
+        )
+      }
+      else if (typeof props.error === 'string') {
+        // Solo si el string no está vacío
+        hasRealError = props.error.trim().length > 0
+      }
+      else if (props.error && typeof props.error === 'object') {
+        // Solo si es un objeto de error válido
+        hasRealError = true
+      }
+    }
+  }
+  catch (error) {
+    Logger.warn('🔍 [ACCESSIBILITY PROPS] Error handling props.error:', error)
+    hasRealError = false
+  }
+
+  return {
+    'aria-label': `${isMultiple.value ? 'MultiSelect' : 'Select'} for ${props.field?.label || props.label}`,
+    'aria-describedby': props.field?.helpText ? `${props.id}-help` : undefined,
+    'aria-invalid': hasRealError,
+    'aria-required': props.required,
+    'aria-expanded': componentState.isDropdownOpen,
+    'aria-multiselectable': isMultiple.value
+  }
+})
 
 const baseFieldProps = computed(() => ({
   field: props.field,
@@ -469,8 +550,8 @@ const multiselectKey = computed(() => `multiselect-${componentState.componentKey
 
 // Computed para el valor seleccionado tipado correctamente
 const selectedItems = computed(() => {
-  if (isMultiple.value && Array.isArray(currentValue.value)) {
-    return currentValue.value
+  if (isMultiple.value && Array.isArray(localValue.value)) {
+    return localValue.value
   }
   return []
 })
@@ -496,7 +577,7 @@ const hasAdditionalItems = computed(() => {
   return additionalItemsCount.value > 0
 })
 
-// 🎯 COMPUTED MEJORADO PARA MULTISELECT
+// 🎯 COMPUTED SIMPLIFICADO PARA MULTISELECT
 const isMultiselectOpen = computed(() => {
   return componentState.isDropdownOpen && isMultiple.value
 })
@@ -517,8 +598,8 @@ const enhancedMultiSelectClasses = computed(() => {
 
 // Computed para contar items seleccionados
 const selectedItemsCount = computed(() => {
-  if (isMultiple.value && Array.isArray(currentValue.value)) {
-    return currentValue.value.length
+  if (isMultiple.value && Array.isArray(localValue.value)) {
+    return localValue.value.length
   }
   return 0
 })
@@ -535,7 +616,7 @@ const isAllSelected = computed(() => {
   }
 
   const validOptions = availableOptions.value.filter(option => option.name !== 'Loading...')
-  const selectedIds = Array.isArray(currentValue.value) ? currentValue.value : []
+  const selectedIds = Array.isArray(localValue.value) ? localValue.value : []
 
   return validOptions.length > 0 && validOptions.every(option =>
     selectedIds.includes(option.id)
@@ -543,8 +624,9 @@ const isAllSelected = computed(() => {
 })
 
 // ============================================================================
-// CORE FUNCTIONS
+// 🎯 CORE FUNCTIONS - VERSIÓN CORREGIDA
 // ============================================================================
+
 function getCurrentFormValue(fieldName: string): any {
   if (props.kwArgs?.getParentValues && typeof props.kwArgs.getParentValues === 'function') {
     try {
@@ -564,6 +646,135 @@ function getCurrentFormValue(fieldName: string): any {
     return formContext.state.values[fieldName]
   }
   return null
+}
+
+/**
+ * 🎯 REFRESCA COMPONENTES DEPENDIENTES CUANDO CAMBIA EL ELEMENTO PADRE
+ */
+function refreshDependentComponents(newParentValue: any): void {
+  try {
+    const currentFieldName = props.field?.name || props.name
+
+    if (currentFieldName) {
+      Logger.info('🔄 [REFRESH DEPENDENTS] Starting dependent refresh:', {
+        parentField: currentFieldName,
+        newValue: newParentValue
+      })
+
+      // Emitir evento para que los componentes dependientes se refresquen
+      const refreshEvent = new CustomEvent('refresh-dependent-field', {
+        detail: {
+          parentField: currentFieldName,
+          newParentValue,
+          clearFirst: true, // Indicador para limpiar primero
+          timestamp: Date.now() // Para debugging
+        },
+        bubbles: true
+      })
+
+      document.dispatchEvent(refreshEvent)
+
+      Logger.info('🔄 [REFRESH DEPENDENTS] ✅ Dependent refresh event dispatched with clear flag')
+    }
+  }
+  catch (error) {
+    Logger.error('🔥 [REFRESH DEPENDENTS] Error refreshing dependent components:', error)
+  }
+}
+
+/**
+ * 🎯 LIMPIA COMPONENTES DEPENDIENTES CUANDO SE ELIMINA UN ELEMENTO PADRE
+ */
+function clearDependentComponents(removedParentValue: any): void {
+  try {
+    const currentFieldName = props.field?.name || props.name
+
+    if (currentFieldName) {
+      Logger.info('🔄 [CLEAR DEPENDENTS] Starting dependent cleanup:', {
+        parentField: currentFieldName,
+        removedValue: removedParentValue
+      })
+
+      // Método 1: Usar formContext si está disponible
+      if (formContext?.actions?.setFieldValue && formContext?.state?.values) {
+        const allFields = Object.keys(formContext.state.values)
+
+        allFields.forEach((fieldName) => {
+          if (fieldName !== currentFieldName) {
+            const fieldValue = formContext.state.values[fieldName]
+
+            // Si el campo tiene valor y podría ser dependiente
+            if (fieldValue !== null && fieldValue !== undefined) {
+              Logger.info('🔄 [CLEAR DEPENDENTS] Clearing dependent field via formContext:', {
+                parentField: currentFieldName,
+                dependentField: fieldName,
+                removedParentValue
+              })
+
+              // Limpiar el campo dependiente
+              const emptyValue = Array.isArray(fieldValue) ? [] : null
+              formContext.actions.setFieldValue(fieldName as any, emptyValue)
+            }
+          }
+        })
+      }
+      else if (props.kwArgs?.getParentValues && typeof props.kwArgs.getParentValues === 'function') {
+        // Método 2: Usar getParentValues si está disponible
+        try {
+          const allValues = props.kwArgs.getParentValues()
+          if (allValues && typeof allValues === 'object') {
+            Object.keys(allValues).forEach((fieldName) => {
+              if (fieldName !== currentFieldName) {
+                const fieldValue = allValues[fieldName]
+
+                // Si el campo tiene valor y podría ser dependiente
+                if (fieldValue !== null && fieldValue !== undefined) {
+                  Logger.info('🔄 [CLEAR DEPENDENTS] Found potential dependent field:', {
+                    parentField: currentFieldName,
+                    dependentField: fieldName,
+                    dependentValue: fieldValue,
+                    removedParentValue
+                  })
+
+                  // Emitir evento personalizado para que el componente dependiente se limpie
+                  const clearEvent = new CustomEvent('clear-dependent-field', {
+                    detail: {
+                      parentField: currentFieldName,
+                      dependentField: fieldName,
+                      removedParentValue,
+                      emptyValue: Array.isArray(fieldValue) ? [] : null
+                    },
+                    bubbles: true
+                  })
+
+                  document.dispatchEvent(clearEvent)
+                }
+              }
+            })
+          }
+        }
+        catch (error) {
+          Logger.error('🔥 [CLEAR DEPENDENTS] Error using getParentValues:', error)
+        }
+      }
+
+      // Método 3: Emitir evento global como fallback
+      const globalClearEvent = new CustomEvent('clear-all-dependents', {
+        detail: {
+          parentField: currentFieldName,
+          removedParentValue
+        },
+        bubbles: true
+      })
+
+      document.dispatchEvent(globalClearEvent)
+
+      Logger.info('🔄 [CLEAR DEPENDENTS] ✅ Dependent cleanup completed')
+    }
+  }
+  catch (error) {
+    Logger.error('🔥 [CLEAR DEPENDENTS] Error clearing dependent components:', error)
+  }
 }
 
 function buildFilters(query: string): IFilter[] {
@@ -754,36 +965,48 @@ const debouncedSearch = useDebounceFn(
 )
 
 // ============================================================================
-// EVENT HANDLERS
+// EVENT HANDLERS - DEBOUNCED MULTISELECT PATTERN
 // ============================================================================
+
+/**
+ * 🎯 NOTIFICA CAMBIOS DE VALOR CON PROTECCIÓN ANTI-ERRORES DE USEFORM
+ */
 function notifyValueChange(value: unknown) {
   try {
-    emit('update:modelValue', value)
-    emit('update:value', value)
-    emit('change', value)
-
-    if (props.onUpdate && typeof props.onUpdate === 'function') {
+    // Usar requestIdleCallback si está disponible, sino setTimeout
+    const safeNotify = () => {
       try {
-        props.onUpdate(value)
+        emit('update:modelValue', value)
+        emit('update:value', value)
+        emit('change', value)
+
+        if (props.onUpdate && typeof props.onUpdate === 'function') {
+          props.onUpdate(value)
+        }
+
+        Logger.log('🔄 [VALUE CHANGE] Notified:', {
+          fieldName: props.field?.name || props.name,
+          value,
+          type: typeof value,
+          isArray: Array.isArray(value),
+          length: Array.isArray(value) ? value.length : 'not array'
+        })
       }
-      catch (error) {
-        Logger.error('🔥 [ERROR] props.onUpdate failed:', error)
+      catch (notifyError) {
+        Logger.warn('🔍 [VALUE CHANGE] Notification error (non-critical):', notifyError)
       }
     }
 
-    Logger.log('🔄 [VALUE CHANGE] Notified:', {
-      fieldName: props.field?.name || props.name,
-      value,
-      type: typeof value,
-      isArray: Array.isArray(value),
-      length: Array.isArray(value) ? value.length : 'not array'
-    })
+    // Usar requestIdleCallback para evitar conflictos con useForm
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(safeNotify, { timeout: 100 })
+    }
+    else {
+      setTimeout(safeNotify, 0)
+    }
   }
   catch (error) {
-    console.error('🔥 [NOTIFY VALUE CHANGE] Error:', error)
-    nextTick(() => {
-      forceComponentUpdate()
-    })
+    Logger.error('🔥 [VALUE CHANGE] Critical error in notifyValueChange:', error)
   }
 }
 
@@ -791,47 +1014,124 @@ function handleValueUpdate(value: unknown) {
   Logger.log('🔄 [HANDLE VALUE UPDATE]', {
     fieldName: props.field?.name || props.name,
     value,
-    oldValue: internalValue.value
+    oldValue: localValue.value
   })
-  const oldValue = internalValue.value
-  internalValue.value = value
+
+  // 🎯 UPDATE LOCAL STATE THEN NOTIFY
+  localValue.value = value
   notifyValueChange(value)
-  if (JSON.stringify(oldValue) !== JSON.stringify(value)) {
-    forceComponentUpdate()
-    nextTick(() => {
-      setTimeout(() => {
-        forceComponentUpdate()
-      }, 50)
+}
+
+// 🎯 MULTISELECT CHANGE HANDLER - CON LÓGICA COMPLETA DE DEPENDIENTES
+function handleMultiSelectChange(event: any): void {
+  if (isMultiple.value && Array.isArray(event.value)) {
+    const oldValue = Array.isArray(localValue.value) ? localValue.value : []
+    const newValue = event.value
+
+    Logger.log('🔄 [MULTISELECT CHANGE] DebouncedMultiSelectComponent pattern:', {
+      fieldName: props.field?.name || props.name,
+      oldValue,
+      newValue,
+      count: newValue.length
+    })
+
+    // 🎯 DETECTAR ELEMENTOS ELIMINADOS PARA LIMPIAR DEPENDIENTES
+    const removedItems = oldValue.filter(item => !newValue.includes(item))
+    const addedItems = newValue.filter(item => !oldValue.includes(item))
+
+    if (removedItems.length > 0) {
+      Logger.info('🔄 [MULTISELECT CHANGE] Items removed, clearing dependents:', {
+        fieldName: props.field?.name || props.name,
+        removedItems
+      })
+
+      // Limpiar componentes dependientes para cada item eliminado
+      removedItems.forEach((removedItem) => {
+        clearDependentComponents(removedItem)
+      })
+    }
+
+    // 🎯 DETECTAR ELEMENTOS AÑADIDOS PARA REFRESCAR DEPENDIENTES
+    if (addedItems.length > 0 && newValue.length > 0) {
+      Logger.info('🔄 [MULTISELECT CHANGE] Items added, refreshing dependents:', {
+        fieldName: props.field?.name || props.name,
+        addedItems,
+        newSelection: newValue
+      })
+
+      // Refrescar con toda la nueva selección
+      refreshDependentComponents(newValue)
+    }
+
+    // 🎯 EXACT PATTERN FROM DebouncedMultiSelectComponent
+    localValue.value = newValue
+
+    // Add small delay like DebouncedMultiSelectComponent does
+    setTimeout(() => {
+      notifyValueChange(newValue)
+    }, 50)
+
+    Logger.log('🎯 [LOCAL VALUE UPDATED] Chips should appear:', {
+      localValue: localValue.value,
+      selectedItemsLength: selectedItems.value.length
     })
   }
 }
 
-// 🎯 MULTISELECT CHANGE HANDLER - SIN REAPERTURA
-function handleMultiSelectChange(event: any): void {
-  if (isMultiple.value && Array.isArray(event.value)) {
-    Logger.log('🔄 [MULTISELECT CHANGE] Enhanced change handler:', {
+// 🎯 DROPDOWN CHANGE HANDLER - CON PROTECCIÓN ANTI-ERRORES
+function handleDropdownChange(event: any): void {
+  if (!isMultiple.value) {
+    const oldValue = localValue.value
+    const newValue = event.value
+
+    Logger.log('🔄 [DROPDOWN CHANGE] Single select change:', {
       fieldName: props.field?.name || props.name,
-      oldValue: internalValue.value,
-      newValue: event.value,
-      count: event.value.length
+      oldValue,
+      newValue
     })
 
     try {
-      // Actualización inmediata del valor
-      internalValue.value = event.value
+      // 🎯 SI HAY CAMBIO DE VALOR, LIMPIAR DEPENDIENTES DEL VALOR ANTERIOR
+      if (oldValue && oldValue !== newValue) {
+        Logger.info('🔄 [DROPDOWN CHANGE] Value changed, clearing dependents:', {
+          fieldName: props.field?.name || props.name,
+          oldValue,
+          newValue
+        })
 
-      // Forzar actualización visual inmediata
-      forceComponentUpdate()
+        clearDependentComponents(oldValue)
+      }
 
-      // Notificar cambios para componentes dependientes
-      nextTick(() => {
-        notifyValueChange(event.value)
+      // 🎯 ACTUALIZAR VALOR LOCAL
+      localValue.value = newValue
+
+      // 🎯 SI HAY NUEVO VALOR, REFRESCAR COMPONENTES DEPENDIENTES
+      if (newValue !== null && newValue !== undefined && newValue !== '') {
+        Logger.info('🔄 [DROPDOWN CHANGE] New value selected, refreshing dependents:', {
+          fieldName: props.field?.name || props.name,
+          newValue
+        })
+
+        refreshDependentComponents(newValue)
+      }
+
+      // Notificación segura con delay para evitar conflictos con useForm
+      setTimeout(() => {
+        try {
+          notifyValueChange(newValue)
+        }
+        catch (notifyError) {
+          Logger.warn('🔍 [DROPDOWN CHANGE] Notification error (non-critical):', notifyError)
+        }
+      }, 100) // Delay aumentado para mayor seguridad
+
+      Logger.log('🎯 [DROPDOWN VALUE UPDATED] Selection changed:', {
+        localValue: localValue.value,
+        displayValue: getSelectedDisplayValue(newValue)
       })
     }
     catch (error) {
-      Logger.error('🔥 [MULTISELECT CHANGE] Enhanced error handler:', error)
-      internalValue.value = event.value
-      forceComponentUpdate()
+      Logger.error('🔥 [DROPDOWN CHANGE] Error in handleDropdownChange:', error)
     }
   }
 }
@@ -864,32 +1164,13 @@ function handleShow(): void {
   }
 }
 
+// 🎯 HANDLER DE HIDE SIMPLIFICADO - SIN OVERRIDE
 function handleHide(): void {
-  // 🎯 INTERCEPTAR EL CIERRE - SOLO PERMITIR SI ES INTENCIONAL
-  if (componentState.isDropdownOpen && isMultiple.value) {
-    // Verificar si el cierre es por click fuera o ESC (legítimo)
-    const activeElement = document.activeElement
-    const isClickingOutside = !activeElement || !activeElement.closest('.p-multiselect-panel, .enhanced-multiselect')
-
-    if (!isClickingOutside) {
-      Logger.log('🛡️ [PREVENT HIDE] Preventing close - user is still interacting with multiselect')
-      return // NO permitir el cierre
-    }
-  }
-
   componentState.isDropdownOpen = false
-  Logger.log('🔄 [HIDE] Dropdown closed:', {
+  Logger.log('🔄 [HIDE] Dropdown closed (natural):', {
     fieldName: props.field?.name || props.name,
     isMultiple: isMultiple.value
   })
-
-  if (isMultiple.value) {
-    removeMultiselectOpenStyles()
-  }
-}
-
-function handleHideMultiselect(): void {
-  componentState.isDropdownOpen = false
 
   if (isMultiple.value) {
     removeMultiselectOpenStyles()
@@ -924,18 +1205,51 @@ function handleClear() {
     fieldName: props.field?.name || props.name,
     clearedValue
   })
-  internalValue.value = clearedValue
+
+  // 🎯 UPDATE LOCAL STATE THEN EMIT
+  localValue.value = clearedValue
   notifyValueChange(clearedValue)
   emit('clear')
 }
 
-// ============================================================================
-// 🎯 ENHANCED EVENT HANDLERS FOR SELECT ALL FUNCTIONALITY
-// ============================================================================
-
 /**
- * Selecciona todas las opciones disponibles
+ * 🎯 DESELECCIONA TODAS LAS OPCIONES - VERSIÓN SIMPLIFICADA Y EFECTIVA
  */
+function handleDeselectAll(): void {
+  if (!isMultiple.value) {
+    Logger.warn('🔄 [DESELECT ALL] Called on non-multiple select')
+    return
+  }
+
+  try {
+    const emptyValue: any[] = []
+
+    // 🎯 ACTUALIZACIÓN DEL ESTADO LOCAL
+    localValue.value = emptyValue
+
+    // Notificaciones usando microtask para evitar conflictos con useForm
+    Promise.resolve().then(() => {
+      notifyValueChange(emptyValue)
+      emit('deselectAll', emptyValue)
+      emit('clear')
+    })
+
+    // Forzar actualización visual SOLO después de nextTick para evitar interferir con selecciones
+    nextTick(() => {
+      forceComponentUpdate()
+    })
+
+    Logger.info('🔄 [DESELECT ALL] ✅ Completed:', {
+      fieldName: props.field?.name || props.name,
+      newCount: 0
+    })
+  }
+  catch (error) {
+    Logger.error('🔥 [DESELECT ALL] Error:', error)
+    handleError(error, 'DESELECT_ALL')
+  }
+}
+
 function handleSelectAll(): void {
   if (!isMultiple.value) {
     Logger.warn('🔄 [SELECT ALL] Called on non-multiple select')
@@ -962,12 +1276,12 @@ function handleSelectAll(): void {
   })
 
   try {
-    internalValue.value = allIds
+    // 🎯 UPDATE LOCAL STATE THEN EMIT
+    localValue.value = allIds
     notifyValueChange(allIds)
-    forceComponentUpdate()
-
-    // Emit custom event for select all
     emit('selectAll', allIds)
+
+    forceComponentUpdate()
 
     nextTick(() => {
       Logger.info('🔄 [SELECT ALL] ✅ Completed:', {
@@ -982,42 +1296,61 @@ function handleSelectAll(): void {
   }
 }
 
-/**
- * Deselecciona todas las opciones
- */
-function handleDeselectAll(): void {
-  if (!isMultiple.value) {
-    Logger.warn('🔄 [DESELECT ALL] Called on non-multiple select')
+function removeChip(itemToRemove: any): void {
+  const currentArrayValue = Array.isArray(localValue.value) ? localValue.value : []
+
+  if (currentArrayValue.length === 0) {
+    Logger.warn('removeChip: No items to remove')
     return
   }
 
-  Logger.info('🔄 [DESELECT ALL] Clearing all selections:', {
-    fieldName: props.field?.name || props.name,
-    previousCount: selectedItemsCount.value
+  const indexToRemove = currentArrayValue.findIndex((item: any) => {
+    if (typeof item === 'object' && typeof itemToRemove === 'object') {
+      return String(item.id) === String(itemToRemove.id)
+    }
+    if (typeof item === 'object') {
+      return String(item.id) === String(itemToRemove)
+    }
+    return String(item) === String(itemToRemove)
   })
 
+  if (indexToRemove === -1) {
+    Logger.warn('removeChip: Item not found for removal', itemToRemove)
+    return
+  }
+
+  const newValue = currentArrayValue.filter((_, index) => index !== indexToRemove)
+
   try {
-    const emptyValue: any[] = []
-    internalValue.value = emptyValue
-    notifyValueChange(emptyValue)
-    forceComponentUpdate()
+    // 🎯 LIMPIAR COMPONENTES DEPENDIENTES DEL ITEM ELIMINADO
+    Logger.info('🔄 [REMOVE CHIP] Item removed, clearing dependents:', {
+      fieldName: props.field?.name || props.name,
+      removedItem: itemToRemove
+    })
 
-    // Emit custom events
-    emit('deselectAll', emptyValue)
-    emit('clear')
+    clearDependentComponents(itemToRemove)
 
-    nextTick(() => {
-      Logger.info('🔄 [DESELECT ALL] ✅ Completed:', {
-        newCount: selectedItemsCount.value,
-        isAllSelected: isAllSelected.value
-      })
+    // 🎯 UPDATE LOCAL STATE THEN EMIT LIKE DebouncedMultiSelectComponent
+    localValue.value = newValue
+
+    setTimeout(() => {
+      notifyValueChange(newValue)
+      emit('chipRemove', itemToRemove)
+    }, 10)
+
+    Logger.info('removeChip: Successfully removed item', {
+      removed: itemToRemove,
+      newLength: newValue.length
     })
   }
   catch (error) {
-    Logger.error('🔥 [DESELECT ALL] Error:', error)
-    handleError(error, 'DESELECT_ALL')
+    Logger.error('removeChip: Error updating value', error)
   }
 }
+
+// ============================================================================
+// 🎯 ENHANCED EVENT HANDLERS FOR SELECT ALL FUNCTIONALITY
+// ============================================================================
 
 /**
  * Maneja el evento nativo de select-all-change de PrimeVue
@@ -1070,73 +1403,25 @@ function getSelectedDisplayValue(selectedValue: any): string {
   return 'Loading...'
 }
 
-function removeChip(itemToRemove: any): void {
-  if (!Array.isArray(internalValue.value)) {
-    Logger.warn('removeChip: internalValue is not an array')
-    return
-  }
-
-  const originalValue = [...internalValue.value]
-  const indexToRemove = originalValue.findIndex((item: any) => {
-    if (typeof item === 'object' && typeof itemToRemove === 'object') {
-      return String(item.id) === String(itemToRemove.id)
-    }
-    if (typeof item === 'object') {
-      return String(item.id) === String(itemToRemove)
-    }
-    return String(item) === String(itemToRemove)
-  })
-
-  if (indexToRemove === -1) {
-    Logger.warn('removeChip: Item not found for removal', itemToRemove)
-    return
-  }
-
-  const newValue = originalValue.filter((_, index) => index !== indexToRemove)
-
-  try {
-    internalValue.value = newValue
-    nextTick(() => {
-      notifyValueChange(newValue)
-      emit('chipRemove', itemToRemove)
-      emit('change', newValue)
-    })
-    Logger.info('removeChip: Successfully removed item', {
-      removed: itemToRemove,
-      newLength: newValue.length
-    })
-  }
-  catch (error) {
-    Logger.error('removeChip: Error updating value', error)
-    internalValue.value = originalValue
-  }
-}
-
 // ============================================================================
-// WATCHERS
+// 🎯 WATCHERS - MEJORADOS PARA SINCRONIZACIÓN INMEDIATA
 // ============================================================================
 watch(() => props.value, (newValue) => {
-  Logger.log('🔄 [PROP VALUE WATCH]', {
+  Logger.log('🔄 [PROP VALUE WATCH] Props changed:', {
     fieldName: props.field?.name || props.name,
     newValue,
-    currentInternal: internalValue.value
+    currentLocal: localValue.value
   })
-  const oldValue = internalValue.value
+
+  // 🎯 SYNC LOCAL VALUE WITH PROPS LIKE DebouncedMultiSelectComponent
   if (isMultiple.value) {
-    internalValue.value = Array.isArray(newValue) ? newValue : (newValue ? [newValue] : [])
+    localValue.value = Array.isArray(newValue) ? newValue : (newValue ? [newValue] : [])
   }
   else {
-    internalValue.value = Array.isArray(newValue) ? (newValue[0] || null) : newValue
+    localValue.value = Array.isArray(newValue) ? (newValue[0] || null) : newValue
   }
+
   hasInitialValueLoaded.value = true
-  if (JSON.stringify(oldValue) !== JSON.stringify(internalValue.value)) {
-    forceComponentUpdate()
-    nextTick(() => {
-      setTimeout(() => {
-        forceComponentUpdate()
-      }, 100)
-    })
-  }
 }, { immediate: true })
 
 watch(dependentFieldValue, async (newValue, oldValue) => {
@@ -1144,54 +1429,66 @@ watch(dependentFieldValue, async (newValue, oldValue) => {
   if (!dependentField || !componentState.isInitialized) {
     return
   }
-  const hasChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue)
-  if (hasChanged) {
-    Logger.log('🔄 [DEPENDENCY WATCH] Parent changed:', {
-      dependentField,
-      newValue,
-      oldValue
-    })
-    const clearedValue = isMultiple.value ? [] : null
-    internalValue.value = clearedValue
-    notifyValueChange(clearedValue)
-    internalSuggestions.value = []
-    componentState.errorState = null
-    const hasValidParentValue = newValue !== null
-      && newValue !== undefined
-      && newValue !== ''
-      && (!Array.isArray(newValue) || newValue.length > 0)
-    if (hasValidParentValue) {
-      await nextTick()
-      await performSearch('')
+
+  try {
+    const hasChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue)
+    if (hasChanged) {
+      Logger.log('🔄 [DEPENDENCY WATCH] Parent changed:', {
+        dependentField,
+        newValue,
+        oldValue
+      })
+
+      const clearedValue = isMultiple.value ? [] : null
+
+      // 🎯 UPDATE LOCAL STATE USANDO MÉTODO SEGURO
+      localValue.value = clearedValue
+
+      // Usar requestIdleCallback para notificaciones seguras
+      const safeNotify = () => {
+        try {
+          notifyValueChange(clearedValue)
+        }
+        catch (notifyError) {
+          Logger.warn('🔍 [DEPENDENCY WATCH] Notification error (non-critical):', notifyError)
+        }
+      }
+
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(safeNotify, { timeout: 100 })
+      }
+      else {
+        Promise.resolve().then(safeNotify)
+      }
+
+      internalSuggestions.value = []
+      componentState.errorState = null
+
+      const hasValidParentValue = newValue !== null
+        && newValue !== undefined
+        && newValue !== ''
+        && (!Array.isArray(newValue) || newValue.length > 0)
+
+      if (hasValidParentValue) {
+        // Delay para permitir que el clearing se complete
+        setTimeout(async () => {
+          try {
+            await performSearch('')
+          }
+          catch (searchError) {
+            Logger.warn('🔍 [DEPENDENCY WATCH] Search error (non-critical):', searchError)
+          }
+        }, 200)
+      }
+
+      componentState.lastParentValue = newValue
     }
-    componentState.lastParentValue = newValue
+  }
+  catch (error) {
+    Logger.error('🔥 [DEPENDENCY WATCH] Error in dependency watcher:', error)
   }
 }, {
   immediate: false,
-  deep: true,
-  flush: 'post'
-})
-
-// 🎯 WATCHER MEJORADO PARA MULTISELECT
-watch(() => internalValue.value, (newValue, oldValue) => {
-  if (isMultiple.value && Array.isArray(newValue)) {
-    // Verificar si realmente cambió para evitar loops infinitos
-    const hasChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue)
-
-    if (hasChanged) {
-      Logger.log('🔄 [INTERNAL VALUE WATCH] MultiSelect value changed:', {
-        fieldName: props.field?.name || props.name,
-        newCount: newValue.length,
-        oldCount: Array.isArray(oldValue) ? oldValue.length : 0
-      })
-
-      // Forzar actualización visual después de un cambio
-      nextTick(() => {
-        forceComponentUpdate()
-      })
-    }
-  }
-}, {
   deep: true,
   flush: 'post'
 })
@@ -1200,19 +1497,131 @@ watch(() => internalValue.value, (newValue, oldValue) => {
 // LIFECYCLE
 // ============================================================================
 onMounted(async () => {
-  Logger.log('🚀 [MOUNT] Enhanced initialization', {
+  Logger.log('🚀 [MOUNT] DebouncedMultiSelectComponent pattern restored', {
     fieldName: props.field?.name || props.name,
     dependentField: effectiveParams.value.dependentField,
     hasApiConfig: !!effectiveApiConfig.value,
-    currentValue: internalValue.value,
+    currentValue: localValue.value,
     isMultiple: isMultiple.value
   })
   await nextTick()
   componentState.isInitialized = true
 
-  // 🎯 INICIALIZAR COMPORTAMIENTO MEJORADO DEL MULTISELECT
+  // 🎯 LISTENER PARA EVENTOS DE LIMPIEZA DE DEPENDIENTES
+  const handleClearDependentField = (event: CustomEvent) => {
+    const { parentField, dependentField, removedParentValue, emptyValue } = event.detail
+    const currentFieldName = props.field?.name || props.name
+
+    // Si este componente es el dependiente que debe limpiarse
+    if (dependentField === currentFieldName) {
+      Logger.info('🔄 [CLEAR DEPENDENT EVENT] Received clear event:', {
+        currentField: currentFieldName,
+        parentField,
+        removedParentValue,
+        emptyValue
+      })
+
+      // Limpiar este componente
+      localValue.value = emptyValue
+      notifyValueChange(emptyValue)
+
+      // Forzar actualización visual
+      nextTick(() => {
+        forceComponentUpdate()
+      })
+    }
+  }
+
+  const handleClearAllDependents = (event: CustomEvent) => {
+    const { parentField, removedParentValue } = event.detail
+    const currentFieldName = props.field?.name || props.name
+
+    // Si este componente depende del campo que cambió
+    if (effectiveParams.value.dependentField === parentField) {
+      Logger.info('🔄 [CLEAR ALL DEPENDENTS EVENT] Received global clear event:', {
+        currentField: currentFieldName,
+        parentField,
+        removedParentValue
+      })
+
+      // Limpiar este componente
+      const emptyValue = isMultiple.value ? [] : null
+      localValue.value = emptyValue
+      notifyValueChange(emptyValue)
+
+      // Forzar actualización visual
+      nextTick(() => {
+        forceComponentUpdate()
+      })
+    }
+  }
+
+  // 🎯 LISTENER PARA EVENTOS DE REFRESH DE DEPENDIENTES
+  const handleRefreshDependentField = (event: CustomEvent) => {
+    const { parentField, newParentValue } = event.detail
+    const currentFieldName = props.field?.name || props.name
+
+    // Si este componente depende del campo que cambió
+    if (effectiveParams.value.dependentField === parentField) {
+      Logger.info('🔄 [REFRESH DEPENDENT EVENT] Received refresh event:', {
+        currentField: currentFieldName,
+        parentField,
+        newParentValue,
+        currentValue: localValue.value
+      })
+
+      // 🎯 PRIMERO: LIMPIAR ELEMENTOS SELECCIONADOS ACTUALES
+      const emptyValue = isMultiple.value ? [] : null
+
+      Logger.info('🔄 [REFRESH DEPENDENT] Clearing current selections before refresh:', {
+        currentField: currentFieldName,
+        oldValue: localValue.value,
+        newEmptyValue: emptyValue
+      })
+
+      localValue.value = emptyValue
+      notifyValueChange(emptyValue)
+
+      // 🎯 SEGUNDO: LIMPIAR OPCIONES INTERNAS
+      internalSuggestions.value = []
+
+      // 🎯 TERCERO: ACTUALIZAR ÚLTIMO VALOR PADRE
+      componentState.lastParentValue = newParentValue
+
+      // 🎯 CUARTO: RECARGAR OPCIONES CON EL NUEVO VALOR PADRE
+      if (effectiveApiConfig.value && props.loadOnOpen) {
+        setTimeout(() => {
+          Logger.info('🔄 [REFRESH DEPENDENT] Performing search with new parent value:', {
+            currentField: currentFieldName,
+            parentField,
+            newParentValue
+          })
+          performSearch('')
+        }, 150) // Delay aumentado para asegurar que todo se haya limpiado
+      }
+
+      // 🎯 QUINTO: FORZAR ACTUALIZACIÓN VISUAL
+      nextTick(() => {
+        forceComponentUpdate()
+
+        Logger.info('🔄 [REFRESH DEPENDENT] ✅ Refresh completed:', {
+          currentField: currentFieldName,
+          clearedValue: localValue.value,
+          hasOptions: internalSuggestions.value.length > 0
+        })
+      })
+    }
+  }
+
+  // Añadir listeners
+  document.addEventListener('clear-dependent-field', handleClearDependentField as EventListener)
+  document.addEventListener('clear-all-dependents', handleClearAllDependents as EventListener)
+  document.addEventListener('refresh-dependent-field', handleRefreshDependentField as EventListener)
+
+  // 🎯 INICIALIZAR COMPORTAMIENTO SIMPLIFICADO DEL MULTISELECT
   if (isMultiple.value) {
     initializeMultiselectBehavior()
+    Logger.log('🎯 [MOUNT] MultiSelect behavior initialized (DebouncedMultiSelectComponent pattern)')
   }
 
   // Aplicar estilos mejorados a los items después del mount
@@ -1252,11 +1661,16 @@ onUnmounted(() => {
     searchController.value.abort()
   }
 
-  // 🎯 CLEANUP MEJORADO PARA MULTISELECT
+  // 🎯 CLEANUP SIMPLIFICADO PARA MULTISELECT
   if (componentState.panelObserver) {
     componentState.panelObserver.disconnect()
     componentState.panelObserver = null
   }
+
+  // 🎯 LIMPIAR EVENT LISTENERS DE DEPENDIENTES
+  document.removeEventListener('clear-dependent-field', () => {})
+  document.removeEventListener('clear-all-dependents', () => {})
+  document.removeEventListener('refresh-dependent-field', () => {})
 })
 
 // ============================================================================
@@ -1264,11 +1678,11 @@ onUnmounted(() => {
 // ============================================================================
 defineExpose({
   handleSelectAll,
-  handleDeselectAll, // 🎯 New expose
-  handleNativeSelectAllChange, // 🎯 New expose - PrimeVue native event handler
-  selectedItemsCount: () => selectedItemsCount.value, // 🎯 New expose
-  availableOptionsCount: () => availableOptionsCount.value, // 🎯 New expose
-  isAllSelected: () => isAllSelected.value, // 🎯 New expose
+  handleDeselectAll,
+  handleNativeSelectAllChange,
+  selectedItemsCount: () => selectedItemsCount.value,
+  availableOptionsCount: () => availableOptionsCount.value,
+  isAllSelected: () => isAllSelected.value,
 
   // Existing methods
   focus: () => instance.value?.focus?.(),
@@ -1307,7 +1721,7 @@ defineExpose({
         :id="fieldId"
         :key="dropdownKey"
         ref="instance"
-        v-model="currentValue"
+        v-model="localValue"
         :options="availableOptions"
         option-label="name"
         option-value="id"
@@ -1322,14 +1736,13 @@ defineExpose({
         :reset-filter-on-hide="false"
         :empty-filter-message="componentState.isLoading ? 'Loading...' : 'No results found'"
         :empty-message="componentState.isLoading ? 'Loading...' : 'No options available'"
-        :data-keep-open="true"
-        :meta-key-selection="false"
         v-bind="accessibilityProps"
         @focus="handleFocus"
         @blur="handleBlur"
         @show="handleShow"
         @hide="handleHide"
         @clear="handleClear"
+        @change="handleDropdownChange"
         @filter="debouncedSearch"
       >
         <!-- Option Template -->
@@ -1393,14 +1806,14 @@ defineExpose({
       </Dropdown>
 
       <!-- ======================================================================
-           🎯 ENHANCED MULTI SELECT WITH SELECT ALL FUNCTIONALITY
+           🎯 SIMPLIFIED MULTI SELECT - NATURAL BEHAVIOR
            ====================================================================== -->
       <MultiSelect
         v-else
         :id="fieldId"
         :key="multiselectKey"
         ref="instance"
-        v-model="currentValue"
+        v-model="localValue"
         class="enhanced-multiselect"
         :class="[...enhancedMultiSelectClasses, { 'multiselect-opened': componentState.isDropdownOpen && isMultiple }]"
         :style="fieldStyle"
@@ -1414,6 +1827,11 @@ defineExpose({
         :max-selected-labels="0"
         display="chip"
         :show-toggle-all="true"
+        :close-on-select="false"
+        :auto-option-focus="false"
+        :auto-focus-filter="false"
+        :meta-key-selection="false"
+        append-to="body"
         v-bind="accessibilityProps"
         @filter="debouncedSearch"
         @show="handleShow"
@@ -1422,6 +1840,7 @@ defineExpose({
         @blur="handleBlur"
         @clear="handleClear"
         @change="handleMultiSelectChange"
+        @before-show="() => { if (props.loadOnOpen && !componentState.isLoading) performSearch('') }"
         @item-select="handleItemSelect"
         @item-unselect="handleItemUnselect"
         @selectall-change="handleNativeSelectAllChange"
@@ -1477,7 +1896,7 @@ defineExpose({
             :class="{
               'enhanced-multiselect__option--inactive': option.status === 'INACTIVE',
               'enhanced-multiselect__option--loading': option.name === 'Loading...',
-              'enhanced-multiselect__option--selected': isMultiple && Array.isArray(currentValue) && currentValue.includes(option.id),
+              'enhanced-multiselect__option--selected': isMultiple && Array.isArray(localValue) && localValue.includes(option.id),
             }"
           >
             <div v-if="option.name === 'Loading...'" class="enhanced-multiselect__option-loading">
@@ -1561,6 +1980,7 @@ defineExpose({
                 class="enhanced-multiselect__footer-clear"
                 :title="`Clear all ${selectedItemsCount} selections`"
                 @click.stop.prevent="handleDeselectAll"
+                @mousedown.stop.prevent
               >
                 <i class="pi pi-times" />
                 Clear All
@@ -1620,6 +2040,34 @@ defineExpose({
   --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
   --enhanced-form-dropdown-z: 1000;
   --enhanced-form-font-size: 1rem;
+}
+
+/* 🎯 ANIMACIONES PARA SUAVIZAR LA REAPERTURA */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.enhanced-multiselect__header {
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.enhanced-multiselect__header-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.enhanced-multiselect__header-content {
+  width: 100%;
 }
 
 /* 🎯 DROPDOWN COMPONENT STYLES - PROFESSIONAL DESIGN */
@@ -1701,11 +2149,6 @@ defineExpose({
 
 :deep(.p-dropdown .p-dropdown-trigger .p-icon) {
   color: #3b82f6 !important;
-  /* No rotation transition */
-}
-
-:deep(.p-dropdown.p-dropdown-opened .p-dropdown-trigger .p-icon) {
-  /* No rotation - keep icon pointing down */
 }
 
 :deep(.p-dropdown.p-invalid) {
@@ -1769,12 +2212,6 @@ defineExpose({
 
 :deep(.enhanced-multiselect .p-multiselect-trigger .p-icon) {
   color: #3b82f6 !important;
-  /* Removed rotation transition */
-}
-
-/* Remove rotation when opened */
-:deep(.enhanced-multiselect.p-multiselect-opened .p-multiselect-trigger .p-icon) {
-  /* No rotation */
 }
 
 :deep(.enhanced-multiselect:hover:not(.p-disabled):not(.p-multiselect-opened):not(.p-focus)) {
@@ -1789,7 +2226,7 @@ defineExpose({
   transform: translateY(-1px) !important;
 }
 
-/* 🎯 MULTISELECT OPENED STATE - Comportamiento igual al dropdown */
+/* 🎯 MULTISELECT OPENED STATE */
 .enhanced-multiselect.multiselect-opened :deep(.p-multiselect),
 :deep(.enhanced-multiselect.p-multiselect-opened) {
   border-bottom-left-radius: 0 !important;
@@ -1799,12 +2236,6 @@ defineExpose({
   box-shadow: var(--enhanced-form-focus-shadow) !important;
   z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
   transform: translateY(-1px) !important;
-}
-
-/* Rotación del ícono cuando está abierto - DESHABILITADO */
-.enhanced-multiselect.multiselect-opened :deep(.p-multiselect-trigger .p-icon),
-:deep(.enhanced-multiselect.p-multiselect-opened .p-multiselect-trigger .p-icon) {
-  /* No rotation - keep icon pointing down */
 }
 
 :deep(.enhanced-multiselect.p-invalid) {
@@ -1819,7 +2250,7 @@ defineExpose({
   box-shadow: var(--enhanced-form-error-shadow-hover) !important;
 }
 
-/* 🎯 ENHANCED PANEL STYLES - IMPROVED VISUAL HIERARCHY */
+/* 🎯 ENHANCED PANEL STYLES */
 :deep(.p-multiselect-panel) {
   border: 2px solid #e2e8f0 !important;
   border-top: none !important;
@@ -1832,30 +2263,25 @@ defineExpose({
   backdrop-filter: blur(12px) !important;
 }
 
-/* 🎯 MINIMAL STYLING - LET PRIMEVUE DO ITS THING */
 :deep(.p-multiselect-panel .p-multiselect-header) {
-  /* Only adjust layout to ensure checkbox and filter are inline */
   display: flex !important;
   align-items: center !important;
   gap: 0.75rem !important;
 }
 
-/* Ensure checkbox is visible if PrimeVue generates it */
 :deep(.p-multiselect-panel .p-multiselect-header .p-checkbox) {
   display: flex !important;
 }
 
-/* Ensure filter container takes remaining space */
 :deep(.p-multiselect-panel .p-multiselect-header .p-multiselect-filter-container) {
   flex: 1 !important;
 }
 
-/* Hide close button - optional */
 :deep(.p-multiselect-panel .p-multiselect-header .p-multiselect-close) {
   display: none !important;
 }
 
-/* 🎯 COMPACT MULTISELECT ITEMS - MATCH DROPDOWN STYLE */
+/* 🎯 COMPACT MULTISELECT ITEMS */
 :deep(.p-multiselect-panel .p-multiselect-items-wrapper) {
   padding: 0 !important;
 }
@@ -1883,8 +2309,6 @@ defineExpose({
   color: #1e40af !important;
 }
 
-/* 🎯 SIMPLIFICADO - SOLO ESTILOS NECESARIOS */
-
 /* Hide the checkbox input but keep the visual box */
 :deep(.p-checkbox-input) {
   position: absolute !important;
@@ -1894,7 +2318,7 @@ defineExpose({
   pointer-events: none !important;
 }
 
-/* 📦 VALUE CONTAINER - EXACT MATCH WITH DROPDOWN LAYOUT */
+/* 📦 VALUE CONTAINER */
 .enhanced-multiselect__value-container {
   width: 100%;
   height: calc(var(--enhanced-form-field-height) - 4px);
@@ -1912,7 +2336,7 @@ defineExpose({
   font-size: var(--enhanced-form-font-size);
 }
 
-/* 🏷️ CHIPS CONTAINER - OPTIMIZED LAYOUT WITH TRIGGER SPACE */
+/* 🏷️ CHIPS CONTAINER */
 .enhanced-multiselect__chips {
   display: flex;
   align-items: center;
@@ -1921,8 +2345,6 @@ defineExpose({
   overflow: hidden;
   width: 100%;
   height: 100%;
-
-  /* Smooth scrolling for overflow */
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -1932,7 +2354,7 @@ defineExpose({
   display: none;
 }
 
-/* 🎨 INDIVIDUAL CHIP - COMPACT SINGLE LINE */
+/* 🎨 INDIVIDUAL CHIP */
 .enhanced-multiselect__chip {
   display: inline-flex;
   align-items: center;
@@ -1961,7 +2383,7 @@ defineExpose({
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-/* 📝 CHIP LABEL - ELLIPSIS HANDLING */
+/* 📝 CHIP LABEL */
 .enhanced-multiselect__chip-label {
   flex: 1;
   min-width: 0;
@@ -1975,7 +2397,7 @@ defineExpose({
   line-height: 1.2;
 }
 
-/* ❌ CHIP REMOVE BUTTON - ACCESSIBLE */
+/* ❌ CHIP REMOVE BUTTON */
 .enhanced-multiselect__chip-remove {
   flex-shrink: 0;
   width: 1.25rem;
@@ -2010,7 +2432,7 @@ defineExpose({
   line-height: 1;
 }
 
-/* 🔢 ADDITIONAL ITEMS COUNTER - PREMIUM DESIGN */
+/* 🔢 ADDITIONAL ITEMS COUNTER */
 .enhanced-multiselect__additional {
   display: inline-flex;
   align-items: center;
@@ -2040,7 +2462,7 @@ defineExpose({
   letter-spacing: 0.025em;
 }
 
-/* 📝 PLACEHOLDER - ULTRA SPECIFIC MATCH WITH DROPDOWN LABEL */
+/* 📝 PLACEHOLDER */
 .enhanced-multiselect__placeholder {
   width: 100%;
   height: 100%;
@@ -2064,7 +2486,7 @@ defineExpose({
   display: inline-block;
 }
 
-/* 🎯 ENHANCED OPTION TEMPLATE - CLEAN DESIGN WITHOUT CHECKBOX */
+/* 🎯 ENHANCED OPTION TEMPLATE */
 .enhanced-multiselect__option {
   display: flex;
   align-items: center;
@@ -2114,7 +2536,7 @@ defineExpose({
   line-height: 1.25rem;
 }
 
-/* 🔍 ENHANCED EMPTY STATES - COMPACT PROFESSIONAL FEEDBACK */
+/* 🔍 ENHANCED EMPTY STATES */
 .enhanced-multiselect__empty-state {
   padding: 1.5rem 1rem;
   text-align: center;
@@ -2281,7 +2703,7 @@ defineExpose({
   font-size: 0.75rem;
 }
 
-/* 🔄 ENHANCED LOADER - COMPACT */
+/* 🔄 ENHANCED LOADER */
 .enhanced-multiselect__loader {
   display: flex;
   align-items: center;
@@ -2310,7 +2732,7 @@ defineExpose({
   20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
-/* 📱 ENHANCED RESPONSIVE DESIGN */
+/* 📱 RESPONSIVE DESIGN */
 @media (max-width: 768px) {
   .enhanced-multiselect__value-container {
     min-height: calc(var(--enhanced-form-field-height-mobile) - 4px);
@@ -2327,10 +2749,6 @@ defineExpose({
     font-size: 0.8rem;
     padding: 0.25rem 0.625rem;
   }
-
-  .enhanced-multiselect__header-controls {
-    gap: 0.5rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -2339,7 +2757,7 @@ defineExpose({
   }
 }
 
-/* 🎯 ULTRA HIGH SPECIFICITY OVERRIDES FOR PRIMEVUE */
+/* 🎯 ULTRA HIGH SPECIFICITY OVERRIDES */
 .enhanced-multiselect {
   :deep(.p-multiselect.p-component.p-inputwrapper) {
     width: 100% !important;
@@ -2355,13 +2773,11 @@ defineExpose({
   }
 
   :deep(.p-multiselect .p-multiselect-token) {
-    display: none !important; /* Hide default chips, we use custom */
+    display: none !important;
   }
 }
 
-/* 🎯 KEEP HEADER CHECKBOX VISIBLE, HIDE ONLY ITEM CHECKBOXES - REMOVED EMPTY RULE */
-
-/* 🎯 DROPDOWN ITEMS - ENSURE CONSISTENT STYLE */
+/* 🎯 DROPDOWN ITEMS */
 :deep(.p-dropdown-panel .p-dropdown-items) {
   padding: 0.25rem 0 !important;
 }
@@ -2385,7 +2801,7 @@ defineExpose({
   color: #1e40af !important;
 }
 
-/* 🎯 MULTISELECT ITEMS COMPACTOS - REMOVED EMPTY DUPLICATE RULES */
+/* 🎯 MULTISELECT ITEMS COMPACTOS */
 :deep(.p-multiselect-panel .p-multiselect-item) {
   padding: 0.25rem 0.75rem !important;
   margin: 0.125rem 0.5rem !important;
@@ -2402,7 +2818,6 @@ defineExpose({
   gap: 0.75rem !important;
 }
 
-/* 🎯 ESTADOS HOVER Y SELECTED CON MEJOR CONTRASTE */
 :deep(.p-multiselect-panel .p-multiselect-item:hover) {
   background: #f3f4f6 !important;
   color: #111827 !important;
@@ -2414,14 +2829,14 @@ defineExpose({
   font-weight: 600 !important;
 }
 
-/* CONTAINERS - SIN PADDING EXTRA */
+/* CONTAINERS */
 .p-multiselect-items,
 .p-dropdown-items {
   padding: 0.25rem 0 !important;
   margin: 0 !important;
 }
 
-/* Ensure proper header styling for dropdown */
+/* Dropdown styling */
 .dropdown-option,
 .dropdown-selected,
 .dropdown-placeholder,
@@ -2467,5 +2882,123 @@ defineExpose({
   justify-content: center;
   padding: 1rem;
   color: #6b7280;
+}
+
+/* 🎯 DROPDOWN PANELS */
+:deep(.p-dropdown-panel) {
+  border: 2px solid #e2e8f0 !important;
+  border-top: none !important;
+  border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+  z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+  overflow: hidden !important;
+  background: white !important;
+  min-width: 100% !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* 🎯 FILTER INPUT STYLING */
+:deep(.p-multiselect-filter),
+:deep(.p-dropdown-filter) {
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s ease !important;
+  background: white !important;
+}
+
+:deep(.p-multiselect-filter:focus),
+:deep(.p-dropdown-filter:focus) {
+  outline: none !important;
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* 🎯 ACCESSIBILITY IMPROVEMENTS */
+:deep(.p-multiselect[aria-expanded="true"]),
+:deep(.p-dropdown[aria-expanded="true"]) {
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: var(--enhanced-form-focus-shadow) !important;
+}
+
+/* 🎯 FOCUS VISIBLE STATES */
+:deep(.p-multiselect:focus-visible),
+:deep(.p-dropdown:focus-visible) {
+  outline: 2px solid var(--enhanced-form-focus-border) !important;
+  outline-offset: 2px !important;
+}
+
+/* 🎯 DISABLED STATE */
+:deep(.p-multiselect.p-disabled),
+:deep(.p-dropdown.p-disabled) {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background: #f9fafb !important;
+}
+
+:deep(.p-multiselect.p-disabled .enhanced-multiselect__chip),
+:deep(.p-dropdown.p-disabled) {
+  opacity: 0.7 !important;
+  pointer-events: none !important;
+}
+
+/* 🎯 LOADING STATE ENHANCEMENTS */
+:deep(.p-multiselect.p-loading),
+:deep(.p-dropdown.p-loading) {
+  pointer-events: none !important;
+}
+
+:deep(.p-multiselect.p-loading .p-multiselect-trigger),
+:deep(.p-dropdown.p-loading .p-dropdown-trigger) {
+  opacity: 0.6 !important;
+}
+
+/* 🎯 HIGH CONTRAST MODE SUPPORT */
+@media (prefers-contrast: high) {
+  :deep(.p-multiselect),
+  :deep(.p-dropdown) {
+    border-width: 3px !important;
+    border-color: #000 !important;
+  }
+
+  .enhanced-multiselect__chip {
+    border-width: 2px !important;
+    border-color: #000 !important;
+  }
+}
+
+/* 🎯 REDUCED MOTION SUPPORT */
+@media (prefers-reduced-motion: reduce) {
+  :deep(.p-multiselect),
+  :deep(.p-dropdown),
+  .enhanced-multiselect__chip,
+  .enhanced-multiselect__chip-remove {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 🎯 PRINT STYLES */
+@media print {
+  :deep(.p-multiselect-panel),
+  :deep(.p-dropdown-panel) {
+    display: none !important;
+  }
+
+  .enhanced-multiselect__chip {
+    background: white !important;
+    border: 1px solid #000 !important;
+    color: #000 !important;
+  }
+}
+
+/* 🎯 DARK MODE SUPPORT (if needed) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --enhanced-form-focus-border: #60a5fa;
+    --enhanced-form-focus-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
 }
 </style>
