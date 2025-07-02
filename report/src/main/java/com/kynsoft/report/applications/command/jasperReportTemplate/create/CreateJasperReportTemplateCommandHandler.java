@@ -93,17 +93,13 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
         // Iterar sobre los parámetros obtenidos del JasperReport original
         for (JRParameter param : jasperReport.getParameters()) {
-            if (!param.isSystemDefined() && param.isForPrompting()) { // Solo parámetros definidos por el usuario y que requieren entrada
+            if (!param.isSystemDefined() && param.isForPrompting()) {
                 try {
-                    // Obtener valor si existe en el mapa de parámetros evaluados
                     Object paramValue = parameters.getOrDefault(param.getName(), "");
-
-                    // Si el parámetro es de tipo fecha, formatearlo correctamente
                     if (paramValue instanceof Date) {
                         paramValue = new SimpleDateFormat("MM/dd/yyyy").format((Date) paramValue);
                     }
 
-                    // Guardar el parámetro en la base de datos
                     this.reportParameterService.create(new JasperReportParameterDto(
                             UUID.randomUUID(), param.getName(), param.getValueClassName(),
                             paramValue.toString(), "", "", "", reportTemplateDto, "",

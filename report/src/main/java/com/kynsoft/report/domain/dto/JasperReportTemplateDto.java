@@ -28,7 +28,6 @@ public class JasperReportTemplateDto {
     private ModuleSystems moduleSystems; // Campo para el módulo del sistema
     private String query;
 
-
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
                                    JasperReportTemplateType type,
@@ -46,6 +45,4 @@ public class JasperReportTemplateDto {
         this.dbConectionDto = dbConection;
         this.query = query;
     }
-
-
 }

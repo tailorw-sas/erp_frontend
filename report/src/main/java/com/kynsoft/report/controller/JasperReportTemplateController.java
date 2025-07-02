@@ -48,8 +48,15 @@ public class JasperReportTemplateController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getById(@PathVariable UUID id) {
+        FindJasperReportTemplateByIdQuery query = new FindJasperReportTemplateByIdQuery(id, false);
+        JasperReportTemplateResponse response = mediator.send(query);
 
-        FindJasperReportTemplateByIdQuery query = new FindJasperReportTemplateByIdQuery(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/template-with-params/{id}")
+    public ResponseEntity<?> getReportTemplateWithParamsById(@PathVariable UUID id) {
+        FindJasperReportTemplateByIdQuery query = new FindJasperReportTemplateByIdQuery(id, true);
         JasperReportTemplateResponse response = mediator.send(query);
 
         return ResponseEntity.ok(response);

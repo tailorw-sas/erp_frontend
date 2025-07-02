@@ -63,24 +63,6 @@ public class ReportController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/parameters")
-//    public ResponseEntity<List<String>> getParameters(@RequestParam("url") String url_jrxml) {
-//        List<String> parameters = new ArrayList<>();
-//
-//        try (InputStream reportStream = new URL(url_jrxml).openStream()) {
-//            JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
-//            JRParameter[] reportParameters = jasperReport.getParameters();
-//            for (JRParameter param : reportParameters) {
-//                if (!param.isSystemDefined()) {
-//                    parameters.add(param.getName());
-//                }
-//            }
-//        } catch (JRException | IOException e) {
-//            logger.error("Error getting parameters",  e);
-//        }
-//        return ResponseEntity.ok(parameters);
-//    }
-
     @PostMapping(value = "/execute-report", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> executeReport(@RequestBody GenerateTemplateRequest request) {
         Connection connection = null;
@@ -172,6 +154,5 @@ public class ReportController {
             throw new RuntimeException("Error loading JRXML template from URL: " + templateUrl, e);
         }
     }
-
 }
 
