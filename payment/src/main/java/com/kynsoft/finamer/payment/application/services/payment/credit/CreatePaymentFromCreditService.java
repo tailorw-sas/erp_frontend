@@ -295,7 +295,7 @@ public class CreatePaymentFromCreditService {
                 bankAccount,
                 paymentAmount,
                 attachmentStatus,
-                invoiceDtoTypeInvoice,
+                invoiceDtoTypeCredit.getInvoiceType() == EInvoiceType.OLD_CREDIT ? invoiceDtoTypeCredit : invoiceDtoTypeInvoice,
                 employee,
                 closeOperation,
                 createAttachmentRequests,
