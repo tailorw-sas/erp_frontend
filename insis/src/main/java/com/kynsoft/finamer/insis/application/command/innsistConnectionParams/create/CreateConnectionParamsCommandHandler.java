@@ -82,7 +82,7 @@ public class CreateConnectionParamsCommandHandler implements ICommandHandler<Cre
 
         UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setHostName, command.getHostName(), dto.getHostName(), update::setUpdate);
         UpdateIfNotNull.updateInteger(dto::setPortNumber, command.getPortNumber(), dto.getPortNumber(), update::setUpdate);
-        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDataBaseName, command.getDataBaseName(), dto.getDataBaseName(), update::setUpdate);
+        UpdateIfNotNull.updateIfStringNotNullNotEmptyAndNotEquals(dto::setDatabaseName, command.getDataBaseName(), dto.getDatabaseName(), update::setUpdate);
 
         updateEncryptedField(dto::setUserName, command.getUserName(), encryptionService.decrypt(dto.getUserName()), update::setUpdate);
         updateEncryptedField(dto::setPassword, command.getPassword(), encryptionService.decrypt(dto.getPassword()), update::setUpdate);
@@ -108,7 +108,7 @@ public class CreateConnectionParamsCommandHandler implements ICommandHandler<Cre
                 dto.getId(),
                 dto.getHostName(),
                 String.valueOf(dto.getPortNumber()),
-                dto.getDataBaseName(),
+                dto.getDatabaseName(),
                 dto.getUserName(),
                 dto.getPassword()
         );

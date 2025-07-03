@@ -26,12 +26,13 @@ public class ExternalRoomRateServiceImpl implements IExternalRoomRateService {
                                                                           LocalDate invoiceDate,
                                                                           String hotel) {
         SyncRateByInvoiceDateMessage message = this.rateHttpService.syncRoomRatesFromTca(processId, hotel, invoiceDate);
-        if(Objects.nonNull(message) && !message.getRateResponses().isEmpty()){
-            return message.getRateResponses().stream()
-                    .map(this::convertToExternalRoomRate)
-                    .collect(Collectors.toList());
+        if(Objects.isNull(message) || Objects.isNull(message.getRateResponses()) || message.getRateResponses().isEmpty()){
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+
+        return message.getRateResponses().stream()
+                .map(this::convertToExternalRoomRate)
+                .collect(Collectors.toList());
     }
 
     private ExternalRoomRateDto convertToExternalRoomRate(RateResponse rateResponse){
@@ -64,6 +65,8 @@ public class ExternalRoomRateServiceImpl implements IExternalRoomRateService {
                 rateResponse.getHotelInvoiceNumber(),
                 rateResponse.getInvoiceFolioNumber(),
                 rateResponse.getQuote(),
+                rateResponse.getRenewalNumber(),
+                rateResponse.getRoomCategory(),
                 rateResponse.getHash()
         );
     }

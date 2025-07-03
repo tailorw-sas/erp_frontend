@@ -43,6 +43,8 @@ public class RateResponse implements IResponse {
     private String hotelInvoiceNumber;
     private String invoiceFolioNumber;
     private Double quote;
+    private String renewalNumber;
+    private String roomCategory;
     private String hash;
 
     public RateResponse(RateDto dto){
@@ -74,6 +76,8 @@ public class RateResponse implements IResponse {
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.invoiceFolioNumber = dto.getInvoiceFolioNumber();
         this.quote = dto.getQuote();
+        this.renewalNumber = dto.getRenewalNumber();
+        this.roomCategory = dto.getRoomCategory();
         this.hash = dto.getHash();
     }
 }

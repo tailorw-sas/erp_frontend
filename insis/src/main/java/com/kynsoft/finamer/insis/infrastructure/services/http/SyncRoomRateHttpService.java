@@ -16,7 +16,7 @@ public class SyncRoomRateHttpService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${tcainnsist.service.url:http://192.168.100.62:9910}")
+    @Value("${tcainnsist.service.url:http://localhost:9910}")
     private String tcaServiceUrl;
 
     public SyncRoomRateHttpService(RestTemplate restTemplate){
@@ -41,7 +41,7 @@ public class SyncRoomRateHttpService {
             HttpEntity<SycnRateByInvoiceDateRequest> requestHttpEntity = new HttpEntity<>(request, headers);
 
             ResponseEntity<SyncRateByInvoiceDateMessage> response = restTemplate.exchange(url,
-                    HttpMethod.GET,
+                    HttpMethod.POST,
                     requestHttpEntity,
                     SyncRateByInvoiceDateMessage.class);
             if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null){

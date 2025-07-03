@@ -89,8 +89,8 @@ public class CreateRoomRatesService {
     public void createRoomRates(UUID processId,
                                 String hotel,
                                 LocalDate invoiceDate,
-                                List<CreateRoomRateRequest> createRoomRates,
-                                BatchType batchType){
+                                BatchType batchType,
+                                List<CreateRoomRateRequest> createRoomRates){
         BatchProcessLogDto processLog = this.createLog(hotel, invoiceDate, invoiceDate, processId, batchType);
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<String>(hotel, "hotel", "The hotel code must not be null"));
@@ -99,9 +99,13 @@ public class CreateRoomRatesService {
         this.updateLogAsInProcess(processLog);
         ManageHotelDto hotelDto = manageHotelService.findByCode(hotel);
         try{
-            this.processNewCatalogs(createRoomRates, hotelDto);
-            boolean processed = this.processRoomRates(processLog, invoiceDate, createRoomRates, hotelDto);
-            this.updateLogAsCompleted(processLog, createRoomRates.size(), processed ? createRoomRates.size() : 0, null);
+            if(!createRoomRates.isEmpty()){
+                this.processNewCatalogs(createRoomRates, hotelDto);
+                boolean processed = this.processRoomRates(processLog, invoiceDate, createRoomRates, hotelDto);
+                this.updateLogAsCompleted(processLog, createRoomRates.size(), processed ? createRoomRates.size() : 0, null);
+            }else{
+                this.updateLogAsCompleted(processLog, 0, 0, null);
+            }
         } catch (RuntimeException rex){
             this.updateLogAsCompleted(processLog, createRoomRates.size(),  0, rex.getMessage());
         }

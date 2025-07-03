@@ -41,5 +41,7 @@ public class ExternalRoomRateDto {
     private String hotelInvoiceNumber;
     private String invoiceFolioNumber;
     private Double quote;
+    private String renewalNumber;
+    private String roomCategory;
     private String hash;
 }

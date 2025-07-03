@@ -25,11 +25,12 @@ public class CreateGroupedRatesCommandHandler implements ICommandHandler<CreateG
                 .map(CreateRoomRateRequest::new)
                 .collect(Collectors.toList());
 
-        this.createRoomRatesService.createRoomRates(command.getId(),
+        this.createRoomRatesService.createRoomRates(
+                command.getId(),
                 command.getHotel(),
                 command.getInvoiceDate(),
-                createRoomRateList,
-                BatchType.convertToBatchType(command.getBatchType())
+                BatchType.convertToBatchType(command.getBatchType()),
+                createRoomRateList
         );
     }
 

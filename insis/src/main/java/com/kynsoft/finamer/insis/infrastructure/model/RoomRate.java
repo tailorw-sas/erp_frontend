@@ -19,12 +19,14 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "roomRate")
+@Table(name = "room_rate")
 public class RoomRate {
+
     @Id
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private RoomRateStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -32,64 +34,116 @@ public class RoomRate {
     private ManageHotel hotel;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Column(name = "agency_code")
     private String agencyCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "agency_id")
     private ManageAgency agency;
 
+    @Column(name = "check_in_date")
     private LocalDate checkInDate;
+
+    @Column(name = "check_out_date")
     private LocalDate checkOutDate;
+
+    @Column(name = "stay_days")
     private int stayDays;
+
+    @Column(name = "reservation_code")
     private String reservationCode;
+
+    @Column(name = "guest_name")
     private String guestName;
+
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "amount")
     private Double amount;
 
+    @Column(name = "room_type_code")
     private String roomTypeCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "roomType_id")
+    @JoinColumn(name = "room_type_id")
     private ManageRoomType roomType;
 
+    @Column(name = "coupon_number")
     private String couponNumber;
-    private int totalNumberOfGuest;
-    private int adults;
-    private int childrens;
 
+    @Column(name = "total_number_of_guest")
+    private int totalNumberOfGuest;
+
+    @Column(name = "adults")
+    private int adults;
+
+    @Column(name = "children")
+    private int children;
+
+    @Column(name = "rate_plan_code")
     private String ratePlanCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "ratePlan_id")
+    @JoinColumn(name = "rate_plan_id")
     private ManageRatePlan ratePlan;
 
+    @Column(name = "invoice_date")
     private LocalDate invoicingDate;
+
+    @Column(name = "hotel_creation_date")
     private LocalDate hotelCreationDate;
+
+    @Column(name = "original_amount")
     private Double originalAmount;
+
+    @Column(name = "amount_payment_applied")
     private Double amountPaymentApplied;
+
+    @Column(name = "rate_by_adult")
     private Double rateByAdult;
+
+    @Column(name = "rate_by_child")
     private Double rateByChild;
+
+    @Column(name = "remarks")
     private String remarks;
+
+    @Column(name = "room_number")
     private String roomNumber;
+
+    @Column(name = "hotel_invoice_amount")
     private Double hotelInvoiceAmount;
+
+    @Column(name = "hotel_invoice_number")
     private String hotelInvoiceNumber;
+
+    @Column(name = "invoice_folio_number")
     private String invoiceFolioNumber;
+
+    @Column(name = "quote")
     private Double quote;
+
+    @Column(name = "renewal_number")
     private String renewalNumber;
 
+    @Column(name = "room_category_code")
     private String roomCategoryCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "roomCategory_id")
+    @JoinColumn(name = "room_category_id")
     private ManageRoomCategory roomCategory;
 
+    @Column(name = "hash")
     private String hash;
 
     @Column(name = "invoice_id")
@@ -115,7 +169,7 @@ public class RoomRate {
         this.couponNumber = dto.getCouponNumber();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
+        this.children = dto.getChildren();
         this.ratePlanCode = dto.getRatePlanCode();
         this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlan(dto.getRatePlan()) : null;
         this.invoicingDate = dto.getInvoicingDate();
@@ -158,7 +212,7 @@ public class RoomRate {
                 this.couponNumber,
                 this.totalNumberOfGuest,
                 this.adults,
-                this.childrens,
+                this.children,
                 this.ratePlanCode,
                 Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
                 this.invoicingDate,

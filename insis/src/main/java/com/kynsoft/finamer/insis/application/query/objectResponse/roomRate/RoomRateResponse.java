@@ -69,7 +69,7 @@ public class RoomRateResponse {
         this.couponNumber = dto.getCouponNumber();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
+        this.childrens = dto.getChildren();
         this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlanResponse(dto.getRatePlan()) : null;
         this.invoicingDate = dto.getInvoicingDate();
         this.hotelCreationDate = dto.getHotelCreationDate();

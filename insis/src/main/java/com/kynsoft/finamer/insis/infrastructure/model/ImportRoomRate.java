@@ -17,7 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "import_roomrate", indexes = {
+@Table(name = "import_room_rate", indexes = {
         @Index(name = "idx_import_process", columnList = "import_process_id"),
         @Index(name = "idx_roomrate", columnList = "roomRate_id"),
         @Index(name = "idx_import_process_roomrate", columnList = "import_process_id, roomRate_id")
@@ -32,16 +32,17 @@ public class ImportRoomRate {
     private ImportProcess importProcess;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "roomRate_id")
+    @JoinColumn(name = "room_rate_id")
     private RoomRate roomRate;
 
+    @Column(name = "error_message")
     private String errorMessage;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     public LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     public LocalDateTime updatedAt;
 
     public ImportRoomRate(ImportRoomRateDto dto){

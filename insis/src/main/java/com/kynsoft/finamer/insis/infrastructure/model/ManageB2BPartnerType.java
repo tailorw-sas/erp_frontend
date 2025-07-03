@@ -22,20 +22,24 @@ import java.util.UUID;
 @Entity
 @Table(name = "manage_b2b_partner_type")
 public class ManageB2BPartnerType implements Serializable {
+
     @Id
     private UUID id;
 
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "status")
     private String status;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
     public ManageB2BPartnerType(ManageB2BPartnerTypeDto dto){

@@ -5,10 +5,7 @@ import com.tailorw.tcaInnsist.application.command.rate.sycnRateByInvoiceDate.Syc
 import com.tailorw.tcaInnsist.application.command.rate.sycnRateByInvoiceDate.SycnRateByInvoiceDateMessage;
 import com.tailorw.tcaInnsist.application.command.rate.sycnRateByInvoiceDate.SycnRateByInvoiceDateRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/room-rate")
@@ -20,7 +17,7 @@ public class RoomRateController {
         this.mediator = mediator;
     }
 
-    @GetMapping("/sync")
+    @PostMapping("/sync")
     public ResponseEntity<?> sync(@RequestBody SycnRateByInvoiceDateRequest request){
         SycnRateByInvoiceDateCommand command = SycnRateByInvoiceDateCommand.fromRequest(request);
         SycnRateByInvoiceDateMessage response = mediator.send(command);

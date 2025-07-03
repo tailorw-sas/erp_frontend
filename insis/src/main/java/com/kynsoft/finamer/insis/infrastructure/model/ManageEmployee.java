@@ -23,30 +23,36 @@ public class ManageEmployee {
 
     @Id
     private UUID id;
+
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "email")
     private String email;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     public LocalDateTime updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "manage_employee_agencies_relations",
-            joinColumns = @JoinColumn(name = "parent_id"),
-            inverseJoinColumns = @JoinColumn(name = "child_id")
+            name = "manage_employee_agency",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "agency_id")
     )
     private List<ManageAgency> manageAgencyList;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "manage_employee_hotels_relations",
-            joinColumns = @JoinColumn(name = "parent_id"),
-            inverseJoinColumns = @JoinColumn(name = "child_id")
+            name = "manage_employee_hotel",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "hotel_id")
     )
     private List<ManageHotel> manageHotelList;
 
