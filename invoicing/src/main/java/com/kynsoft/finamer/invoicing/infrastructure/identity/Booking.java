@@ -231,6 +231,44 @@ public class Booking {
         );
     }
 
+    public ManageBookingDto toAggregateWithRatesAndParent() {
+        return new ManageBookingDto(
+                this.id,
+                this.bookingId,
+                this.reservationNumber,
+                this.hotelCreationDate,
+                this.bookingDate,
+                this.checkIn,
+                this.checkOut,
+                this.hotelBookingNumber,
+                this.fullName,
+                this.firstName,
+                this.lastName,
+                Objects.nonNull(this.invoiceAmount) ? BankerRounding.round(this.invoiceAmount) : null,
+                Objects.nonNull(this.dueAmount) ? BankerRounding.round(this.dueAmount) : 0.0,
+                this.roomNumber,
+                this.couponNumber,
+                this.adults,
+                Objects.nonNull(this.children) ? this.children : 0,
+                Objects.nonNull(this.rateAdult) ? BankerRounding.round(this.rateAdult) : null,
+                Objects.nonNull(this.rateChild) ? BankerRounding.round(this.rateChild) : null,
+                this.hotelInvoiceNumber, this.folioNumber,
+                Objects.nonNull(this.hotelAmount) ? BankerRounding.round(this.hotelAmount) : null,
+                this.description,
+                Objects.nonNull(this.invoice) ? this.invoice.toAggregateSimple() : null,
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
+                Objects.nonNull(this.nightType) ? this.nightType.toAggregate() : null,
+                Objects.nonNull(this.roomType) ? this.roomType.toAggregate() : null,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                Objects.nonNull(this.roomRates) ? this.roomRates.stream().map(ManageRoomRate::toAggregateSimple).collect(Collectors.toList()) : null,
+                this.nights,
+                Objects.nonNull(this.parent) ? this.parent.toAggregateSimple() : null,
+                this.contract,
+                this.deleteInvoice,
+                this.updatedAt
+        );
+    }
+
     public ManageBookingDto toAggregateSimple() {
         return new ManageBookingDto(
                 this.id,

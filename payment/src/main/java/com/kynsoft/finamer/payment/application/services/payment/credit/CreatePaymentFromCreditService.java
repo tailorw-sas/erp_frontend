@@ -7,6 +7,7 @@ import com.kynsoft.finamer.payment.domain.core.helper.CreateAttachment;
 import com.kynsoft.finamer.payment.domain.core.payment.ProcessCreatePayment;
 import com.kynsoft.finamer.payment.domain.core.paymentDetail.ProcessCreatePaymentDetail;
 import com.kynsoft.finamer.payment.domain.dto.*;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.payment.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.payment.domain.services.*;
 import org.springframework.stereotype.Service;
@@ -294,7 +295,7 @@ public class CreatePaymentFromCreditService {
                 bankAccount,
                 paymentAmount,
                 attachmentStatus,
-                invoiceDtoTypeInvoice,
+                invoiceDtoTypeCredit.getInvoiceType() == EInvoiceType.OLD_CREDIT ? invoiceDtoTypeCredit : invoiceDtoTypeInvoice,
                 employee,
                 closeOperation,
                 createAttachmentRequests,
@@ -315,7 +316,7 @@ public class CreatePaymentFromCreditService {
         );
         paymentDetailList.add(depositPaymentDetail);
 
-        if (!hotelDto.getNoAutoApplyCredit()) {
+        if (!hotelDto.getNoAutoApplyCredit() && invoiceDtoTypeCredit.getInvoiceType() != EInvoiceType.OLD_CREDIT) {
             for (ManageBookingDto creditBooking : invoiceDtoTypeCredit.getBookings()) {
                 if(creditBooking.getParent().getAmountBalance() > 0){
                     //Crear un AANT por cada booking para el deposito
