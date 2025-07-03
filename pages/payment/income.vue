@@ -633,6 +633,7 @@ async function createItem(item: { [key: string]: any }) {
     payload.hotel = Object.prototype.hasOwnProperty.call(payload.hotel, 'id') ? payload.hotel.id : payload.hotel
     payload.status = statusToString(payload.status)
     payload.employee = userData?.data?.userId
+    payload.reSend = payload.reSend ? payload.reSend : false
 
     let totalIncomeAmount = 0
     if (Array.isArray(payload.incomeAmount)) {
@@ -655,6 +656,17 @@ async function createItem(item: { [key: string]: any }) {
         paymentResourceType: item.paymentResourceType.id,
       }))
     }
+
+    // Asignacion de los ajuste al payload
+    if (AdjustmentList.value.length > 0) {
+      payload.adjustments = AdjustmentList.value.map(item => ({
+        transactionType: item.transactionType ? item.transactionType.id : null,
+        amount: Number.parseFloat(item.amount),
+        date: item.date ? dayjs(item.date).format('YYYY-MM-DD') : null,
+        remark: item.remark
+      }))
+    }
+
     const response: any = await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
     if (response && response.id) {
       // Guarda el id del elemento creado
@@ -691,14 +703,10 @@ async function saveItem(item: { [key: string]: any }) {
   }
   else {
     try {
-      // await validateIncomeCloseOperation(item)
       await createItem(item)
       // Deshabilitar campos restantes del formulario
       updateFieldProperty(fields, 'reSend', 'disabled', true)
       updateFieldProperty(fields, 'reSendDate', 'disabled', true)
-      if (AdjustmentList.value.length > 0) {
-        await createAdjustment(AdjustmentList.value)
-      }
       await getItemById(idItem.value)
     }
     catch (error: any) {
@@ -757,6 +765,7 @@ async function getItemById(id: string) {
   }
 }
 
+/*
 async function createAdjustment(items: any[]) {
   try {
     // console.log(item)
@@ -787,7 +796,7 @@ async function createAdjustment(items: any[]) {
   finally {
     loadingSaveAdjustment.value = false
   }
-}
+} */
 
 async function createInvoiceAdjustment(item: { [key: string]: any }) {
   try {
