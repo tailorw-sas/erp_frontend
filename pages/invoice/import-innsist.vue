@@ -782,14 +782,14 @@ function generateProcessId() {
   processId.value = uuidv4()
 }
 
-async function importBookings() {
+async function importRoomRates() {
   listItemsSearchErrors.value = []
   const idItemsToImport = selectedElements.value
   if (selectedElements.value.length === 0) {
     toast.add({
       severity: 'info',
       summary: 'Confirmed',
-      detail: `No bookings selected. `,
+      detail: `No rates selected. `,
       life: 3000
     })
     return
@@ -1313,9 +1313,8 @@ onMounted(async () => {
         </DynamicTable>
       </div>
       <div class="flex align-items-end justify-content-end">
-        <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importBookings" />
+        <Button v-tooltip.top="'Import'" class="w-3rem mx-2" icon="pi pi-save" :disabled="disabledImport" @click="importRoomRates" />
         <Button v-tooltip.top="'View Errors Search'" :outlined="disabledSearchErrors" severity="danger" class="w-3rem mx-2" icon="pi pi-times-circle" :disabled="disabledSearchErrors" @click="openErrorsSearch($event)" />
-        <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
       </div>
     </div>
   </div>
