@@ -168,7 +168,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
     }
 
     @Override
-    //@Transactional
+    @Transactional
     public UUID insert(ManageInvoiceDto dto) {
         Invoice invoice = new Invoice(dto);
         //this.repositoryCommand.insert(invoice);
@@ -230,7 +230,7 @@ public class ManageInvoiceServiceImpl implements IManageInvoiceService {
 
         if(Objects.nonNull(invoice.getBookings()) && !invoice.getBookings().isEmpty()){
             this.bookingService.insertAll(invoice.getBookings());
-            dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRates).collect(Collectors.toList()));
+            dto.setBookings(invoice.getBookings().stream().map(Booking::toAggregateWithRatesAndParent).collect(Collectors.toList()));
         }
 
         return invoice.getId();
