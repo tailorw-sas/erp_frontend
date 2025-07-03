@@ -106,6 +106,52 @@ const emit = defineEmits<{
 
 const { loadDynamicData } = useDynamicData()
 
+// ============================================================================
+// COMPUTED PROPERTIES - MOVED EARLY TO AVOID USE-BEFORE-DEFINE
+// ============================================================================
+
+const effectiveParams = computed(() => {
+  const baseParams = {
+    multiple: props.multiple,
+    maxSelectedLabels: props.maxSelectedLabels,
+    debounceTimeMs: props.debounceTimeMs,
+    filtersBase: props.filtersBase,
+    dependentField: props.dependentField,
+    filterKeyValue: '',
+    minQueryLength: props.minQueryLength,
+    maxItems: props.maxItems
+  }
+
+  if (props.kwArgs) {
+    return {
+      ...baseParams,
+      multiple: props.kwArgs.multiple ?? baseParams.multiple,
+      maxSelectedLabels: props.kwArgs.maxSelectedLabels ?? baseParams.maxSelectedLabels,
+      debounceTimeMs: props.kwArgs.debounceTimeMs ?? baseParams.debounceTimeMs,
+      filtersBase: props.kwArgs.filtersBase ?? baseParams.filtersBase,
+      dependentField: props.kwArgs.dependentField ?? baseParams.dependentField,
+      filterKeyValue: props.kwArgs.filterKeyValue ?? baseParams.filterKeyValue,
+      minQueryLength: props.kwArgs.minQueryLength ?? baseParams.minQueryLength,
+      maxItems: props.kwArgs.maxItems ?? baseParams.maxItems
+    }
+  }
+  return baseParams
+})
+
+// FIXED: Move isMultiple definition early to avoid use-before-define errors
+const isMultiple = computed(() => {
+  if (effectiveParams.value.multiple !== undefined) {
+    return effectiveParams.value.multiple
+  }
+  if (props.field?.type === 'multiselect') {
+    return true
+  }
+  if (props.field?.type === 'select') {
+    return false
+  }
+  return props.field?.multiple || props.multiple || false
+})
+
 // 🔧 FUNCIÓN MEMOIZE SIMPLE
 function createMemoize<T extends (...args: any[]) => any>(fn: T): T {
   const cache = new Map()
@@ -244,7 +290,7 @@ function removeMultiselectOpenStyles(): void {
     'transform',
     'z-index'
   ]
-  propertiesToReset.forEach(prop => element.style.removeProperty(prop))
+  propertiesToReset.forEach((prop: string) => element.style.removeProperty(prop))
 }
 
 /**
@@ -258,7 +304,7 @@ function initializeMultiselectBehavior(): void {
 
       // Observer para detectar cambios en las clases
       const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
+        mutations.forEach((mutation: MutationRecord) => {
           if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
             const target = mutation.target as HTMLElement
             const isOpen = target.classList.contains('p-multiselect-opened')
@@ -297,7 +343,7 @@ function initializeMultiselectBehavior(): void {
 }
 
 // ============================================================================
-// COMPUTED PROPERTIES
+// MORE COMPUTED PROPERTIES
 // ============================================================================
 
 const effectiveApiConfig = computed((): ApiConfig | null => {
@@ -317,48 +363,6 @@ const effectiveApiConfig = computed((): ApiConfig | null => {
     }
   }
   return null
-})
-
-const effectiveParams = computed(() => {
-  const baseParams = {
-    multiple: props.multiple,
-    maxSelectedLabels: props.maxSelectedLabels,
-    debounceTimeMs: props.debounceTimeMs,
-    filtersBase: props.filtersBase,
-    dependentField: props.dependentField,
-    filterKeyValue: '',
-    minQueryLength: props.minQueryLength,
-    maxItems: props.maxItems
-  }
-
-  if (props.kwArgs) {
-    return {
-      ...baseParams,
-      multiple: props.kwArgs.multiple ?? baseParams.multiple,
-      maxSelectedLabels: props.kwArgs.maxSelectedLabels ?? baseParams.maxSelectedLabels,
-      debounceTimeMs: props.kwArgs.debounceTimeMs ?? baseParams.debounceTimeMs,
-      filtersBase: props.kwArgs.filtersBase ?? baseParams.filtersBase,
-      dependentField: props.kwArgs.dependentField ?? baseParams.dependentField,
-      filterKeyValue: props.kwArgs.filterKeyValue ?? baseParams.filterKeyValue,
-      minQueryLength: props.kwArgs.minQueryLength ?? baseParams.minQueryLength,
-      maxItems: props.kwArgs.maxItems ?? baseParams.maxItems
-    }
-  }
-  return baseParams
-})
-
-// FIXED: Single isMultiple computed property
-const isMultiple = computed(() => {
-  if (effectiveParams.value.multiple !== undefined) {
-    return effectiveParams.value.multiple
-  }
-  if (props.field?.type === 'multiselect') {
-    return true
-  }
-  if (props.field?.type === 'select') {
-    return false
-  }
-  return props.field?.multiple || props.multiple || false
 })
 
 const availableOptions = computed(() => {
@@ -388,7 +392,7 @@ const availableOptions = computed(() => {
   }
 
   // Agregar suggestions internas y props
-  [...internalSuggestions.value, ...props.suggestions].forEach(addUniqueOption)
+  [...internalSuggestions.value, ...props.suggestions].forEach((item: SuggestionItem) => addUniqueOption(item))
 
   return Array.from(optionsMap.values())
 })
@@ -433,12 +437,12 @@ const componentClasses = computed(() => {
       if (Array.isArray(props.error)) {
         // Solo si hay errores en el array y no está vacío
         hasRealError = props.error.length > 0 && props.error.some(error =>
-          error && (typeof error === 'string' ? error.trim() : true)
+          error && (typeof error === 'string' ? (error as string).trim() : true)
         )
       }
       else if (typeof props.error === 'string') {
         // Solo si el string no está vacío
-        hasRealError = props.error.trim().length > 0
+        hasRealError = (props.error as string).trim().length > 0
       }
       else if (props.error && typeof props.error === 'object') {
         // Solo si es un objeto de error válido
@@ -489,12 +493,12 @@ const accessibilityProps = computed(() => {
       if (Array.isArray(props.error)) {
         // Solo si hay errores reales en el array
         hasRealError = props.error.length > 0 && props.error.some(error =>
-          error && (typeof error === 'string' ? error.trim() : true)
+          error && (typeof error === 'string' ? (error as string).trim() : true)
         )
       }
       else if (typeof props.error === 'string') {
         // Solo si el string no está vacío
-        hasRealError = props.error.trim().length > 0
+        hasRealError = (props.error as string).trim().length > 0
       }
       else if (props.error && typeof props.error === 'object') {
         // Solo si es un objeto de error válido
@@ -699,7 +703,7 @@ function clearDependentComponents(removedParentValue: any): void {
       if (formContext?.actions?.setFieldValue && formContext?.state?.values) {
         const allFields = Object.keys(formContext.state.values)
 
-        allFields.forEach((fieldName) => {
+        allFields.forEach((fieldName: string) => {
           if (fieldName !== currentFieldName) {
             const fieldValue = formContext.state.values[fieldName]
 
@@ -723,7 +727,7 @@ function clearDependentComponents(removedParentValue: any): void {
         try {
           const allValues = props.kwArgs.getParentValues()
           if (allValues && typeof allValues === 'object') {
-            Object.keys(allValues).forEach((fieldName) => {
+            Object.keys(allValues).forEach((fieldName: string) => {
               if (fieldName !== currentFieldName) {
                 const fieldValue = allValues[fieldName]
 
@@ -828,7 +832,7 @@ function buildFilters(query: string): IFilter[] {
       { key: 'code', operator: 'LIKE', value: query, logicalOperation: 'OR' },
       { key: 'name', operator: 'LIKE', value: query, logicalOperation: 'OR' }
     ]
-    searchFilters.forEach((searchFilter) => {
+    searchFilters.forEach((searchFilter: any) => {
       const exists = filters.find(f => f.key === searchFilter.key && f.operator === 'LIKE')
       if (!exists) {
         filters.push(searchFilter as IFilter)
@@ -1037,7 +1041,7 @@ function handleMultiSelectChange(event: any): void {
 
     // 🎯 DETECTAR ELEMENTOS ELIMINADOS PARA LIMPIAR DEPENDIENTES
     const removedItems = oldValue.filter(item => !newValue.includes(item))
-    const addedItems = newValue.filter(item => !oldValue.includes(item))
+    const addedItems = newValue.filter((item: any) => !oldValue.includes(item))
 
     if (removedItems.length > 0) {
       Logger.info('🔄 [MULTISELECT CHANGE] Items removed, clearing dependents:', {
@@ -1046,7 +1050,7 @@ function handleMultiSelectChange(event: any): void {
       })
 
       // Limpiar componentes dependientes para cada item eliminado
-      removedItems.forEach((removedItem) => {
+      removedItems.forEach((removedItem: any) => {
         clearDependentComponents(removedItem)
       })
     }
@@ -1319,7 +1323,7 @@ function removeChip(itemToRemove: any): void {
     return
   }
 
-  const newValue = currentArrayValue.filter((_, index) => index !== indexToRemove)
+  const newValue = currentArrayValue.filter((_: any, index: number) => index !== indexToRemove)
 
   try {
     // 🎯 LIMPIAR COMPONENTES DEPENDIENTES DEL ITEM ELIMINADO
@@ -1627,7 +1631,7 @@ onMounted(async () => {
   // Aplicar estilos mejorados a los items después del mount
   setTimeout(() => {
     const items = document.querySelectorAll('.p-multiselect-item, .p-dropdown-item')
-    items.forEach((item) => {
+    items.forEach((item: Element) => {
       (item as HTMLElement).style.setProperty('padding', '0.75rem 1rem', 'important')
       ;(item as HTMLElement).style.setProperty('margin', '0.125rem 0.5rem', 'important')
       ;(item as HTMLElement).style.setProperty('border-radius', '0.375rem', 'important')

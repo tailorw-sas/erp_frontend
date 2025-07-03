@@ -2,6 +2,7 @@
    REPORT VIEWER - COMPONENT STYLES - PROFESSIONAL ENTERPRISE GRADE
    Form fields, buttons, interactions, and component-specific styling
    Compatible with PrimeVue + PrimeFlex + Design System
+   (DateField styles extracted - component is now autonomous)
    =================================================================== */
 
 // ===============================
@@ -246,60 +247,6 @@ $status-error: $error-color;
     // 🎯 ENHANCED FORM FIELDS - ENTERPRISE LEVEL
     // ===============================
     
-    // UNIVERSAL CLEAR BUTTON
-    :deep(.p-calendar .p-calendar-clear-icon),
-    :deep(.p-inputtext-clear-icon) {
-      position: absolute !important;
-      top: 50% !important;
-      right: calc(var(--enhanced-form-field-height) + 8px) !important;
-      transform: translateY(-50%) !important;
-      width: 1.25rem !important;
-      height: 1.25rem !important;
-      color: $gray-500 !important;
-      cursor: pointer !important;
-      border-radius: 50% !important;
-      transition: var(--enhanced-form-transition) !important;
-      z-index: 2 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      box-shadow: none !important;
-      
-      &:hover {
-        color: $error-color !important;
-        background: rgba($error-color, 0.1) !important;
-        transform: translateY(-50%) scale(1.1) !important;
-        box-shadow: 0 2px 8px rgba($error-color, 0.2) !important;
-      }
-      
-      &:focus {
-        outline: 2px solid rgba($error-color, 0.3) !important;
-        outline-offset: 1px !important;
-      }
-      
-      &:active {
-        transform: translateY(-50%) scale(0.95) !important;
-      }
-      
-      .p-icon,
-      .pi {
-        font-size: 1rem !important;
-        color: inherit !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1 !important;
-        font-weight: 400 !important;
-        font-family: 'primeicons' !important;
-        vertical-align: baseline !important;
-        text-rendering: auto !important;
-        -webkit-font-smoothing: antialiased !important;
-      }
-    }
-    
     // CONTAINER STYLING
     :deep(.col-12) {
       margin-bottom: 0 !important;
@@ -309,7 +256,6 @@ $status-error: $error-color;
     
     // UNIVERSAL FIELD SIZING
     :deep(.p-inputtext),
-    :deep(.p-calendar),
     :deep(.p-inputnumber),
     :deep(.p-password) {
       width: 100% !important;
@@ -318,234 +264,6 @@ $status-error: $error-color;
       box-sizing: border-box !important;
       height: var(--enhanced-form-field-height) !important;
       min-height: var(--enhanced-form-field-height) !important;
-    }
-    
-    // ===============================
-    // CALENDAR/DATE FIELD STYLING - ENTERPRISE GRADE
-    // ===============================
-    :deep(.p-calendar) {
-      position: relative !important;
-      border: var(--enhanced-form-border-width) solid $gray-200 !important;
-      border-radius: var(--enhanced-form-border-radius) !important;
-      transition: var(--enhanced-form-transition) !important;
-      background: white !important;
-      display: flex !important;
-      align-items: center !important;
-      overflow: hidden !important;
-      box-shadow: var(--enhanced-form-shadow) !important;
-      
-      .p-component {
-        height: 100% !important;
-      }
-
-      .p-calendar-w-btn {
-        width: 100% !important;
-        max-width: none !important;
-        display: flex !important;
-        align-items: center !important;
-      }
-      
-      .p-inputtext,
-      .p-datepicker-trigger {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        
-        &:focus,
-        &:focus-visible,
-        &:focus-within {
-          border: none !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
-      }
-      
-      .p-inputtext {
-        width: 100% !important;
-        height: 100% !important;
-        font-size: var(--enhanced-form-font-size) !important;
-        background: transparent !important;
-        color: $gray-700 !important;
-        padding: 0 1rem !important;
-        flex: 1 !important;
-        line-height: normal !important;
-        
-        &::placeholder {
-          color: $gray-400 !important;
-          font-style: italic !important;
-        }
-      }
-      
-      .p-datepicker-trigger {
-        height: 100% !important;
-        width: var(--enhanced-form-field-height) !important;
-        background: transparent !important;
-        border-left: 1px solid $gray-200 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        color: $primary-color !important;
-        cursor: pointer !important;
-        flex-shrink: 0 !important;
-        transition: var(--enhanced-form-transition) !important;
-        
-        &:hover {
-          background: rgba($primary-color, 0.05) !important;
-          color: $primary-hover !important;
-        }
-        
-        .p-icon {
-          color: inherit !important;
-          font-size: 1.1rem !important;
-        }
-      }
-      
-      &:hover:not(.p-calendar-disabled):not(.p-calendar-opened):not(.p-focus) {
-        border-color: $gray-300 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: var(--enhanced-form-shadow-lg) !important;
-      }
-      
-      &:focus-within:not(.p-calendar-opened) {
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-calendar-opened {
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border-bottom-color: transparent !important;
-        border-color: var(--enhanced-form-focus-border) !important;
-        box-shadow: var(--enhanced-form-focus-shadow) !important;
-        transform: translateY(-1px) !important;
-      }
-      
-      &.p-invalid {
-        border-color: var(--enhanced-form-error-border) !important;
-        box-shadow: var(--enhanced-form-error-shadow) !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-        
-        &:focus-within {
-          border-color: var(--enhanced-form-error-border) !important;
-          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
-        }
-      }
-    }
-        
-    // ===============================
-    // DATE PICKER PANEL - ENTERPRISE GRADE
-    // ===============================
-    :deep(.p-datepicker) {
-      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
-      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
-      border-top: none !important;
-      margin-top: 0 !important;
-      background: white !important;
-      overflow: hidden !important;
-      animation: slideDown 0.2s ease-out !important;
-      
-      &::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--enhanced-form-focus-border);
-        z-index: 1;
-      }
-      
-      .p-datepicker-header {
-        background: $gray-50 !important;
-        border-bottom: 1px solid $gray-200 !important;
-        padding: 1rem !important;
-        
-        .p-datepicker-title {
-          color: $gray-800 !important;
-          font-weight: 600 !important;
-          font-size: 1.1rem !important;
-        }
-        
-        .p-datepicker-prev,
-        .p-datepicker-next {
-          color: $gray-600 !important;
-          width: 32px !important;
-          height: 32px !important;
-          border-radius: var(--enhanced-form-border-radius-small) !important;
-          transition: var(--enhanced-form-transition) !important;
-          
-          &:hover {
-            background: $gray-100 !important;
-            color: $gray-800 !important;
-            transform: scale(1.1) !important;
-          }
-          
-          &:focus {
-            outline: 2px solid rgba($primary-color, 0.3) !important;
-            outline-offset: 1px !important;
-          }
-        }
-      }
-      
-      .p-datepicker-calendar {
-        .p-datepicker-weekheader {
-          background: $gray-50 !important;
-          
-          th {
-            color: $gray-600 !important;
-            font-weight: 600 !important;
-            padding: 0.75rem 0.5rem !important;
-            font-size: 0.9rem !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-          }
-        }
-        
-        td {
-          padding: 2px !important;
-          
-          .p-datepicker-day {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: var(--enhanced-form-border-radius-small) !important;
-            color: $gray-700 !important;
-            font-weight: 500 !important;
-            transition: var(--enhanced-form-transition) !important;
-            
-            &:hover {
-              background: $primary-light !important;
-              color: $primary-color !important;
-              transform: scale(1.05) !important;
-              box-shadow: 0 2px 4px rgba($primary-color, 0.2) !important;
-            }
-            
-            &:focus {
-              outline: 2px solid rgba($primary-color, 0.3) !important;
-              outline-offset: 1px !important;
-            }
-            
-            &.p-datepicker-day-selected {
-              background: $primary-color !important;
-              color: white !important;
-              font-weight: 700 !important;
-              box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
-              transform: scale(1.05) !important;
-            }
-            
-            &.p-datepicker-day-today {
-              background: $warning-light !important;
-              color: $warning-color !important;
-              font-weight: 700 !important;
-              border: 2px solid $warning-color !important;
-            }
-            
-            &.p-datepicker-day-other-month {
-              opacity: 0.5 !important;
-            }
-          }
-        }
-      }
     }
     
     // ===============================
@@ -569,13 +287,6 @@ $status-error: $error-color;
     }
     
     // WRAPPER CONTAINERS
-    :deep(.date-field__wrapper) {
-      width: 100% !important;
-      position: relative !important;
-      display: block !important;
-      box-sizing: border-box !important;
-    }
-    
     :deep(.form-field__input-container),
     :deep(.form-field__input-wrapper) {
       width: 100% !important;
@@ -587,58 +298,6 @@ $status-error: $error-color;
     // FOCUS STATES
     :deep(.form-field:focus-within) {
       animation: field-focus 0.3s ease-out !important;
-    }
-  }
-  
-  // ===============================
-  // 📝 COMPONENT-SPECIFIC STYLES (Ya no necesitamos clases específicas)
-  // ===============================
-  
-  .date-field__calendar {
-    width: 100% !important;
-    
-    // Los estilos de label están manejados por BaseField arriba
-    // Solo necesitamos estilos específicos del componente si es necesario
-  }
-  
-  // ===============================
-  // 📅 DATE FIELD STYLES - SIMPLIFICADO
-  // ===============================
-  
-  .date-field__wrapper {
-    width: 100% !important;
-    position: relative !important;
-    display: flex !important;
-    align-items: stretch !important;
-    box-sizing: border-box !important;
-    animation: fadeInUp 0.3s ease-out;
-    margin: 0 !important;
-    padding: 0 !important;
-    
-    // Los estilos de label están manejados por BaseField arriba
-    
-    &--error {
-      .date-field__calendar {
-        border-color: $error-color !important;
-        box-shadow: 0 0 0 1px $error-color !important;
-        animation: fieldErrorShake 0.5s ease-in-out !important;
-      }
-    }
-    
-    &--loading {
-      opacity: 0.7 !important;
-      pointer-events: none !important;
-      
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-      }
     }
   }
   
@@ -685,94 +344,6 @@ $status-error: $error-color;
           flex-shrink: 0 !important;
         }
       }
-    }
-  }
-  
-  .date-field__calendar {
-    width: 100% !important;
-    
-    &--inline {
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: $border-radius-lg !important;
-      overflow: hidden;
-    }
-    
-    &--mobile {
-      font-size: 1.1rem !important;
-      
-      .p-calendar-w-btn .p-inputtext {
-        font-size: 1rem !important;
-      }
-    }
-  }
-  
-  .date-field__header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0.75rem 1rem !important;
-    background: $gray-50 !important;
-    border-bottom: 1px solid $gray-200 !important;
-  }
-  
-  .date-field__today-btn {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    padding: 0.5rem 0.75rem !important;
-    background: $primary-color !important;
-    color: white !important;
-    border: none !important;
-    border-radius: $border-radius !important;
-    cursor: pointer !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease !important;
-    box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
-    
-    &:hover {
-      background: $primary-hover !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 8px rgba($primary-color, 0.4) !important;
-    }
-    
-    &:focus {
-      outline: 2px solid rgba($primary-color, 0.3) !important;
-      outline-offset: 1px !important;
-    }
-    
-    &:active {
-      transform: translateY(0) !important;
-    }
-  }
-  
-  .date-field__footer {
-    padding: 0.75rem 1rem !important;
-    background: $gray-50 !important;
-    border-top: 1px solid $gray-200 !important;
-  }
-  
-  .date-field__selected-info {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    color: $success-color !important;
-    font-weight: 500 !important;
-    font-size: 0.875rem !important;
-    
-    .pi {
-      color: inherit !important;
-      animation: pulse 2s infinite !important;
-    }
-  }
-  
-  .date-field__date-cell {
-    &--weekend {
-      color: $error-color !important;
-      font-weight: 600 !important;
-      background: rgba($error-color, 0.1) !important;
-      border-radius: 50% !important;
     }
   }
   
@@ -882,11 +453,6 @@ $status-error: $error-color;
       .grid {
         row-gap: 1.75rem !important;
       }
-      
-      :deep(.p-calendar) {
-        height: var(--enhanced-form-field-height) !important;
-        min-height: var(--enhanced-form-field-height) !important;
-      }
     }
   }
   
@@ -912,19 +478,6 @@ $status-error: $error-color;
       }
     }
     
-    .date-field__today-btn {
-      padding: 0.625rem 1rem !important;
-      font-size: 0.9rem !important;
-      
-      .pi {
-        font-size: 1rem !important;
-      }
-    }
-    
-    .date-field__selected-info {
-      font-size: 0.9rem !important;
-    }
-    
     &__parameters-content {
       .grid {
         row-gap: 1.75rem !important;
@@ -941,40 +494,11 @@ $status-error: $error-color;
         margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
         padding: 0 !important;
       }
-      
-      :deep(.p-calendar-clear-icon) {
-        width: 1.5rem !important;
-        height: 1.5rem !important;
-        right: calc(var(--enhanced-form-field-height) + 10px) !important;
-        
-        .p-icon,
-        .pi {
-          font-size: 0.9rem !important;
-        }
-      }
-      
-      :deep(.p-calendar) {
-        height: var(--enhanced-form-field-height) !important;
-        min-height: var(--enhanced-form-field-height) !important;
-      }
     }
   }
   
   @media (max-width: 480px) {
     --enhanced-form-field-height: 3.5rem;
-    
-    &__parameters-content {
-      :deep(.p-calendar) {
-        height: var(--enhanced-form-field-height) !important;
-        min-height: var(--enhanced-form-field-height) !important;
-      }
-
-      :deep(.p-calendar-clear-icon) {
-        width: 1.75rem !important;
-        height: 1.75rem !important;
-        right: calc(var(--enhanced-form-field-height) + 12px) !important;
-      }
-    }
   }
 }
 
@@ -1007,39 +531,10 @@ $status-error: $error-color;
   }
 }
 
-@keyframes slideDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-5px) scaleY(0.95);
-    transform-origin: top;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scaleY(1);
-    transform-origin: top;
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-@keyframes chip-appear {
-  0% { opacity: 0; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 @keyframes field-focus {
   0% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-1px) scale(1.001); }
   100% { transform: translateY(-1px) scale(1); }
-}
-
-@keyframes fieldErrorShake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
-  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
 // ===============================
@@ -1087,9 +582,5 @@ $status-error: $error-color;
   
   @media (prefers-contrast: high) {
     --enhanced-form-border-width: 3px;
-    
-    :deep(.p-calendar) {
-      border-width: 3px !important;
-    }
   }
 }

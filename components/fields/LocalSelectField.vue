@@ -6,7 +6,7 @@ import type { FormFieldProps, ValidationError } from '../../types/form'
 import BaseField from './BaseField.vue'
 
 // Props que extienden FormFieldProps para ser compatible con el sistema
-interface LocalSelectFieldProps extends Omit<FormFieldProps<any>, 'value'> {
+interface LocalSelectFieldProps extends Omit<FormFieldProps<any>, 'value' | 'onUpdate'> {
   value?: any
   readonly?: boolean
   required?: boolean
@@ -88,21 +88,6 @@ const isDisabled = computed(() =>
   props.disabled || props.field?.ui?.readonly || props.readonly || false
 )
 
-const isClearable = computed(() => {
-  if (props.clearable !== undefined) {
-    return props.clearable
-  }
-  return !isDisabled.value
-})
-
-const showClearButton = computed(() => {
-  return isClearable.value
-    && internalValue.value !== null
-    && internalValue.value !== undefined
-    && internalValue.value !== ''
-    && !isDisabled.value
-})
-
 const placeholder = computed(() => {
   if (props.field?.ui?.placeholder) {
     return props.field.ui.placeholder
@@ -116,19 +101,50 @@ const placeholder = computed(() => {
   return `Select ${label}`
 })
 
-// Computed para clases del componente
+// Computed para clases del componente - Mejorado con manejo estricto de errores
 const componentClasses = computed(() => {
-  const classes = ['local-select-dropdown']
+  const classes = ['select-field__component', 'local-select-dropdown']
 
-  if (props.error && props.error.length > 0) {
-    classes.push('p-invalid')
+  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES - SOLO MARCAR COMO INVÁLIDO SI HAY ERRORES REALES
+  try {
+    let hasRealError = false
+
+    if (props.error) {
+      if (Array.isArray(props.error)) {
+        // Solo si hay errores en el array y no está vacío
+        hasRealError = props.error.length > 0 && props.error.some(error =>
+          error && (typeof error === 'string' ? (error as string).trim() : true)
+        )
+      }
+      else if (typeof props.error === 'string') {
+        // Solo si el string no está vacío
+        hasRealError = (props.error as string).trim().length > 0
+      }
+      else if (props.error && typeof props.error === 'object') {
+        // Solo si es un objeto de error válido
+        hasRealError = true
+      }
+    }
+
+    if (hasRealError) {
+      classes.push('p-invalid')
+    }
+  }
+  catch (error) {
+    console.warn('🔍 [COMPONENT CLASSES] Error handling props.error:', error)
+    // No añadir clase de error si hay problemas procesando
   }
 
   if (props.field?.ui?.className) {
-    const uiClasses = Array.isArray(props.field.ui.className)
-      ? props.field.ui.className
-      : [props.field.ui.className]
-    classes.push(...uiClasses)
+    try {
+      const uiClasses = Array.isArray(props.field.ui.className)
+        ? props.field.ui.className
+        : [props.field.ui.className]
+      classes.push(...uiClasses)
+    }
+    catch (error) {
+      console.warn('🔍 [COMPONENT CLASSES] Error handling ui.className:', error)
+    }
   }
 
   return classes
@@ -136,6 +152,38 @@ const componentClasses = computed(() => {
 
 // Computed para el estilo del campo
 const fieldStyle = computed(() => props.field?.ui?.style || {})
+
+// Computed para propiedades de accesibilidad
+const accessibilityProps = computed(() => {
+  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES PARA ARIA
+  let hasRealError = false
+  try {
+    if (props.error) {
+      if (Array.isArray(props.error)) {
+        hasRealError = props.error.length > 0 && props.error.some(error =>
+          error && (typeof error === 'string' ? (error as string).trim() : true)
+        )
+      }
+      else if (typeof props.error === 'string') {
+        hasRealError = (props.error as string).trim().length > 0
+      }
+      else if (props.error && typeof props.error === 'object') {
+        hasRealError = true
+      }
+    }
+  }
+  catch (error) {
+    console.warn('🔍 [ACCESSIBILITY PROPS] Error handling props.error:', error)
+    hasRealError = false
+  }
+
+  return {
+    'aria-label': `Select for ${props.field?.label || props.label || 'option'}`,
+    'aria-describedby': props.field?.helpText ? `${props.id}-help` : undefined,
+    'aria-invalid': hasRealError,
+    'aria-required': props.required
+  }
+})
 
 // Computed para el BaseField props
 const baseFieldProps = computed(() => ({
@@ -157,7 +205,7 @@ const baseFieldProps = computed(() => ({
   class: props.class,
   config: props.config,
   style: fieldStyle.value,
-  onUpdate: props.onUpdate || handleValueUpdate
+  onUpdate: handleValueUpdate // Direct reference, no conflicting onUpdate
 }))
 
 // Event handlers compatibles con BaseField
@@ -173,11 +221,11 @@ function handleValueUpdate(value: any) {
   emit('change', value)
 }
 
-function handleBlur() {
+function _handleBlur() {
   emit('blur')
 }
 
-function handleFocus() {
+function _handleFocus() {
   emit('focus')
 }
 
@@ -197,8 +245,9 @@ function handleChange(event: any) {
   currentValue.value = newValue
 }
 
-function handleFilter(event: any) {
-  console.log('Filter:', event.value)
+function handleFilter(_event: any) {
+  // Filter functionality removed - using console for debugging if needed
+  // console.log('Filter:', event.value)
 }
 
 // Función para obtener el display label
@@ -237,10 +286,11 @@ defineExpose({
         :class="componentClasses"
         :style="fieldStyle"
         :filter="normalizedOptions.length > 10"
-        :show-clear="showClearButton"
+        :show-clear="false"
         :disabled="isDisabled"
         :loading="props.loading || false"
         filter-placeholder="Search..."
+        v-bind="accessibilityProps"
         @update:model-value="onUpdate"
         @blur="onBlur"
         @focus="onFocus"
@@ -248,30 +298,38 @@ defineExpose({
         @clear="handleClear"
         @filter="handleFilter"
       >
+        <!-- Option Template -->
         <template #option="{ option }">
           <div class="dropdown-option">
             <span>{{ option.name }}</span>
           </div>
         </template>
 
+        <!-- Selected Value Template -->
         <template #value="{ value }">
           <div v-if="value !== null && value !== undefined" class="dropdown-selected">
-            <span>{{ getDisplayLabel(value) }}</span>
+            <span class="dropdown-selected--value">{{ getDisplayLabel(value) }}</span>
           </div>
           <span v-else class="dropdown-placeholder">
             {{ placeholder }}
           </span>
         </template>
 
+        <!-- Empty State -->
         <template #empty>
-          <div class="p-dropdown-empty-message">
-            <span>No options available.</span>
+          <div class="dropdown-empty">
+            <div class="dropdown-empty__content">
+              <i class="pi pi-search text-lg text-gray-400" />
+              <span class="dropdown-empty__text">No options available.</span>
+            </div>
           </div>
         </template>
 
+        <!-- Loading State -->
         <template #loader>
-          <div class="p-dropdown-loader">
+          <div class="dropdown-loader">
             <i class="pi pi-spin pi-spinner" />
+            <span>Loading options...</span>
           </div>
         </template>
       </Dropdown>
@@ -311,3 +369,306 @@ defineExpose({
     </template>
   </BaseField>
 </template>
+
+<style scoped>
+/* ===============================================================================
+   🎯 ENHANCED LOCAL SELECT FIELD STYLES - PROFESSIONAL UI/UX
+   =============================================================================== */
+
+/* 🎨 CSS VARIABLES - CONSISTENT WITH GLOBAL DESIGN SYSTEM */
+:root {
+  --enhanced-form-field-height: 2.75rem;
+  --enhanced-form-field-height-mobile: 3rem;
+  --enhanced-form-border-width: 2px;
+  --enhanced-form-border-radius: 0.5rem;
+  --enhanced-form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --enhanced-form-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --enhanced-form-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --enhanced-form-focus-border: #3b82f6;
+  --enhanced-form-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --enhanced-form-error-border: #ef4444;
+  --enhanced-form-error-shadow: 0 0 0 1px #ef4444;
+  --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  --enhanced-form-dropdown-z: 1000;
+  --enhanced-form-font-size: 1rem;
+}
+
+/* 🎯 DROPDOWN COMPONENT STYLES - PROFESSIONAL DESIGN */
+:deep(.p-dropdown) {
+  width: 100% !important;
+  height: var(--enhanced-form-field-height) !important;
+  min-height: var(--enhanced-form-field-height) !important;
+  background: white !important;
+  border: var(--enhanced-form-border-width) solid #d1d5db !important;
+  border-radius: var(--enhanced-form-border-radius) !important;
+  transition: var(--enhanced-form-transition) !important;
+  box-shadow: var(--enhanced-form-shadow) !important;
+  overflow: hidden !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+:deep(.p-dropdown:hover:not(.p-disabled):not(.p-dropdown-opened):not(.p-focus)) {
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--enhanced-form-shadow-lg) !important;
+}
+
+:deep(.p-dropdown.p-focus:not(.p-dropdown-opened)) {
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: var(--enhanced-form-focus-shadow) !important;
+  transform: translateY(-1px) !important;
+}
+
+:deep(.p-dropdown.p-dropdown-opened) {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom-color: transparent !important;
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: var(--enhanced-form-focus-shadow) !important;
+  z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+  transform: translateY(-1px) !important;
+}
+
+:deep(.p-dropdown .p-dropdown-label),
+:deep(.p-dropdown .p-dropdown-trigger),
+:deep(.p-dropdown .p-inputtext) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:deep(.p-dropdown .p-dropdown-label) {
+  height: calc(var(--enhanced-form-field-height) - 4px) !important;
+  padding: 0 1rem !important;
+  line-height: normal !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: var(--enhanced-form-font-size) !important;
+  color: #374151 !important;
+  background: transparent !important;
+}
+
+:deep(.p-dropdown .p-dropdown-label.p-placeholder) {
+  color: #9ca3af !important;
+  font-style: italic !important;
+}
+
+:deep(.p-dropdown .p-dropdown-trigger) {
+  height: calc(var(--enhanced-form-field-height) - 4px) !important;
+  width: var(--enhanced-form-field-height) !important;
+  background: transparent !important;
+  border-left: 1px solid #d1d5db !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: var(--enhanced-form-transition) !important;
+}
+
+:deep(.p-dropdown .p-dropdown-trigger:hover) {
+  background: #f9fafb !important;
+}
+
+:deep(.p-dropdown .p-dropdown-trigger .p-icon) {
+  color: #3b82f6 !important;
+}
+
+:deep(.p-dropdown.p-invalid) {
+  border-color: var(--enhanced-form-error-border) !important;
+  box-shadow: var(--enhanced-form-error-shadow) !important;
+  animation: fieldErrorShake 0.5s ease-in-out !important;
+}
+
+:deep(.p-dropdown.p-invalid:focus),
+:deep(.p-dropdown.p-invalid.p-focus) {
+  border-color: var(--enhanced-form-error-border) !important;
+  box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+}
+
+/* 🎯 DROPDOWN PANELS */
+:deep(.p-dropdown-panel) {
+  border: 2px solid #e2e8f0 !important;
+  border-top: none !important;
+  border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+  z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+  overflow: hidden !important;
+  background: white !important;
+  min-width: 100% !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* 🎯 DROPDOWN ITEMS */
+:deep(.p-dropdown-panel .p-dropdown-items) {
+  padding: 0.25rem 0 !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item) {
+  padding: 0.5rem 1rem !important;
+  margin: 0 !important;
+  min-height: auto !important;
+  font-size: 0.875rem !important;
+  border: none !important;
+  border-radius: 0 !important;
+  transition: background-color 0.15s ease !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item:hover) {
+  background: #f3f4f6 !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item.p-highlight) {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+}
+
+/* 🎯 FILTER INPUT STYLING */
+:deep(.p-dropdown-filter) {
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s ease !important;
+  background: white !important;
+}
+
+:deep(.p-dropdown-filter:focus) {
+  outline: none !important;
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Dropdown styling */
+.dropdown-option,
+.dropdown-selected,
+.dropdown-placeholder,
+.dropdown-empty,
+.dropdown-loader {
+  font-size: var(--enhanced-form-font-size);
+  color: #374151;
+}
+
+.dropdown-selected--value {
+  color: #374151;
+  font-weight: 500;
+}
+
+.dropdown-placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.dropdown-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.dropdown-empty__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropdown-empty__text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.dropdown-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* 🎯 ACCESSIBILITY IMPROVEMENTS */
+:deep(.p-dropdown[aria-expanded="true"]) {
+  border-color: var(--enhanced-form-focus-border) !important;
+  box-shadow: var(--enhanced-form-focus-shadow) !important;
+}
+
+/* 🎯 FOCUS VISIBLE STATES */
+:deep(.p-dropdown:focus-visible) {
+  outline: 2px solid var(--enhanced-form-focus-border) !important;
+  outline-offset: 2px !important;
+}
+
+/* 🎯 DISABLED STATE */
+:deep(.p-dropdown.p-disabled) {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background: #f9fafb !important;
+}
+
+/* 🎯 LOADING STATE ENHANCEMENTS */
+:deep(.p-dropdown.p-loading) {
+  pointer-events: none !important;
+}
+
+:deep(.p-dropdown.p-loading .p-dropdown-trigger) {
+  opacity: 0.6 !important;
+}
+
+/* 🎬 ANIMATIONS */
+@keyframes fieldErrorShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* 📱 RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  :deep(.p-dropdown) {
+    height: var(--enhanced-form-field-height-mobile) !important;
+    min-height: var(--enhanced-form-field-height-mobile) !important;
+  }
+
+  :deep(.p-dropdown .p-dropdown-label) {
+    height: calc(var(--enhanced-form-field-height-mobile) - 4px) !important;
+    padding: 0 0.75rem !important;
+  }
+
+  :deep(.p-dropdown .p-dropdown-trigger) {
+    height: calc(var(--enhanced-form-field-height-mobile) - 4px) !important;
+    width: var(--enhanced-form-field-height-mobile) !important;
+  }
+}
+
+/* 🎯 HIGH CONTRAST MODE SUPPORT */
+@media (prefers-contrast: high) {
+  :deep(.p-dropdown) {
+    border-width: 3px !important;
+    border-color: #000 !important;
+  }
+}
+
+/* 🎯 REDUCED MOTION SUPPORT */
+@media (prefers-reduced-motion: reduce) {
+  :deep(.p-dropdown) {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 🎯 PRINT STYLES */
+@media print {
+  :deep(.p-dropdown-panel) {
+    display: none !important;
+  }
+}
+
+/* 🎯 DARK MODE SUPPORT (if needed) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --enhanced-form-focus-border: #60a5fa;
+    --enhanced-form-focus-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+}
+</style>
