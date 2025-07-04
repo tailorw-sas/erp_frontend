@@ -20,10 +20,9 @@ public class UpdateJasperReportParameterRequest {
     private  String label;
     private String componentType;
     private  UUID reportId;
-    private String reportClass;
-    private String reportValidation;
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
     private String dataValueStatic;
+    private String parameterCategory;
 }

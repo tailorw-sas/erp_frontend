@@ -2,9 +2,12 @@ package com.kynsoft.report.infrastructure.services;
 
 import com.kynsoft.report.applications.query.jasperreporttemplate.getbyid.JasperReportTemplateResponse;
 import com.kynsoft.report.applications.query.menu.ReportMenuResponse;
+import com.kynsoft.report.domain.dto.JasperReportParameterDto;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
+import com.kynsoft.report.domain.dto.status.JasperReportTemplateWithParamsDto;
 import com.kynsoft.report.domain.dto.status.ModuleSystems;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+import com.kynsoft.report.domain.services.IReportParameterService;
 import com.kynsoft.report.infrastructure.entity.JasperReportTemplate;
 import com.kynsoft.report.infrastructure.repository.command.JasperReportTemplateWriteDataJPARepository;
 import com.kynsoft.report.infrastructure.repository.query.JasperReportTemplateReadDataJPARepository;
@@ -15,6 +18,7 @@ import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.ErrorField;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,11 +32,13 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
 
     private final JasperReportTemplateWriteDataJPARepository commandRepository;
     private final JasperReportTemplateReadDataJPARepository queryRepository;
+    private final IReportParameterService reportParameterService;
 
     public JasperReportTemplateServiceImpl(JasperReportTemplateWriteDataJPARepository commandRepository,
-                                           JasperReportTemplateReadDataJPARepository queryRepository) {
+                                           JasperReportTemplateReadDataJPARepository queryRepository, IReportParameterService reportParameterService) {
         this.commandRepository = commandRepository;
         this.queryRepository = queryRepository;
+        this.reportParameterService = reportParameterService;
     }
 
     @Override
@@ -66,6 +72,23 @@ public class JasperReportTemplateServiceImpl implements IJasperReportTemplateSer
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BUSINESS_NOT_FOUND,
                 new ErrorField("id", "JasperReportTemplate not found.")));
+    }
+
+    @Override
+    public JasperReportTemplateWithParamsDto getReportTemplateWithParams(UUID id) {
+        JasperReportTemplate baseTemplate = this.queryRepository.findById(id)
+                .orElseThrow(() -> new BusinessNotFoundException(new GlobalBusinessException(
+                        DomainErrorMessage.BUSINESS_NOT_FOUND,
+                        new ErrorField("id", "JasperReportTemplate not found.")
+                )));
+
+        JasperReportTemplateWithParamsDto dto = new JasperReportTemplateWithParamsDto();
+        BeanUtils.copyProperties(baseTemplate.toAggregate(), dto);
+
+        List<JasperReportParameterDto> parameters = reportParameterService.findByTemplateId(id);
+        dto.setParameters(parameters);
+
+        return dto;
     }
 
     @Override

@@ -15,19 +15,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JasperReportTemplateDto {
-    private  UUID id;
-    private  String code;
-    private  String name;
-    private  String description;
-    private  String file;
-    private  JasperReportTemplateType type;
+    private UUID id;
+    private String code;
+    private String name;
+    private String description;
+    private String file;
+    private JasperReportTemplateType type;
     private Status status;
     private LocalDateTime createdAt;
     private Double menuPosition;
     private DBConectionDto dbConectionDto;
     private ModuleSystems moduleSystems; // Campo para el módulo del sistema
     private String query;
-
 
     public JasperReportTemplateDto(UUID id, String templateCode, String templateName, 
                                    String templateDescription, String templateContentUrl, 
@@ -46,6 +45,4 @@ public class JasperReportTemplateDto {
         this.dbConectionDto = dbConection;
         this.query = query;
     }
-
-
 }

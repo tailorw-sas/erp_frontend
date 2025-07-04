@@ -2,6 +2,7 @@ package com.kynsoft.report.infrastructure.entity;
 
 import com.kynsof.share.core.domain.BaseEntity;
 import com.kynsoft.report.domain.dto.JasperReportParameterDto;
+import com.kynsoft.report.infrastructure.enums.JasperParameterCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,18 +21,18 @@ import java.time.LocalDateTime;
 public class JasperReportParameter extends BaseEntity {
 
     private String paramName;
-
     private String type;
     private String componentType;
     private String module;
     private String service;
     private String label;
-    private String reportClass;
-    private String reportValidation;
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
     private String dataValueStatic;
+
+    @Enumerated(EnumType.STRING)
+    private JasperParameterCategory parameterCategory;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "jasper_report_template_id", nullable = false)
@@ -53,12 +54,11 @@ public class JasperReportParameter extends BaseEntity {
         this.label = jasperReportParameterDto.getLabel();
         this.componentType = jasperReportParameterDto.getComponentType();
         this.jasperReportTemplate = new JasperReportTemplate(jasperReportParameterDto.getJasperReportTemplate());
-        reportClass = jasperReportParameterDto.getReportClass();
-        reportValidation = jasperReportParameterDto.getReportValidation();
         parameterPosition = jasperReportParameterDto.getParameterPosition();
         dependentField = jasperReportParameterDto.getDependentField();
         filterKeyValue = jasperReportParameterDto.getFilterKeyValue();
         dataValueStatic = jasperReportParameterDto.getDataValueStatic();
+        this.parameterCategory = jasperReportParameterDto.getParameterCategory();
     }
 
     public JasperReportParameterDto toAggregate() {
@@ -71,12 +71,11 @@ public class JasperReportParameter extends BaseEntity {
                 label,
                 componentType,
                 jasperReportTemplate.toAggregate(),
-                reportClass,
-                reportValidation,
                 parameterPosition,
                 dependentField,
                 filterKeyValue,
-                dataValueStatic
+                dataValueStatic,
+                parameterCategory
         );
     }
 }

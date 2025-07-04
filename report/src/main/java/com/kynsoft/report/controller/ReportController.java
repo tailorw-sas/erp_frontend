@@ -8,6 +8,7 @@ import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterBy
 import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.report.domain.dto.JasperReportTemplateDto;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+import com.kynsoft.report.infrastructure.enums.ReportFormatType;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
@@ -22,12 +23,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.kynsoft.report.infrastructure.enums.ReportFormatType.*;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -36,6 +43,8 @@ public class ReportController {
     private final IMediator mediator;
     private final IJasperReportTemplateService reportService;
     private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+    private final ConcurrentHashMap<String, JasperReport> jasperCache = new ConcurrentHashMap<>();
+    private final AtomicInteger compileCounter = new AtomicInteger(0);
 
     public ReportController(IMediator mediator, IJasperReportTemplateService reportService) {
         this.mediator = mediator;
@@ -63,24 +72,6 @@ public class ReportController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping("/parameters")
-//    public ResponseEntity<List<String>> getParameters(@RequestParam("url") String url_jrxml) {
-//        List<String> parameters = new ArrayList<>();
-//
-//        try (InputStream reportStream = new URL(url_jrxml).openStream()) {
-//            JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
-//            JRParameter[] reportParameters = jasperReport.getParameters();
-//            for (JRParameter param : reportParameters) {
-//                if (!param.isSystemDefined()) {
-//                    parameters.add(param.getName());
-//                }
-//            }
-//        } catch (JRException | IOException e) {
-//            logger.error("Error getting parameters",  e);
-//        }
-//        return ResponseEntity.ok(parameters);
-//    }
-
     @PostMapping(value = "/execute-report", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> executeReport(@RequestBody GenerateTemplateRequest request) {
         Connection connection = null;
@@ -90,30 +81,8 @@ public class ReportController {
             logger.info("Report format type: {}", request.getReportFormatType());
             logger.info("Parameters: {}", request.getParameters());
 
-            Map<String, Object> originalParams = request.getParameters();
-            Map<String, Object> convertedParams = new HashMap<>();
-
-            for (Map.Entry<String, Object> entry : originalParams.entrySet()) {
-                String key = entry.getKey();
-                Object value = entry.getValue();
-                if (value instanceof String && ("true".equalsIgnoreCase((String) value) || "false".equalsIgnoreCase((String) value))) {
-                    convertedParams.put(key, Boolean.valueOf((String) value));
-                } else if (key.toLowerCase().contains("date") && value instanceof String) {
-                    try {
-                        java.sql.Date dateValue = java.sql.Date.valueOf((String) value);
-                        convertedParams.put(key, dateValue);
-                    } catch (IllegalArgumentException ex) {
-                        logger.warn("El parámetro {} con valor '{}' no pudo convertirse a java.sql.Date", key, value);
-                        convertedParams.put(key, value);
-                    }
-                } else if (value instanceof List<?>) {
-                    List<?> list = (List<?>) value;
-                    String joined = String.join(",", list.stream().map(Object::toString).toArray(String[]::new));
-                    convertedParams.put(key, joined);
-                } else {
-                    convertedParams.put(key, value);
-                }
-            }
+            // Use extracted parameter conversion method
+            Map<String, Object> convertedParams = convertParameters(request.getParameters());
             logger.info("URL dataBase: {}", reportTemplateDto.getDbConectionDto().getUrl());
 
             // Cargar el archivo JRXML
@@ -126,34 +95,40 @@ public class ReportController {
             // Llenar el reporte usando la conexión de base de datos proporcionada
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, convertedParams, connection);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            String contentType;
-            String fileName;
+            // Use try-with-resources for ByteArrayOutputStream
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                String contentType;
+                String fileName;
+                ReportFormatType formatType = ReportFormatType.fromString(request.getReportFormatType());
+                switch (formatType) {
+                    case XLS:
+                        JRXlsxExporter exporterxls = new JRXlsxExporter();
+                        exporterxls.setExporterInput(new SimpleExporterInput(jasperPrint));
+                        exporterxls.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+                        SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+                        configuration.setDetectCellType(true);
+                        configuration.setCollapseRowSpan(false);
+                        exporterxls.setConfiguration(configuration);
+                        exporterxls.exportReport();
+                        break;
+                    case CSV:
+                        net.sf.jasperreports.engine.export.JRCsvExporter exporterCsv = new net.sf.jasperreports.engine.export.JRCsvExporter();
+                        exporterCsv.setExporterInput(new SimpleExporterInput(jasperPrint));
+                        exporterCsv.setExporterOutput(new net.sf.jasperreports.export.SimpleWriterExporterOutput(outputStream));
+                        exporterCsv.exportReport();
+                        break;
+                    case PDF:
+                    default:
+                        JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+                        break;
+                }
 
-            if ("XLS".equalsIgnoreCase(request.getReportFormatType())) {
-                JRXlsxExporter exporter = new JRXlsxExporter();
-                exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-                exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
-                SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
-                configuration.setDetectCellType(true);
-                configuration.setCollapseRowSpan(false);
-                exporter.setConfiguration(configuration);
-                exporter.exportReport();
-            } else if ("CSV".equalsIgnoreCase(request.getReportFormatType())) {
-                net.sf.jasperreports.engine.export.JRCsvExporter exporter = new net.sf.jasperreports.engine.export.JRCsvExporter();
-                exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
-                exporter.setExporterOutput(new net.sf.jasperreports.export.SimpleWriterExporterOutput(outputStream));
-                exporter.exportReport();
-            } else {
-                JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
-            }
-
-            // Convertir el reporte a Base64
             String base64Report = Base64.getEncoder().encodeToString(outputStream.toByteArray());
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"base64Report\": \"" + base64Report + "\"}");
+            }
         } catch (Exception e) {
             logger.error("Report code: {}", request.getJasperReportCode(), e);
-            throw new RuntimeException("Error generating report", e);
+            return ResponseEntity.status(500).body("{\"error\": \"Error generating report\", \"details\": \"" + e.getMessage().replace("\"", "\\\"") + "\"}");
         } finally {
             if (connection != null) {
                 try {
@@ -165,13 +140,64 @@ public class ReportController {
         }
     }
 
-    private JasperReport loadJasperReportFromUrl(String templateUrl) throws JRException {
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(new URL(templateUrl).openStream().readAllBytes())) {
-            return JasperCompileManager.compileReport(inputStream);
-        } catch (Exception e) {
-            throw new RuntimeException("Error loading JRXML template from URL: " + templateUrl, e);
+    /**
+     * Convierte los parámetros recibidos, procesando solo aquellos de categoría "REPORT".
+     * Solo los parámetros cuya categoría sea "REPORT" serán incluidos en el resultado.
+     * Si el parámetro es un String "true"/"false" se convierte a Boolean.
+     * Si el nombre del parámetro contiene "date" y es un String, intenta convertirlo a java.sql.Date.
+     * Si el valor es una lista, la convierte en String separado por comas.
+     *
+     * Nota: Para que la categoría esté disponible aquí, se debe incluir en la estructura de originalParams
+     *       como un campo adicional (por ejemplo, usando un DTO con getCategory()).
+     */
+    private Map<String, Object> convertParameters(Map<String, Object> originalParams) {
+        Map<String, Object> convertedParams = new HashMap<>();
+        for (Map.Entry<String, Object> entry : originalParams.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof String && ("true".equalsIgnoreCase((String) value) || "false".equalsIgnoreCase((String) value))) {
+                convertedParams.put(key, Boolean.valueOf((String) value));
+            } else if (value instanceof Boolean) {
+                convertedParams.put(key, value);
+            } else if (key.toLowerCase().contains("date") && value instanceof String) {
+                try {
+                    LocalDate localDate = LocalDate.parse((String) value, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    convertedParams.put(key, java.sql.Date.valueOf(localDate));
+                } catch (Exception ex) {
+                    logger.warn("El parámetro {} con valor '{}' no pudo convertirse a java.sql.Date", key, value);
+                    convertedParams.put(key, value);
+                }
+            } else if (value instanceof List<?>) {
+                List<?> list = (List<?>) value;
+                String joined = String.join(",", list.stream().map(Object::toString).toArray(String[]::new));
+                convertedParams.put(key, joined);
+            } else {
+                convertedParams.put(key, value);
+            }
+
+            logger.debug("Parametro convertido: {} = {}", key, convertedParams.get(key));
         }
+        return convertedParams;
     }
 
+    private JasperReport loadJasperReportFromUrl(String templateUrl) {
+        try {
+            return jasperCache.computeIfAbsent(templateUrl, url -> {
+                try {
+                    logger.info("Compiling JRXML template from URL: {}", url);
+                    compileCounter.incrementAndGet();
+                    try (InputStream in = new URL(url).openStream();
+                         ByteArrayInputStream inputStream = new ByteArrayInputStream(in.readAllBytes())) {
+                        return JasperCompileManager.compileReport(inputStream);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Error compiling JRXML template from URL: " + url, e);
+                }
+            });
+        } catch (RuntimeException e) {
+            throw e;
+        }
+    }
 }
 

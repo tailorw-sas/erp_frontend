@@ -39,50 +39,6 @@ public class ReportMenuController {
         this.mediator = mediator;
         this.jasperReportTemplateService = jasperReportTemplateService;
     }
-//
-//    @PostMapping("")
-//    public ResponseEntity<?> create(@RequestBody CreateJasperReportTemplateRequest request) {
-//        CreateJasperReportTemplateCommand createCommand = CreateJasperReportTemplateCommand.fromRequest(request);
-//        CreateJasperReportTemplateMessage response = mediator.send(createCommand);
-//
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @GetMapping(path = "/{id}")
-//    public ResponseEntity<?> getById(@PathVariable UUID id) {
-//
-//        FindJasperReportTemplateByIdQuery query = new FindJasperReportTemplateByIdQuery(id);
-//        JasperReportTemplateResponse response = mediator.send(query);
-//
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @PostMapping("/search")
-//    public ResponseEntity<PaginatedResponse> search(@RequestBody SearchRequest request) {
-//        Pageable pageable = PageableUtil.createPageable(request);
-//
-//        GetJasperReportTemplateQuery query = new GetJasperReportTemplateQuery(pageable, request.getFilter(), request.getQuery());
-//        PaginatedResponse data = mediator.send(query);
-//
-//        return ResponseEntity.ok(data);
-//    }
-//
-//    @PatchMapping("/{id}")
-//    public ResponseEntity<UpdateJasperReportTemplateMessage> update(@PathVariable("id") UUID id,
-//            @RequestBody UpdateJasperReportTemplateRequest request) {
-//
-//        UpdateJasperReportTemplateCommand command = UpdateJasperReportTemplateCommand.fromRequest(request, id);
-//        UpdateJasperReportTemplateMessage response = mediator.send(command);
-//        return ResponseEntity.ok(response);
-//    }
-//
-//    @DeleteMapping(path = "/{id}")
-//    public ResponseEntity<?> delete(@PathVariable UUID id) {
-//
-//        DeleteJasperReportTemplateCommand query = new DeleteJasperReportTemplateCommand(id);
-//        DeleteJasperReportTemplateMessage response = mediator.send(query);
-//        return ResponseEntity.ok(response);
-//    }
 
     @GetMapping("/grouped")
     public ResponseEntity<?> getGroupedReports() {
