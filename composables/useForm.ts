@@ -251,7 +251,7 @@ export function useForm<T extends Record<string, unknown> = Record<string, unkno
       touched: touchedTyped,
       dirty: dirtyTyped,
       meta: {
-        valid: Object.values(errors).every(fieldErrors => fieldErrors.length === 0),
+        valid: Object.values(errors).every(fieldErrors => Array.isArray(fieldErrors) && fieldErrors.length === 0),
         pending: isValidating.value,
         submitted: isSubmitted.value,
         submitting: isSubmitting.value,

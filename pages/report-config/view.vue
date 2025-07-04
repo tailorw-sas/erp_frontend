@@ -65,12 +65,11 @@ interface BackendReportParameter {
   readonly label: string
   readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
   readonly jasperReportTemplate: any
-  readonly reportClass: string
-  readonly reportValidation: string
   readonly parameterPosition: number
   readonly dependentField: string
   readonly filterKeyValue: string
   readonly dataValueStatic: string
+  readonly parameterCategory: string
 }
 
 interface BackendReportInfo {
@@ -89,7 +88,6 @@ interface ReportParameter {
   readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
   readonly module?: string
   readonly service?: string
-  readonly reportClass?: string
   readonly dataValueStatic?: string
   readonly filtersBase?: any[]
   readonly dependentField?: string
@@ -99,6 +97,7 @@ interface ReportParameter {
   readonly required?: boolean
   readonly defaultValue?: any
   readonly parameterPosition?: number
+  readonly parameterCategory?: string
 }
 
 interface ReportInfo {
@@ -177,8 +176,8 @@ const loadingReport = ref(false)
 
 // Report generator config
 const reportConfig = reactive<ReportConfig>({
-  moduleApi: 'reports',
-  uriApiReportGenerate: '/generate',
+  moduleApi: 'report',
+  uriApiReportGenerate: 'reports/execute-report',
   timeout: 600000,
   retryAttempts: 2,
   retryDelay: 3000
@@ -283,6 +282,7 @@ function mapBackendParameter(backendParam: BackendReportParameter): ReportParame
     debounceTimeMs: 300,
     maxSelectedLabels: 2,
     parameterPosition: backendParam.parameterPosition || 0,
+    parameterCategory: backendParam.parameterCategory || 'REPORT',
   }
 
   // Add module/service for dynamic components
@@ -453,7 +453,8 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
         undefined,
         {
           ...baseProps,
-          dataType: 'date'
+          dataType: 'date',
+          defaultValue: null,
         }
       )
     },
@@ -714,20 +715,33 @@ function useReportParameters() {
     return true
   }
 
-  const isValidDate = (value: string): boolean => !Number.isNaN(Date.parse(value))
+  const isValidDate = (value: any): boolean => {
+    if (!value) { return false }
+
+    // Verificar diferentes formatos de fecha
+    const dateValue = new Date(value)
+    const isValid = !Number.isNaN(dateValue.getTime())
+
+    return isValid && dayjs(value).isValid()
+  }
 
   function processParameterValue(value: any): any {
-    if (value === null || value === undefined) { return null }
+    if (value === null || value === undefined || value === '') {
+      return null
+    }
 
     if (isValidDate(value) && typeof value !== 'number') {
-      return dayjs(value).format('YYYY-MM-DD')
+      const processedDate = dayjs(value).format('YYYY-MM-DD')
+      return processedDate
     }
     else if (Array.isArray(value) && value.every(v => v && typeof v === 'object' && 'id' in v)) {
-      return value.map(v => v.id)
+      const processedArray = value.map(v => v.id)
+      return processedArray
     }
     else if (value && typeof value === 'object' && 'id' in value) {
       return value.id
     }
+
     return value
   }
 
@@ -746,12 +760,38 @@ function useReportParameters() {
     const excludeFields = ['reportFormatType', 'jasperReportCode', 'event']
 
     payload.parameters = Object.keys(formData)
-      .filter(key => !excludeFields.includes(key))
-      .reduce((acc, key) => {
-        const value = processParameterValue(formData[key])
-        if (value !== null && value !== undefined) {
-          acc[key] = value
+      .filter((key) => {
+        if (excludeFields.includes(key)) {
+          return false
         }
+
+        // Busca el parámetro en la definición
+        const paramDef = currentReport.value?.parameters?.find(p => p.paramName === key)
+        return paramDef?.parameterCategory === 'REPORT'
+      })
+      .reduce((acc, key) => {
+        const rawValue = formData[key]
+
+        // ✅ ESPECIAL: Manejar campos de fecha de forma diferente
+        const isDateField = key.toLowerCase().includes('date')
+
+        if (isDateField) {
+          // Solo incluir fechas si tienen valor válido
+          if (rawValue && rawValue !== '' && rawValue !== null) {
+            const processedValue = processParameterValue(rawValue)
+            if (processedValue && processedValue !== null) {
+              acc[key] = processedValue
+            }
+          }
+        }
+        else {
+        // Manejar campos no-fecha normalmente
+          const processedValue = processParameterValue(rawValue)
+          if (processedValue !== null && processedValue !== undefined && processedValue !== '') {
+            acc[key] = processedValue
+          }
+        }
+
         return acc
       }, {} as Record<string, any>)
 
@@ -879,7 +919,19 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
         const fieldDef = createField(param) as MutableReportFormField
 
         // Set default value if available
-        let initialValue = param.componentType === 'multiselect' ? [] : ''
+        let initialValue: any
+        switch (param.componentType) {
+          case 'multiselect':
+            initialValue = []
+            break
+          case 'date':
+            // ✅ Inicializar como null para fechas, NO como string vacío
+            initialValue = null
+            break
+          default:
+            initialValue = ''
+        }
+
         if (param.componentType === 'localselect' && fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
           initialValue = fieldDef.defaultValue
         }
@@ -1044,6 +1096,17 @@ function handleDependencyCascade(changedFieldName: string, newValue: any, oldVal
   })
 
   if (dependentFields.length > 0) {
+    // ✅ Batch updates para mejor performance
+    const updates: Record<string, any> = {}
+
+    dependentFields.forEach((depField) => {
+      const resetValue = depField.multiple ? [] : null
+      updates[depField.name] = resetValue
+    })
+
+    // ✅ Aplicar todos los updates de una vez
+    Object.assign(item.value, updates)
+
     dependentFields.forEach((depField) => {
       // Reset dependent field value IMMEDIATELY
       if (depField.multiple) {
@@ -1056,7 +1119,7 @@ function handleDependencyCascade(changedFieldName: string, newValue: any, oldVal
       // Trigger immediate reactive update
       nextTick(() => {
         // Force formReload to ensure SelectField remounts with new dependencies
-        formReload.value++
+        // formReload.value++
       })
     })
   }
@@ -1065,7 +1128,22 @@ function handleDependencyCascade(changedFieldName: string, newValue: any, oldVal
 // ✅ ENHANCED: Improved field update handler
 
 function handleReactiveUpdate(values: FieldValues) {
-  item.value = { ...values }
+  // ✅ Definir campos que NUNCA deben ser sobrescritos por el formulario
+  const CRITICAL_FIELDS = ['jasperReportCode', 'reportFormatType']
+
+  // Extraer valores críticos actuales
+  const preservedValues = CRITICAL_FIELDS.reduce((acc, field) => {
+    if (item.value[field] !== undefined && item.value[field] !== null) {
+      acc[field] = item.value[field]
+    }
+    return acc
+  }, {} as Record<string, any>)
+
+  // Merge con protección
+  item.value = {
+    ...values, // Campos del formulario
+    ...preservedValues // Campos críticos preservados
+  }
 }
 
 function handleCancel() {
@@ -1544,41 +1622,24 @@ const isShareSupported = computed(() => {
               <div class="report-viewer__preview-icon">
                 <i class="pi pi-eye" />
               </div>
-              <div>
-                <h3 class="report-viewer__preview-title">
-                  Report Preview
-                </h3>
+              <div class="flex flex-column">
+                <div class="flex align-items-center gap-2">
+                  <h3 class="report-viewer__preview-title">
+                    Report Preview
+                  </h3>
+                </div>
                 <p class="report-viewer__preview-subtitle">
                   {{ pdfUrl ? 'Your generated report' : 'Generated reports will appear here' }}
                 </p>
               </div>
-            </div>
-            <div v-if="pdfUrl" class="report-viewer__preview-actions">
-              <Button
-                v-tooltip.top="'Zoom In'"
-                icon="pi pi-search-plus"
-                class="p-button-text p-button-sm"
-                @click="zoomIn"
-              />
-              <Button
-                v-tooltip.top="'Zoom Out'"
-                icon="pi pi-search-minus"
-                class="p-button-text p-button-sm"
-                @click="zoomOut"
-              />
-              <Divider layout="vertical" />
-              <Button
-                icon="pi pi-download"
-                label="Download"
-                class="p-button-outlined p-button-sm"
-                @click="downloadCurrentReport"
-              />
-              <Button
-                v-tooltip.top="'Open in New Tab'"
-                icon="pi pi-external-link"
-                class="p-button-text p-button-sm"
-                @click="openInNewTab"
-              />
+              <div class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+                <Tag severity="success" icon="pi pi-check">
+                  Report Generated
+                </Tag>
+                <span class="text-sm text-gray-600">
+                  {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1586,17 +1647,6 @@ const isShareSupported = computed(() => {
           <div class="report-viewer__preview-content">
             <!-- PDF Display with enhanced features -->
             <div v-if="item?.reportFormatType?.id === 'PDF' && pdfUrl" class="report-viewer__pdf-container">
-              <div class="report-viewer__pdf-toolbar">
-                <div class="report-viewer__pdf-info">
-                  <Tag severity="success" icon="pi pi-check">
-                    Report Generated
-                  </Tag>
-                  <span class="text-sm text-gray-600">
-                    {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
-                  </span>
-                </div>
-              </div>
-
               <object
                 :data="pdfUrl"
                 type="application/pdf"

@@ -784,15 +784,21 @@ $panel-border: $gray-200;
     }
     
     &-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       padding: $spacing-lg $spacing-xl;
       border-bottom: 1px solid $panel-border;
       background: $panel-header-bg;
-      flex-shrink: 0;
+      flex-direction: row;
     }
     
     &-info {
-      @extend .flex, .align-items-center;
-      gap: $spacing-lg;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      gap: $spacing-xs;
     }
     
     &-object {

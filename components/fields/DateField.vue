@@ -96,6 +96,7 @@ const props = withDefaults(defineProps<DateFieldProps>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: Date | string | null]
+  'update:value': [value: Date | string | null]
   'blur': []
   'focus': []
   'clear': []
@@ -367,6 +368,7 @@ function handleValueUpdate(value: Date | null) {
 
   if (processedValue !== props.value) {
     emit('update:modelValue', processedValue)
+    emit('update:value', processedValue)
   }
 }
 
