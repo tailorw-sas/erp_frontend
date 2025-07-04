@@ -1,964 +1,1719 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
-import type { PageState } from 'primevue/paginator'
+import { computed, nextTick, onUnmounted, reactive, readonly, ref, watch } from 'vue'
 import { z } from 'zod'
-import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
-import ReportParamPage from './params.vue'
+import { useRoute } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
+import ProgressBar from 'primevue/progressbar'
+import Dropdown from 'primevue/dropdown'
+import Tag from 'primevue/tag'
+import Divider from 'primevue/divider'
+import Toast from 'primevue/toast'
+import ConfirmPopup from 'primevue/confirmpopup'
+import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
-import type { GenericObject } from '~/types'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
-import type { FieldDefinitionType } from '~/components/form/EditFormV2'
-import getUrlByImage from '~/composables/files'
-import type { IData } from '~/components/table/interfaces/IModelData'
-import { statusToBoolean, statusToString, updateFieldProperty } from '~/utils/helpers'
-import { ENUM_SHORT_TYPE } from '~/utils/Enums'
-// VARIABLES -----------------------------------------------------------------------------------------
+import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
 
-interface TreeNode {
-  key: string // Identificador único del nodo
-  label: string // Etiqueta del nodo
-  data: string // Información o descripción del nodo
-  icon?: string // Clase de icono opcional (por ejemplo, de PrimeVue)
-  children?: TreeNode[] // Hijos del nodo, de tipo recursivo
+// ✅ FIXED: Import createDynamicField as value, not type
+import type {
+  DynamicApiConfig,
+  DynamicFieldArgs,
+  FormField,
+  ReportFormField,
+} from '~/types/form'
+import { createDynamicField } from '~/types/form'
+
+// ========== TYPES & INTERFACES ==========
+interface FieldValues {
+  [key: string]: any
 }
 
-interface MenuItem {
-  label: string
-  icon: string // Opcional, ya que algunos elementos pueden no tener icono
-  command: (event: { originalEvent: Event, item: MenuItem }) => void
+interface ReportConfig {
+  readonly moduleApi: string
+  readonly uriApiReportGenerate: string
+  readonly timeout?: number
+  readonly retryAttempts?: number
+  readonly retryDelay?: number
 }
 
-interface MenuCategory {
-  label: string
-  items: MenuItem[]
+interface ReportProgress {
+  status: 'idle' | 'generating' | 'success' | 'error' | 'timeout'
+  message?: string
+  progress?: number
 }
 
+interface ReportResponse {
+  readonly base64Report: string
+}
+
+interface ReportFormat {
+  readonly id: 'PDF' | 'XLS' | 'CSV'
+  readonly name: string
+  readonly icon: string
+  readonly description: string
+}
+
+// ========== BACKEND INTERFACES ==========
+interface BackendReportParameter {
+  readonly id: string
+  readonly paramName: string
+  readonly type: string
+  readonly module: string
+  readonly service: string
+  readonly label: string
+  readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
+  readonly jasperReportTemplate: any
+  readonly parameterPosition: number
+  readonly dependentField: string
+  readonly filterKeyValue: string
+  readonly dataValueStatic: string
+  readonly parameterCategory: string
+}
+
+interface BackendReportInfo {
+  readonly id: string
+  readonly code: string
+  readonly name: string
+  readonly description?: string
+  readonly parameters?: BackendReportParameter[]
+}
+
+// ========== FRONTEND INTERFACES ==========
+interface ReportParameter {
+  readonly id?: string
+  readonly paramName: string
+  readonly label: string
+  readonly componentType: 'text' | 'select' | 'multiselect' | 'localselect' | 'date' | 'number'
+  readonly module?: string
+  readonly service?: string
+  readonly dataValueStatic?: string
+  readonly filtersBase?: any[]
+  readonly dependentField?: string
+  readonly filterKeyValue?: string // ✅ ADDED: Missing property
+  readonly debounceTimeMs?: number
+  readonly maxSelectedLabels?: number
+  readonly required?: boolean
+  readonly defaultValue?: any
+  readonly parameterPosition?: number
+  readonly parameterCategory?: string
+}
+
+interface ReportInfo {
+  readonly id: string
+  readonly code: string
+  readonly name: string
+  readonly description?: string
+  readonly category?: string
+  readonly parameters?: ReportParameter[]
+}
+
+// ========== TYPED FIELD CONFIGURATIONS ==========
+interface FieldConfigurationMap {
+  readonly multiselect: () => ReportFormField
+  readonly select: () => ReportFormField
+  readonly localselect: () => ReportFormField
+  readonly date: () => ReportFormField
+  readonly number: () => ReportFormField
+  readonly text: () => ReportFormField
+}
+
+interface NormalizedOption {
+  readonly name: string
+  readonly label: string
+  readonly value: any
+  readonly id: string
+  readonly description?: string
+  readonly defaultValue?: boolean
+}
+
+// ✅ FIXED: Using mutable ReportFormField type for assignment compatibility
+interface MutableReportFormField extends Omit<ReportFormField, 'objApi' | 'kwArgs'> {
+  objApi?: DynamicApiConfig
+  kwArgs?: DynamicFieldArgs
+}
+
+// ========== CONSTANTS ==========
+const REPORT_FORMATS: ReportFormat[] = [
+  {
+    id: 'PDF',
+    name: 'PDF Document',
+    icon: 'pi pi-file-pdf',
+    description: 'Portable Document Format - Best for viewing and printing'
+  },
+  {
+    id: 'XLS',
+    name: 'Excel Spreadsheet',
+    icon: 'pi pi-file-excel',
+    description: 'Excel format - Best for data analysis'
+  },
+  {
+    id: 'CSV',
+    name: 'CSV Data',
+    icon: 'pi pi-table',
+    description: 'Comma-separated values - Best for importing data'
+  },
+]
+
+// ========== REACTIVE STATE ==========
 const route = useRoute()
 const toast = useToast()
-const confirm = useConfirm()
-const listItemsMenu = ref<MenuCategory[]>([
-  {
-    label: '',
-    items: []
-  }
-])
 
-const selectedKey = ref(undefined)
-
-const listItemMenuTree = ref<TreeNode[]>([])
-const listItems = ref<any[]>([])
-
+// Form state
+const fields = ref<ReportFormField[]>([])
+const item = ref<FieldValues>({
+  jasperReportCode: '',
+  reportFormatType: REPORT_FORMATS[0]
+})
 const formReload = ref(0)
-const loadingSaveAll = ref(false)
-const loadingSaveAllGetReport = ref(false)
-const idItem = ref('')
-const idItemToLoadFirstTime = ref('')
+const showForm = ref(false)
+const formValidationErrors = ref<Record<string, string[]>>({})
 
-const loadingSearch = ref(false)
+// Report state
+const currentReport = ref<ReportInfo | null>(null)
+const loadingReport = ref(false)
 
-const filterToSearch = ref<IData>({
-  criterial: null,
-  search: '',
-})
-const confApi = reactive({
+// Report generator config
+const reportConfig = reactive<ReportConfig>({
   moduleApi: 'report',
-  uriApi: 'jasper-report-template',
-  uriApiReportGenerate: 'reports/execute-report'
-})
-const ENUM_FILTER = [
-  { id: 'templateCode', name: 'Code' },
-  { id: 'templateName', name: 'Name' },
-
-]
-
-const item = ref<GenericObject>({
-  reportFormatType: REPORT_FORMATS_TYPE[0],
-  jasperReportCode: ''
+  uriApiReportGenerate: 'reports/execute-report',
+  timeout: 600000,
+  retryAttempts: 2,
+  retryDelay: 3000
 })
 
-const itemTemp = ref<GenericObject>({
-  reportFormatType: REPORT_FORMATS_TYPE[0],
-  jasperReportCode: ''
-})
+// ========== UTILITY FUNCTIONS - MODULAR APPROACH ==========
 
-const fields = ref<FieldDefinitionType[]>([
-  {
-    field: 'reportFormatType',
-    header: 'Format Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-1 required auto',
-    disabled: false,
-    validation: z.object({
-      id: z.string().min(1, 'This is a required field'),
-      name: z.string().min(1, 'This is a required field'),
-    }).nullable().refine(value => value && value.id && value.name, { message: 'This is a required field' }),
-  },
-  {
-    field: 'jasperReportCode',
-    header: 'Report Code',
-    dataType: 'text',
-    disabled: true,
-    hidden: true,
-    class: 'field col-12 md:col-1 auto',
-    validation: z.string().trim()
-    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
-  },
-])
-
-const fieldsTemp = [
-  {
-    field: 'reportFormatType',
-    header: 'Format Type',
-    dataType: 'select',
-    class: 'field col-12 md:col-1 required auto',
-    validation: z.object({
-      id: z.string().min(1, 'This is a required field'),
-      name: z.string().min(1, 'This is a required field'),
-    }).nullable().refine(value => value && value.id && value.name, { message: 'This is a required field' }),
-  },
-  {
-    field: 'jasperReportCode',
-    header: 'Report Code',
-    dataType: 'text',
-    disabled: true,
-    hidden: true,
-    class: 'field col-12 md:col-1 auto',
-    validation: z.string().trim()
-    // validation: z.string().trim().min(1, 'The report code field is required').max(50, 'Maximum 50 characters')
-  },
-]
-// FORM CONFIG -------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------
-
-// TABLE OPTIONS -----------------------------------------------------------------------------------------
-const options = ref({
-  tableName: 'Manage Report',
-  moduleApi: 'report',
-  uriApi: 'jasper-report-template',
-  loading: false,
-  actionsAsMenu: false,
-  messageToDelete: 'Do you want to save the change?'
-})
-
-const payload = ref<IQueryRequest>({
-  filter: [],
-  query: '',
-  pageSize: 50,
-  page: 0,
-  sortBy: 'createdAt',
-  sortType: ENUM_SHORT_TYPE.DESC
-})
-const pagination = ref<IPagination>({
-  page: 0,
-  limit: 50,
-  totalElements: 0,
-  totalPages: 0,
-  search: ''
-})
-
-function searchAndFilter() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  if (filterToSearch.value.criterial && filterToSearch.value.search) {
-    payload.value.filter = [...payload.value.filter, {
-      key: filterToSearch.value.criterial ? filterToSearch.value.criterial.id : '',
-      operator: 'LIKE',
-      value: filterToSearch.value.search,
-      logicalOperation: 'AND',
-      type: 'filterSearch',
-    }]
+/**
+ * Normalizes options from various formats into a consistent structure
+ * @param options - Raw options array
+ * @returns Normalized options array
+ */
+function normalizeOptions(options: any[]): NormalizedOption[] {
+  if (!options || !Array.isArray(options) || options.length === 0) {
+    return []
   }
-  getList()
-}
 
-function clearFilterToSearch() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  filterToSearch.value.search = ''
-  getList()
-}
-// -------------------------------------------------------------------------------------------------------
+  // Handle backend localselect format: {id, name, slug, defaultValue}
+  if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
+    return options.map(opt => ({
+      name: opt.name,
+      label: opt.name,
+      value: opt.id,
+      id: opt.id,
+      description: opt.description || opt.slug,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
 
-// FUNCTIONS ---------------------------------------------------------------------------------------------
-function clearForm() {
-  item.value = { ...itemTemp.value }
-  idItem.value = ''
-  fields.value[0].disabled = false
-  updateFieldProperty(fields.value, 'status', 'disabled', true)
-  updateFieldProperty(fields.value, 'reportParams', 'hidden', true)
-  formReload.value++
-}
+  // Already normalized with 'name'
+  if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
+    return options.map(opt => ({
+      name: opt.name,
+      label: opt.name,
+      value: opt.value,
+      id: opt.id || opt.value,
+      description: opt.description,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
 
-async function getList() {
-  try {
-    idItemToLoadFirstTime.value = ''
-    options.value.loading = true
-    listItems.value = []
-    const newListItems = []
+  // Has 'label' instead of 'name'
+  if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
+    return options.map(opt => ({
+      name: opt.label,
+      label: opt.label,
+      value: opt.value,
+      id: opt.id || opt.value,
+      description: opt.description,
+      defaultValue: opt.defaultValue === true
+    }))
+  }
 
-    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
+  // String array
+  if (options.every(opt => typeof opt === 'string')) {
+    return options.map(opt => ({
+      name: opt,
+      label: opt,
+      value: opt,
+      id: opt,
+      defaultValue: false
+    }))
+  }
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
-
-    pagination.value.page = page
-    pagination.value.limit = size
-    pagination.value.totalElements = totalElements
-    pagination.value.totalPages = totalPages
-
-    const existingIds = new Set(listItems.value.map(item => item.id))
-
-    for (const iterator of dataList) {
-      iterator.type = ENUM_REPORT_TYPE.find(x => x.id === iterator.type)
-      if (Object.prototype.hasOwnProperty.call(iterator, 'status')) {
-        iterator.status = statusToBoolean(iterator.status)
+  // Mixed objects fallback
+  if (options.every(opt => opt && typeof opt === 'object')) {
+    return options.map((opt, index) => {
+      const displayName = opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`
+      return {
+        name: displayName,
+        label: displayName,
+        value: opt.value !== undefined ? opt.value : opt.id !== undefined ? opt.id : opt,
+        id: (opt.id || opt.value || index).toString(),
+        description: opt.description || opt.slug,
+        defaultValue: opt.defaultValue === true
       }
-
-      // Verificar si el ID ya existe en la lista
-      if (!existingIds.has(iterator.id)) {
-        newListItems.push({ ...iterator, loadingEdit: false, loadingDelete: false })
-        existingIds.add(iterator.id) // Añadir el nuevo ID al conjunto
-      }
-    }
-    listItems.value = [...listItems.value, ...newListItems]
-
-    for (const element of listItems.value) {
-      listItemsMenu.value[0].items.push({
-        label: `${element.code} - ${element.name}`,
-        icon: 'pi pi-file-pdf',
-        // ...element,
-        command: () => loadParamsFieldByReportTemplate(element.id, element.code)
-      })
-    }
-
-    // if (listItems.value.length > 0) {
-    //   idItemToLoadFirstTime.value = listItems.value[0].id
-    // }
+    })
   }
-  catch (error) {
-    console.error(error)
-  }
-  finally {
-    options.value.loading = false
-  }
+
+  // Ultimate fallback
+  return options.map((opt, index) => ({
+    name: String(opt),
+    label: String(opt),
+    value: opt,
+    id: String(index),
+    defaultValue: false
+  }))
 }
 
-async function getItemById(id: string) {
-  if (id) {
-    idItem.value = id
-    loadingSaveAll.value = true
-    try {
-      const response = await GenericService.getById(confApi.moduleApi, confApi.uriApi, id)
-      if (response) {
-        item.value.id = response.id
-        item.value.file = response.file
-        item.value.code = response.code
-        item.value.name = response.name
-        item.value.type = ENUM_REPORT_TYPE.find(x => x.id === response.type)
-        item.value.description = response.description
-        item.value.status = statusToBoolean(response.status)
-        if (response.dbConection) {
-          item.value.dbConection = {
-            id: response.dbConection.id,
-            name: response.dbConection.name,
-            code: response.dbConection.code,
-            status: response.dbConection.status
+/**
+ * Maps backend parameter to frontend parameter with proper typing
+ * @param backendParam - Backend parameter definition
+ * @returns Mapped frontend parameter
+ */
+function mapBackendParameter(backendParam: BackendReportParameter): ReportParameter {
+  const mappedParam: ReportParameter = {
+    id: backendParam.id,
+    paramName: backendParam.paramName,
+    label: backendParam.label,
+    componentType: backendParam.componentType,
+    required: false,
+    debounceTimeMs: 300,
+    maxSelectedLabels: 2,
+    parameterPosition: backendParam.parameterPosition || 0,
+    parameterCategory: backendParam.parameterCategory || 'REPORT',
+  }
+
+  // Add module/service for dynamic components
+  if (backendParam.module?.trim()) {
+    Object.assign(mappedParam, { module: backendParam.module.trim() })
+  }
+
+  if (backendParam.service?.trim()) {
+    Object.assign(mappedParam, { service: backendParam.service.trim() })
+  }
+
+  // Handle dependent field relationships
+  if (backendParam.dependentField?.trim()) {
+    Object.assign(mappedParam, { dependentField: backendParam.dependentField.trim() })
+  }
+
+  // ✅ ADDED: Map filterKeyValue directly
+  if (backendParam.filterKeyValue?.trim()) {
+    Object.assign(mappedParam, { filterKeyValue: backendParam.filterKeyValue.trim() })
+  }
+
+  // Map filterKeyValue to filtersBase structure (keep for compatibility)
+  if (backendParam.filterKeyValue?.trim()) {
+    Object.assign(mappedParam, {
+      filtersBase: [{
+        key: backendParam.filterKeyValue.trim(),
+        value: null
+      }]
+    })
+  }
+  else {
+    Object.assign(mappedParam, { filtersBase: [] })
+  }
+
+  if (backendParam.componentType === 'localselect' && backendParam.dataValueStatic) {
+    Object.assign(mappedParam, { dataValueStatic: backendParam.dataValueStatic })
+  }
+
+  return mappedParam
+}
+
+/**
+ * Creates form field from parameter with proper type safety
+ * @param param - Report parameter
+ * @returns Configured form field
+ */
+function createFieldFromParameter(param: ReportParameter): ReportFormField {
+  const baseProps = {
+    id: param.id,
+    name: param.paramName,
+    type: param.componentType,
+    field: param.paramName,
+    label: param.label,
+    class: 'col-12 md:col-6',
+    placeholder: `Select ${param.label}`,
+    helpText: param.required ? 'This field is required' : `Optional - ${param.label}`,
+    validation: param.required
+      ? z.string().min(1, `${param.label} is required`)
+      : z.string().optional(),
+    required: param.required || false,
+    showClear: true,
+    filterable: true
+  }
+
+  if (param.required) {
+    baseProps.class = `${baseProps.class} required`
+  }
+
+  // API Configuration
+  const apiConfig: DynamicApiConfig | undefined = param.module && param.service
+    ? {
+        moduleApi: param.module,
+        uriApi: param.service
+      }
+    : undefined
+
+  // Dynamic Arguments
+  const kwArgs: DynamicFieldArgs = {
+    filtersBase: param.filtersBase || [],
+    dependentField: param.dependentField,
+    debounceTimeMs: param.debounceTimeMs || 300,
+    maxSelectedLabels: param.maxSelectedLabels || 3,
+    loadOnOpen: true,
+    minQueryLength: 0,
+    maxItems: 50
+  }
+
+  // ✅ FIXED: Properly typed field configurations
+  const fieldConfigs: FieldConfigurationMap = {
+    multiselect: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'multiselect',
+        param.label,
+        apiConfig,
+        {
+          ...baseProps,
+          dataType: 'multiselect',
+          multiple: true,
+          maxSelectedLabels: param.maxSelectedLabels || 3,
+          kwArgs,
+          filtersBase: param.filtersBase || []
+        }
+      )
+    },
+
+    select: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'select',
+        param.label,
+        apiConfig,
+        {
+          ...baseProps,
+          dataType: 'select',
+          multiple: false,
+          kwArgs,
+          filtersBase: param.filtersBase || []
+        }
+      )
+    },
+
+    localselect: (): ReportFormField => {
+      let options: NormalizedOption[] = []
+      let defaultValue: any = null
+
+      try {
+        if (param.dataValueStatic) {
+          const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
+          options = normalizeOptions(rawData)
+
+          // Find default value
+          const defaultOption = options.find(opt => opt.defaultValue === true)
+          if (defaultOption) {
+            defaultValue = defaultOption.value
           }
         }
-        item.value.query = response.query
       }
-      updateFieldProperty(fields.value, 'reportParams', 'hidden', false)
-      updateFieldProperty(fields.value, 'status', 'disabled', false)
-      formReload.value += 1
+      catch (e) {
+        Logger.error('Invalid JSON in dataValueStatic for param', param.paramName, e)
+        options = []
+      }
+
+      return createDynamicField(
+        param.paramName,
+        'localselect',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          type: 'localselect',
+          dataType: 'localselect',
+          options: options.map(opt => ({ ...opt, label: opt.name })),
+          defaultValue,
+          filterable: options.length > 5,
+          config: {
+            showDebugInfo: false
+          }
+        }
+      )
+    },
+
+    date: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'date',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'date',
+          defaultValue: null,
+        }
+      )
+    },
+
+    number: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'number',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'number'
+        }
+      )
+    },
+
+    text: (): ReportFormField => {
+      return createDynamicField(
+        param.paramName,
+        'text',
+        param.label,
+        undefined,
+        {
+          ...baseProps,
+          dataType: 'text'
+        }
+      )
+    }
+  }
+
+  const generatedField = fieldConfigs[param.componentType]?.() || fieldConfigs.text()
+
+  return generatedField
+}
+
+// ========== COMPOSABLES ==========
+function useReportGenerator(config: ReportConfig) {
+  const pdfUrl = ref('')
+  const reportProgress = reactive<ReportProgress>({
+    status: 'idle',
+    progress: 0
+  })
+
+  const defaultConfig = {
+    timeout: 600000, // 10 minutes
+    retryAttempts: 2,
+    retryDelay: 3000,
+    ...config
+  }
+
+  const isGenerating = computed(() => reportProgress.status === 'generating')
+  const canRetry = computed(() => reportProgress.status === 'error' || reportProgress.status === 'timeout')
+
+  let progressInterval: NodeJS.Timeout | null = null
+
+  async function generateReport(payload: any): Promise<string | null> {
+    let attempt = 0
+
+    while (attempt <= defaultConfig.retryAttempts) {
+      try {
+        reportProgress.status = 'generating'
+        reportProgress.progress = 0
+        reportProgress.message = attempt > 0
+          ? `Retry attempt ${attempt}/${defaultConfig.retryAttempts}...`
+          : 'Initializing report generation...'
+
+        // Simulate progress for better UX
+        progressInterval = setInterval(() => {
+          if ((reportProgress.progress || 0) < 90) {
+            reportProgress.progress = (reportProgress.progress || 0) + Math.random() * 10
+          }
+        }, 1000)
+
+        const response = await GenericService.createReport<ReportResponse>(
+          defaultConfig.moduleApi,
+          defaultConfig.uriApiReportGenerate,
+          payload,
+          defaultConfig.timeout
+        )
+
+        if (progressInterval) {
+          clearInterval(progressInterval)
+          progressInterval = null
+        }
+        reportProgress.progress = 100
+
+        if (response?.base64Report) {
+          reportProgress.status = 'success'
+          reportProgress.message = 'Report generated successfully'
+          return response.base64Report
+        }
+
+        throw new Error('Invalid server response - no report data received')
+      }
+      catch (error: any) {
+        attempt++
+
+        if (progressInterval) {
+          clearInterval(progressInterval)
+          progressInterval = null
+        }
+
+        Logger.error(`Generation attempt ${attempt} failed:`, error)
+
+        if (error.message?.includes('cancelled') || error.message?.includes('timed out')) {
+          reportProgress.status = 'timeout'
+          reportProgress.message = 'Request timed out. Please try again with different parameters or contact support.'
+          break
+        }
+
+        if (attempt <= defaultConfig.retryAttempts) {
+          reportProgress.message = `Attempt ${attempt} failed. Retrying in ${defaultConfig.retryDelay / 1000} seconds...`
+          await new Promise(resolve => setTimeout(resolve, defaultConfig.retryDelay))
+        }
+        else {
+          reportProgress.status = 'error'
+          reportProgress.message = `Failed to generate report after ${defaultConfig.retryAttempts} attempts. ${error.message}`
+        }
+      }
+    }
+
+    return null
+  }
+
+  function processReportFile(base64Report: string, formatType: string): string | null {
+    try {
+      // Cleanup previous file
+      if (pdfUrl.value) {
+        URL.revokeObjectURL(pdfUrl.value)
+        pdfUrl.value = ''
+      }
+
+      const byteCharacters = atob(base64Report)
+      const byteArray = new Uint8Array(byteCharacters.length)
+
+      // Process in chunks for better performance
+      const chunkSize = 1024 * 1024
+      for (let i = 0; i < byteCharacters.length; i += chunkSize) {
+        const chunk = byteCharacters.slice(i, i + chunkSize)
+        for (let j = 0; j < chunk.length; j++) {
+          byteArray[i + j] = chunk.charCodeAt(j)
+        }
+      }
+
+      const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
+      const { mimeType, extension } = getFileTypeInfo(formatType)
+
+      const blob = new Blob([byteArray], { type: mimeType })
+      const blobUrl = URL.createObjectURL(blob)
+
+      if (formatType === 'PDF') {
+        pdfUrl.value = blobUrl
+      }
+      else {
+        downloadFile(blobUrl, `report-${timestamp}.${extension}`)
+      }
+
+      return blobUrl
     }
     catch (error) {
-      if (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load mail configuration data', life: 3000 })
-      }
+      Logger.error('Error processing file:', error)
+      reportProgress.status = 'error'
+      reportProgress.message = 'Error processing the generated file'
+      return null
     }
-    finally {
-      loadingSaveAll.value = false
+  }
+
+  function downloadFile(url: string, filename: string) {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // Cleanup after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  function getFileTypeInfo(formatType: string) {
+    const formats = {
+      XLS: {
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        extension: 'xlsx'
+      },
+      CSV: {
+        mimeType: 'text/csv',
+        extension: 'csv'
+      },
+      PDF: {
+        mimeType: 'application/pdf',
+        extension: 'pdf'
+      },
     }
+
+    return formats[formatType as keyof typeof formats] || formats.PDF
+  }
+
+  function cleanup() {
+    if (pdfUrl.value) {
+      URL.revokeObjectURL(pdfUrl.value)
+      pdfUrl.value = ''
+    }
+    if (progressInterval) {
+      clearInterval(progressInterval)
+      progressInterval = null
+    }
+    reportProgress.status = 'idle'
+    reportProgress.message = undefined
+    reportProgress.progress = 0
+  }
+
+  function resetProgress() {
+    if (progressInterval) {
+      clearInterval(progressInterval)
+      progressInterval = null
+    }
+    reportProgress.status = 'idle'
+    reportProgress.message = undefined
+    reportProgress.progress = 0
+  }
+
+  return {
+    pdfUrl: readonly(pdfUrl),
+    reportProgress: readonly(reportProgress),
+    isGenerating,
+    canRetry,
+    generateReport,
+    processReportFile,
+    cleanup,
+    resetProgress
   }
 }
 
-const isDate = (value: string) => !Number.isNaN(Date.parse(value))
+function useReportParameters() {
+  function validateParameter(param: ReportParameter, value: any): boolean {
+    if (param.required && (!value || (Array.isArray(value) && value.length === 0))) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Validation Error',
+        detail: `${param.label} is required`,
+        life: 3000
+      })
+      return false
+    }
+    return true
+  }
 
-function formatToDateTimeZero(date: string | number | Date) {
-  const formattedDate = new Date(date).toISOString().split('T')[0]
-  return `${formattedDate}T00:00:00.000Z`
-};
+  function validateAllParameters(parameters: ReportParameter[], formData: any): boolean {
+    const requiredParams = parameters.filter(p => p.required)
 
-async function saveItem(objItem: any) {
-  if (objItem) {
-    try {
-      loadingSaveAllGetReport.value = true
-      const payload = {
-        parameters: {},
-        reportFormatType: typeof objItem.value.reportFormatType === 'object' ? objItem.value.reportFormatType.id : objItem.value.reportFormatType,
-        jasperReportCode: objItem.value.jasperReportCode
-      } as any
+    for (const param of requiredParams) {
+      if (!validateParameter(param, formData[param.paramName])) {
+        return false
+      }
+    }
+    return true
+  }
 
-      payload.parameters = Object.keys(objItem.value).reduce((acc: Record<string, any>, key) => {
-        const value = objItem.value[key]
+  const isValidDate = (value: any): boolean => {
+    if (!value) { return false }
 
-        // 📆 Fecha válida
-        if (isDate(value) && typeof value !== 'number') {
-          acc[key] = dayjs(value).format('YYYY-MM-DD')
+    // Verificar diferentes formatos de fecha
+    const dateValue = new Date(value)
+    const isValid = !Number.isNaN(dateValue.getTime())
+
+    return isValid && dayjs(value).isValid()
+  }
+
+  function processParameterValue(value: any): any {
+    if (value === null || value === undefined || value === '') {
+      return null
+    }
+
+    if (isValidDate(value) && typeof value !== 'number') {
+      const processedDate = dayjs(value).format('YYYY-MM-DD')
+      return processedDate
+    }
+    else if (Array.isArray(value) && value.every(v => v && typeof v === 'object' && 'id' in v)) {
+      const processedArray = value.map(v => v.id)
+      return processedArray
+    }
+    else if (value && typeof value === 'object' && 'id' in value) {
+      return value.id
+    }
+
+    return value
+  }
+
+  function buildPayload(formData: any, reportCode: string, formatType: any) {
+    const payload = {
+      parameters: {} as Record<string, any>,
+      reportFormatType: typeof formatType === 'object' ? formatType.id : formatType,
+      jasperReportCode: reportCode,
+      requestId: Date.now().toString(),
+      metadata: {
+        timestamp: dayjs().toISOString(),
+        userAgent: navigator.userAgent
+      }
+    }
+
+    const excludeFields = ['reportFormatType', 'jasperReportCode', 'event']
+
+    payload.parameters = Object.keys(formData)
+      .filter((key) => {
+        if (excludeFields.includes(key)) {
+          return false
         }
-        // 🔢 Multiselect (Array con objetos que tienen ID)
-        else if (Array.isArray(value) && value.every(v => v && typeof v === 'object' && 'id' in v)) {
-          acc[key] = value.map(v => v.id)
+
+        // Busca el parámetro en la definición
+        const paramDef = currentReport.value?.parameters?.find(p => p.paramName === key)
+        return paramDef?.parameterCategory === 'REPORT'
+      })
+      .reduce((acc, key) => {
+        const rawValue = formData[key]
+
+        // ✅ ESPECIAL: Manejar campos de fecha de forma diferente
+        const isDateField = key.toLowerCase().includes('date')
+
+        if (isDateField) {
+          // Solo incluir fechas si tienen valor válido
+          if (rawValue && rawValue !== '' && rawValue !== null) {
+            const processedValue = processParameterValue(rawValue)
+            if (processedValue && processedValue !== null) {
+              acc[key] = processedValue
+            }
+          }
         }
-        // ✅ Select simple
-        else if (value && typeof value === 'object' && 'id' in value) {
-          acc[key] = value.id
-        }
-        // 🔄 Default
         else {
-          acc[key] = value
+        // Manejar campos no-fecha normalmente
+          const processedValue = processParameterValue(rawValue)
+          if (processedValue !== null && processedValue !== undefined && processedValue !== '') {
+            acc[key] = processedValue
+          }
         }
 
         return acc
       }, {} as Record<string, any>)
-      delete payload?.parameters?.reportFormatType
-      delete payload?.parameters?.jasperReportCode
-      delete payload?.parameters?.event
-      // const payloadTemp = {
-      //   jasperReportCode: 'KKKK',
-      //   parameters: {
-      //     ReportTitle: 'Reporte de Ventas',
-      //   },
-      //   reportFormatType: 'PDF'
-      // }
-      const response = await GenericService.create(confApi.moduleApi, confApi.uriApiReportGenerate, payload)
-      if (response) {
-        loadPDF(response.base64Report)
-      }
-      loadingSaveAllGetReport.value = false
-    }
-    catch (error) {
-      console.error(error)
-      loadingSaveAllGetReport.value = false
-    }
+
+    return payload
   }
-}
 
-function requireConfirmationToSave(item2: any) {
-  const { event } = item2
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      item.value = { ...item2 }
-      saveItem(item)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-function requireConfirmationToDelete(event: any) {
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    acceptClass: 'p-button-danger',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      // deleteItem(idItem.value)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-
-const disabledSearch = computed(() => {
-  // return !(filterToSearch.value.criterial && filterToSearch.value.search)
-  return false
-})
-
-const disabledClearSearch = computed(() => {
-  return !(filterToSearch.value.criterial && filterToSearch.value.search)
-})
-
-interface DataList {
-  id: string
-  componentType: string
-  label: string
-  module: string
-  paramName: string
-  service: string
-  type: string
-  reportClass: string
-  reportValidation: any
-  dependentField: any
-  parameterPosition: number
-  filterKeyValue: string
-  dataValueStatic: string
-}
-
-interface ListItem {
-  id: string
-  type: string
-  componentType: string
-  paramName: string
-  label: string
-  module: string
-  service: string
-  reportClass: string
-  reportValidation: any
-  dependentField: any
-  parameterPosition: number
-  filterKeyValue: string
-  dataValueStatic: string
-}
-
-function mapFunction(data: DataList): ListItem {
   return {
-    id: data.id,
-    type: data.type,
-    componentType: data.componentType,
-    paramName: data.paramName,
-    label: data.label,
-    module: data.module,
-    service: data.service,
-    reportClass: data.reportClass,
-    reportValidation: data.reportValidation,
-    dependentField: data.dependentField,
-    parameterPosition: data.parameterPosition,
-    filterKeyValue: data.filterKeyValue,
-    dataValueStatic: data.dataValueStatic
+    buildPayload,
+    validateAllParameters,
+    validateParameter
   }
 }
-async function getParamsByReport(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]): Promise<ListItem[]> {
-  return await getDataList<DataList, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'createdAt', sortType: ENUM_SHORT_TYPE.ASC })
+
+function useFieldBuilder() {
+  return {
+    createFieldFromParameter,
+    normalizeOptions,
+    mapBackendParameter
+  }
 }
 
-const showForm = ref(false)
-async function loadParamsFieldByReportTemplate(id: string, code: string) {
-  if (id) {
-    try {
-      showForm.value = false
-      const filter: FilterCriteria[] = [
-        {
-          key: 'jasperReportTemplate.id',
-          logicalOperation: 'AND',
-          operator: 'EQUALS',
-          value: `${id}`,
-        },
-      ]
-      const objQueryToSearch = {
-        query: '',
-        keys: ['name', 'username', 'url'],
-      }
-      const result = await getParamsByReport('report', 'jasper-report-template-parameter', objQueryToSearch, filter)
+// ========== INITIALIZE COMPOSABLES ==========
+const {
+  pdfUrl,
+  reportProgress,
+  isGenerating,
+  canRetry,
+  generateReport,
+  processReportFile,
+  cleanup,
+  resetProgress
+} = useReportGenerator(reportConfig)
 
-      fields.value = [...fieldsTemp]
-      if (result && result.length > 0) {
-        for (const element of result) {
-          item.value[element.paramName] = ''
-          if (element.componentType === 'select' || element.componentType === 'multiselect') {
-            fields.value = [...fields.value, {
-              field: element.paramName,
-              header: element.label,
-              dataType: element.componentType,
-              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
-              // validation: element.reportValidation ? element.reportValidation : z.object({}).nullable(),
-              objApi: {
-                moduleApi: element.module,
-                uriApi: element.service
-              },
-              kwArgs: {
-                ...element
-              }
-            }]
+const {
+  buildPayload,
+  validateAllParameters
+} = useReportParameters()
+
+const {
+  createFieldFromParameter: createField,
+  mapBackendParameter: mapParameter
+} = useFieldBuilder()
+
+// ========== COMPUTED PROPERTIES ==========
+const reportTitle = computed(() => {
+  return currentReport.value?.name || 'No Report Selected'
+})
+
+const reportDescription = computed(() => {
+  return currentReport.value?.description || 'Select a report to begin'
+})
+
+const hasParameters = computed(() => {
+  return currentReport.value?.parameters && currentReport.value.parameters.length > 0
+})
+
+const canGenerate = computed(() => {
+  return !isGenerating.value
+    && item.value.jasperReportCode
+    && item.value.reportFormatType
+})
+
+const progressPercentage = computed(() => {
+  return Math.round(reportProgress.progress || 0)
+})
+
+// ========== METHODS ==========
+async function loadReport(reportId: string) {
+  if (!reportId) {
+    return
+  }
+
+  try {
+    loadingReport.value = true
+
+    const response = await GenericService.getById<BackendReportInfo>(
+      'report',
+      'jasper-report-template/template-with-params/',
+      reportId
+    )
+
+    const mappedReport: ReportInfo = {
+      id: response.id,
+      code: response.code,
+      name: response.name,
+      description: response.description,
+      parameters: response.parameters
+        ? response.parameters
+            .map(mapParameter)
+            .sort((a, b) => (a.parameterPosition || 0) - (b.parameterPosition || 0))
+        : []
+    }
+
+    currentReport.value = mappedReport
+    await loadReportParameters(mappedReport.id, mappedReport.code, mappedReport)
+  }
+  catch (error) {
+    Logger.error('🧪 [ERROR] loadReport failed:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Load Failed',
+      detail: 'Failed to load report information',
+      life: 5000
+    })
+  }
+  finally {
+    loadingReport.value = false
+  }
+}
+
+async function loadReportParameters(id: string, code: string, reportData?: ReportInfo) {
+  if (!id) {
+    return
+  }
+
+  try {
+    showForm.value = false
+
+    // Clear existing fields
+    fields.value = []
+
+    if (reportData?.parameters && reportData.parameters.length > 0) {
+      reportData.parameters.forEach((param: ReportParameter) => {
+        // Create field definition
+        const fieldDef = createField(param) as MutableReportFormField
+
+        // Set default value if available
+        let initialValue: any
+        switch (param.componentType) {
+          case 'multiselect':
+            initialValue = []
+            break
+          case 'date':
+            // ✅ Inicializar como null para fechas, NO como string vacío
+            initialValue = null
+            break
+          default:
+            initialValue = ''
+        }
+
+        if (param.componentType === 'localselect' && fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
+          initialValue = fieldDef.defaultValue
+        }
+        else if (fieldDef.defaultValue !== undefined && fieldDef.defaultValue !== null) {
+          initialValue = fieldDef.defaultValue
+        }
+
+        // Initialize field value
+        item.value[param.paramName] = initialValue
+
+        // ✅ FIXED: Enhanced API configuration for dynamic fields using mutable interface
+        if (['select', 'multiselect'].includes(param.componentType) && param.module && param.service) {
+          fieldDef.objApi = {
+            moduleApi: param.module,
+            uriApi: param.service
           }
-          else {
-            fields.value = [...fields.value, {
-              field: element.paramName,
-              header: element.label,
-              dataType: element.componentType,
-              class: element.reportClass ? element.reportClass : 'field col-12 md:col-2',
-              // validation: element.reportValidation ? element.reportValidation : z.string().trim()
-              kwArgs: {
-                ...element
-              }
-            }]
-
-            if (element.componentType === 'local-select') {
-              const listValue = element.dataValueStatic ? JSON.parse(element.dataValueStatic) : []
-              if (listValue && listValue.length > 0) {
-                item.value[element.paramName] = listValue.find((x: any) => x.defaultValue)
-              }
-            }
+          fieldDef.kwArgs = {
+            ...param,
+            filtersBase: param.filtersBase || [],
+            dependentField: param.dependentField,
+            filterKeyValue: param.filterKeyValue, // ✅ ADDED: Pass filterKeyValue to SelectField
+            debounceTimeMs: param.debounceTimeMs || 300,
+            // ✅ NEW: Add getter function for parent values
+            getParentValues: () => item.value
           }
         }
-      }
-      formReload.value++
 
-      if (code) {
-        item.value.jasperReportCode = code
+        fields.value.push(fieldDef as ReportFormField)
+      })
+    }
+
+    item.value.jasperReportCode = code || ''
+    currentReport.value = reportData || null
+    formReload.value++
+
+    await nextTick()
+    showForm.value = true
+  }
+  catch (error) {
+    Logger.error('Error loading parameters:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Parameter Load Failed',
+      detail: 'Failed to load report parameters',
+      life: 5000
+    })
+  }
+}
+
+async function executeReport() {
+  if (!canGenerate.value) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Cannot Generate',
+      detail: 'Please ensure all required fields are filled',
+      life: 3000
+    })
+    return
+  }
+
+  resetProgress()
+
+  try {
+    // Validate parameters if report has them
+    if (currentReport.value?.parameters) {
+      const isValid = validateAllParameters(currentReport.value.parameters, item.value)
+      if (!isValid) { return }
+    }
+
+    const payload = buildPayload(
+      item.value,
+      item.value.jasperReportCode,
+      item.value.reportFormatType
+    )
+
+    const base64Report = await generateReport(payload)
+
+    if (base64Report) {
+      const processedUrl = processReportFile(base64Report, item.value.reportFormatType.id)
+
+      if (processedUrl) {
+        toast.add({
+          severity: 'success',
+          summary: 'Report Generated',
+          detail: `Your ${item.value.reportFormatType.name} report is ready`,
+          life: 5000
+        })
+      }
+    }
+  }
+  catch (error) {
+    Logger.error('Error executing report:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Generation Failed',
+      detail: 'Failed to generate report. Please try again.',
+      life: 5000
+    })
+  }
+}
+
+async function retryGeneration() {
+  if (canRetry.value) {
+    await executeReport()
+  }
+}
+
+function clearForm() {
+  // Reset form values but keep report code and format
+  const reportCode = item.value.jasperReportCode
+  const reportFormat = item.value.reportFormatType
+
+  item.value = {
+    jasperReportCode: reportCode,
+    reportFormatType: reportFormat
+  }
+
+  // Reinitialize parameter values
+  if (currentReport.value?.parameters) {
+    currentReport.value.parameters.forEach((param: ReportParameter) => {
+      item.value[param.paramName] = param.componentType === 'multiselect' ? [] : ''
+    })
+  }
+
+  formValidationErrors.value = {}
+  formReload.value++
+}
+
+// ========== EVENT HANDLERS ==========
+// ✅ ENHANCED: Improved field update handler with better error handling
+function handleFieldUpdate(event: any) {
+  const name = event.name || event.fieldName || event.field
+  const value = event.value
+
+  const oldValue = item.value[name]
+
+  // Update the value FIRST
+  item.value[name] = value
+
+  // Clear validation error for this field
+  if (formValidationErrors.value[name]) {
+    delete formValidationErrors.value[name]
+  }
+
+  // Handle dependency cascading AFTER the value is set
+  if (JSON.stringify(oldValue) !== JSON.stringify(value)) {
+    handleDependencyCascade(name, value, oldValue)
+  }
+}
+
+// ✅ ENHANCED: Improved dependency cascade with better error handling
+function handleDependencyCascade(changedFieldName: string, newValue: any, oldValue: any) {
+  // Skip if value didn't actually change
+  if (JSON.stringify(newValue) === JSON.stringify(oldValue)) {
+    return
+  }
+
+  // Find all fields that depend on the changed field
+  const dependentFields = fields.value.filter((field) => {
+    const dependentField = field.kwArgs?.dependentField
+    return dependentField === changedFieldName
+  })
+
+  if (dependentFields.length > 0) {
+    // ✅ Batch updates para mejor performance
+    const updates: Record<string, any> = {}
+
+    dependentFields.forEach((depField) => {
+      const resetValue = depField.multiple ? [] : null
+      updates[depField.name] = resetValue
+    })
+
+    // ✅ Aplicar todos los updates de una vez
+    Object.assign(item.value, updates)
+
+    dependentFields.forEach((depField) => {
+      // Reset dependent field value IMMEDIATELY
+      if (depField.multiple) {
+        item.value[depField.name] = []
       }
       else {
-        item.value.jasperReportCode = ''
+        item.value[depField.name] = null
       }
 
-      showForm.value = true
-    }
-    catch (error) {
-      console.log(error)
-    }
+      // Trigger immediate reactive update
+      nextTick(() => {
+        // Force formReload to ensure SelectField remounts with new dependencies
+        // formReload.value++
+      })
+    })
   }
 }
 
-const suggestionsData = ref<any[]>([])
+// ✅ ENHANCED: Improved field update handler
 
-async function getDinamicData(query: string, moduleApi: string, uriApi: string, filter?: IFilter[]) {
+function handleReactiveUpdate(values: FieldValues) {
+  // ✅ Definir campos que NUNCA deben ser sobrescritos por el formulario
+  const CRITICAL_FIELDS = ['jasperReportCode', 'reportFormatType']
+
+  // Extraer valores críticos actuales
+  const preservedValues = CRITICAL_FIELDS.reduce((acc, field) => {
+    if (item.value[field] !== undefined && item.value[field] !== null) {
+      acc[field] = item.value[field]
+    }
+    return acc
+  }, {} as Record<string, any>)
+
+  // Merge con protección
+  item.value = {
+    ...values, // Campos del formulario
+    ...preservedValues // Campos críticos preservados
+  }
+}
+
+function handleCancel() {
+  clearForm()
+}
+
+// ✅ ENHANCED: Improved validation error handler with better error checking
+function handleValidationErrors(event: any) {
   try {
-    const payload
-        = {
-          filter: filter || [],
-          query: '',
-          pageSize: 2000,
-          page: 0,
-          sortBy: 'createdAt',
-          sortType: ENUM_SHORT_TYPE.ASC
+    // Handle FormValidationEvent properly with safe checking
+    if (event && typeof event === 'object' && 'errors' in event) {
+      const errorRecord: Record<string, string[]> = {}
+
+      if (Array.isArray(event.errors)) {
+        event.errors.forEach((error: any) => {
+          try {
+            if (error && typeof error === 'object' && error.path) {
+              if (!errorRecord[error.path]) {
+                errorRecord[error.path] = []
+              }
+
+              const message = error.message || error.msg || 'Validation error'
+              errorRecord[error.path].push(String(message))
+            }
+          }
+          catch (errorProcessingError) {
+            Logger.error('🔴 [VALIDATION ERRORS] Error processing individual error:', errorProcessingError)
+          }
+        })
+      }
+
+      formValidationErrors.value = errorRecord
+    }
+    else if (event && typeof event === 'object') {
+      // Handle direct error object
+      const errorRecord: Record<string, string[]> = {}
+
+      Object.keys(event).forEach((key) => {
+        try {
+          const value = event[key]
+          if (Array.isArray(value)) {
+            errorRecord[key] = value.map(v => String(v))
+          }
+          else if (value) {
+            errorRecord[key] = [String(value)]
+          }
         }
+        catch (keyProcessingError) {
+          Logger.error('🔴 [VALIDATION ERRORS] Error processing key:', key, keyProcessingError)
+        }
+      })
 
-    const response = await GenericService.search(moduleApi, uriApi, payload)
-    const { data: dataList } = response
-    suggestionsData.value = []
-    for (const iterator of dataList) {
-      suggestionsData.value = [...suggestionsData.value, { id: iterator.id, name: `${iterator.code} - ${iterator.name}`, status: iterator.status }]
+      formValidationErrors.value = errorRecord
+    }
+    else {
+      formValidationErrors.value = {}
     }
   }
-  catch (error) {
-    console.error('Error loading agency type list:', error)
+  catch (handlerError) {
+    Logger.error('🔴 [VALIDATION ERRORS] Critical error in validation handler:', handlerError)
+    formValidationErrors.value = {}
   }
 }
 
-function transformToTreeNode(data: Record<string, any[]>): TreeNode[] {
-  return Object.entries(data).map(([moduleName, items]) => ({
-    key: moduleName,
-    label: moduleName,
-    data: `${moduleName} Module`,
-    icon: 'pi pi-folder', // Puedes cambiar el ícono según tus necesidades
-    children: items.map(item => ({
-      key: item.id,
-      label: item.name,
-      data: {
-        ...item,
-      },
-      icon: item.highRisk ? 'pi pi-exclamation-triangle' : 'pi pi-file', // Ícono según si es de alto riesgo
-    })),
-  }))
+// ========== UTILITY FUNCTIONS ==========
+function getFormatIcon(formatId: string): string {
+  const format = REPORT_FORMATS.find(f => f.id === formatId)
+  return format?.icon || 'pi pi-file'
 }
 
-async function getMenuItems(): Promise<TreeNode[]> {
-  try {
-    const response = await GenericService.get('report', 'report-menu/grouped')
-    if (response) {
-      const treeNodes: TreeNode[] = transformToTreeNode(response)
-      return treeNodes
-    }
-    return []
-  }
-  catch (error) {
-    console.error('Error loading menu items:', error)
-    return []
-  }
-}
-
-function onNodeSelect(node) {
-  loadParamsFieldByReportTemplate(node.data.id, node.data.code)
-}
-
-function onNodeUnselect(node) {
-  toast.add({ severity: 'warn', summary: 'Node Unselected', detail: node.label, life: 3000 })
-}
-
-// -------------------------------------------------------------------------------------------------------
-
-const pdfUrl = ref('')
-function loadPDF(base64Report: string) {
-  pdfUrl.value = ''
-  // Convertir base64 a un ArrayBuffer
-  const byteCharacters = atob(base64Report)
-  const byteNumbers = Array.from({ length: byteCharacters.length })
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i)
-  }
-  const byteArray = new Uint8Array(byteNumbers)
-
-  if (item.value?.reportFormatType?.id === 'XLS') {
-    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-
-    // Crear una URL del Blob y asignarla a pdfUrl
-    pdfUrl.value = URL.createObjectURL(blob)
-
-    // Abrir el PDF en una nueva ventana
+function downloadCurrentReport() {
+  if (pdfUrl.value) {
+    const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
     const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.xlsx`
+    link.href = pdfUrl.value
+    link.download = `report-${timestamp}.pdf`
     link.click()
   }
-  else if (item.value?.reportFormatType?.id === 'CSV') {
-    const blob = new Blob([byteArray], { type: 'text/csv' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `report-file-${dayjs().format('YYYY-MM-DD')}.csv`
-    link.click()
-  }
-  else if (item.value?.reportFormatType?.id === 'PDF') {
-    // Crear un Blob del ArrayBuffer con tipo MIME 'application/pdf'
-    const blob = new Blob([byteArray], { type: 'application/pdf' })
+}
 
-    // Crear una URL del Blob y asignarla a pdfUrl
-    pdfUrl.value = URL.createObjectURL(blob)
-
-    // Abrir el PDF en una nueva ventana
-    // window.open(pdfUrl.value, '_blank')
+function openInNewTab() {
+  if (pdfUrl.value) {
+    window.open(pdfUrl.value, '_blank', 'noopener,noreferrer')
   }
 }
 
-async function loadReport() {
-  try {
-    const reportId = route.query.reportId ? route.query.reportId.toString() : ''
-    const reportCode = route.query.reportCode ? route.query.reportCode.toString() : ''
-    if (reportId && reportCode) {
-      await loadParamsFieldByReportTemplate(reportId, reportCode)
-    }
-  }
-  catch (error) {
-    console.error('Error loading report:', error)
+function shareReport() {
+  if (typeof navigator !== 'undefined' && (navigator as any).share && pdfUrl.value) {
+    (navigator as any).share({
+      title: `Report: ${currentReport.value?.name}`,
+      text: 'Generated report',
+      url: pdfUrl.value
+    }).catch((err: any) => Logger.error('Error sharing:', err))
   }
 }
 
-watch(() => idItemToLoadFirstTime.value, async (newValue) => {
-  if (!newValue) {
-    clearForm()
+// PDF Viewer functions
+function zoomIn() {
+  Logger.log('Zoom in')
+}
+
+function zoomOut() {
+  Logger.log('Zoom out')
+}
+
+// ========== WATCHERS ==========
+watch(() => route.query.reportId, (newReportId) => {
+  if (newReportId && typeof newReportId === 'string') {
+    loadReport(newReportId)
   }
-  else {
-    await getItemById(newValue)
-  }
+}, { immediate: true })
+
+// ========== LIFECYCLE ==========
+onUnmounted(() => {
+  cleanup()
 })
 
-watch(() => route.query, async (newValue) => {
-  if (newValue) {
-    loadReport()
-  }
+// ========== COMPUTED PROPERTIES - Additional ==========
+const isShareSupported = computed(() => {
+  return typeof navigator !== 'undefined' && (navigator as any).share
 })
-// -------------------------------------------------------------------------------------------------------
-
-// TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
-onMounted(async () => {
-  updateFieldProperty(fields.value, 'reportParams', 'hidden', true)
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  if (useRuntimeConfig().public.loadTableData) {
-    getList()
-  }
-
-  // listItemMenuTree.value = await getMenuItems()
-  await loadReport()
-})
-// -------------------------------------------------------------------------------------------------------
 </script>
 
 <template>
-  <!-- <div class="flex justify-content-between align-items-center">
-    <h3 class="mb-0">
-      Manage Report
-    </h3>
-  </div> -->
-  <div class="grid">
-    <div v-if="false" class="col-12 md:col-6 xl:col-2">
-      <div>
-        <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-          Report List
+  <div class="report-viewer">
+    <!-- Enhanced Header Section -->
+    <div class="report-viewer__header">
+      <div class="report-viewer__header-content">
+        <div class="report-viewer__header-info">
+          <div class="report-viewer__header-icon">
+            <i class="pi pi-chart-bar" />
+          </div>
+          <div>
+            <h1 class="report-viewer__title">
+              Report Viewer
+            </h1>
+            <p class="report-viewer__subtitle">
+              Generate and preview reports with customizable parameters
+            </p>
+          </div>
         </div>
-        <div class="card p-0">
-          <!-- <Tree :value="listItemMenuTree" class="w-full md:auto" /> -->
-          <Tree
-            v-model:selectionKeys="selectedKey"
-            :value="listItemMenuTree"
-            selection-mode="single"
-            :meta-key-selection="false"
-            :filter="true"
-            class="w-full md:w-auto"
-            @node-select="onNodeSelect"
-            @node-unselect="onNodeUnselect"
-          />
-          <!-- @node-expand="onNodeExpand"
-            @node-collapse="onNodeCollapse" -->
-          <!-- <Menu
-            :model="listItemsMenu" :pt="{
-              menuitem: {
-                class: 'py-2',
-              },
-            }"
-          /> -->
+        <div class="report-viewer__header-badge">
+          <i :class="currentReport ? 'pi pi-check-circle' : 'pi pi-info-circle'" />
+          <div class="report-viewer__header-badge-content">
+            <span class="report-viewer__header-badge-title">{{ reportTitle }}</span>
+            <small class="report-viewer__header-badge-subtitle">{{ reportDescription }}</small>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-12">
-      <div v-if="fields.length > 0">
-        <div class="font-bold text-lg px-4 bg-primary custom-card-header">
-          Params
+
+    <!-- Enhanced Progress/Status Messages -->
+    <div v-if="reportProgress.status !== 'idle'" class="report-viewer__status">
+      <!-- Generation Progress -->
+      <div v-if="isGenerating" class="report-viewer__status-card report-viewer__status-card--loading">
+        <div class="report-viewer__status-content">
+          <div class="report-viewer__status-progress">
+            <ProgressSpinner style="width: 24px; height: 24px" />
+            <div class="report-viewer__progress-details">
+              <ProgressBar
+                :value="progressPercentage"
+                class="report-viewer__progress-bar"
+                :show-value="false"
+              />
+              <span class="report-viewer__progress-text">{{ progressPercentage }}%</span>
+            </div>
+          </div>
+          <div>
+            <h4 class="report-viewer__status-title">
+              Generating Report
+            </h4>
+            <p class="report-viewer__status-message">
+              {{ reportProgress.message }}
+            </p>
+          </div>
         </div>
-        <div class="card">
-          <Accordion v-if="false" :active-index="0" class="mb-2">
-            <AccordionTab>
-              <template #header>
-                <div class="text-white font-bold custom-accordion-header">
-                  Filters
+      </div>
+
+      <!-- Success Message -->
+      <div v-if="reportProgress.status === 'success'" class="report-viewer__status-card report-viewer__status-card--success">
+        <div class="report-viewer__status-content">
+          <i class="pi pi-check-circle" />
+          <div>
+            <h4 class="report-viewer__status-title">
+              Report Generated Successfully
+            </h4>
+            <p class="report-viewer__status-message">
+              {{ reportProgress.message }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeout Warning with Retry -->
+      <div v-if="reportProgress.status === 'timeout'" class="report-viewer__status-card report-viewer__status-card--warning">
+        <div class="report-viewer__status-content">
+          <i class="pi pi-clock" />
+          <div class="flex-1">
+            <h4 class="report-viewer__status-title">
+              Request Timeout
+            </h4>
+            <p class="report-viewer__status-message">
+              {{ reportProgress.message }}
+            </p>
+          </div>
+          <Button
+            label="Retry"
+            icon="pi pi-refresh"
+            class="p-button-warning p-button-outlined"
+            size="small"
+            @click="retryGeneration"
+          />
+        </div>
+      </div>
+
+      <!-- Error Message with Retry -->
+      <div v-if="reportProgress.status === 'error'" class="report-viewer__status-card report-viewer__status-card--error">
+        <div class="report-viewer__status-content">
+          <i class="pi pi-exclamation-triangle" />
+          <div class="flex-1">
+            <h4 class="report-viewer__status-title">
+              Generation Failed
+            </h4>
+            <p class="report-viewer__status-message">
+              {{ reportProgress.message }}
+            </p>
+          </div>
+          <Button
+            label="Retry"
+            icon="pi pi-refresh"
+            class="p-button-danger p-button-outlined"
+            size="small"
+            @click="retryGeneration"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="report-viewer__main">
+      <!-- Left Panel: Enhanced Parameters -->
+      <div class="report-viewer__parameters">
+        <div class="report-viewer__parameters-container">
+          <!-- Panel Header -->
+          <div class="report-viewer__parameters-header">
+            <div class="report-viewer__parameters-header-content">
+              <div class="report-viewer__parameters-icon">
+                <i class="pi pi-sliders-h" />
+              </div>
+              <div>
+                <h3 class="report-viewer__parameters-title">
+                  Report Parameters
+                </h3>
+                <div class="report-viewer__parameters-subtitle">
+                  {{ hasParameters ? 'Configure your report settings' : 'No parameters required' }}
+                </div>
+              </div>
+            </div>
+            <div v-if="currentReport" class="report-viewer__parameters-actions">
+              <Button
+                v-tooltip.top="'Reset Parameters'"
+                icon="pi pi-refresh"
+                class="p-button-text p-button-sm"
+                :disabled="isGenerating"
+                @click="clearForm"
+              />
+            </div>
+          </div>
+
+          <!-- Panel Content -->
+          <div v-if="hasParameters" class="report-viewer__parameters-content">
+            <div v-if="loadingReport" class="report-viewer__loading">
+              <div class="report-viewer__loading-content">
+                <ProgressSpinner style="width: 32px; height: 32px" />
+                <p>Loading report parameters...</p>
+              </div>
+            </div>
+
+            <EnhancedFormComponent
+              v-if="showForm"
+              :key="formReload"
+              :fields="fields as FormField[]"
+              :initial-values="item"
+              :show-actions="false"
+              :loading="isGenerating"
+              :validate-on-change="true"
+              data-test-id="report-form"
+              @field-change="handleFieldUpdate"
+              @update:values="handleReactiveUpdate"
+              @validation-change="handleValidationErrors"
+              @cancel="handleCancel"
+            >
+              <template
+                v-for="fieldItem in fields.filter((f) => f.required)"
+                :key="`header-${fieldItem.field}`"
+                #[`header-${fieldItem.field}`]="{ field }"
+              >
+                <div class="flex align-items-center gap-2">
+                  <span>{{ field.label }}</span>
+                  <Tag severity="danger" value="Required" class="text-xs" />
                 </div>
               </template>
-              <div class="flex gap-4 flex-column lg:flex-row">
+            </EnhancedFormComponent>
+            <!-- Enhanced Action Section -->
+            <div class="report-viewer__actions">
+              <!-- Export Format Selection -->
+              <div class="report-viewer__format-section">
+                <label class="report-viewer__format-label">
+                  <i class="pi pi-download mr-2" />
+                  Export Format
+                </label>
+                <div class="report-viewer__format-grid">
+                  <div
+                    v-for="format in REPORT_FORMATS"
+                    :key="format.id"
+                    class="report-viewer__format-option"
+                    :class="{ 'report-viewer__format-option--selected': item.reportFormatType?.id === format.id }"
+                    @click="item.reportFormatType = format"
+                  >
+                    <div class="report-viewer__format-option-header">
+                      <i :class="format.icon" />
+                      <span class="report-viewer__format-option-name">{{ format.name }}</span>
+                    </div>
+                    <p class="report-viewer__format-option-description">
+                      {{ format.description }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Generation Controls -->
+              <div class="report-viewer__generation-controls">
+                <Button
+                  :label="isGenerating ? 'Generating...' : 'Generate Report'"
+                  :icon="isGenerating ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                  class="report-viewer__generate-button report-viewer__generate-btn"
+                  :loading="isGenerating"
+                  :disabled="!canGenerate"
+                  @click="executeReport"
+                />
+
+                <div class="report-viewer__generation-info">
+                  <div class="flex align-items-center gap-2 text-sm text-gray-600">
+                    <i class="pi pi-info-circle" />
+                    <span v-if="item.reportFormatType?.id === 'PDF'">
+                      PDF will be displayed in the preview panel
+                    </span>
+                    <span v-else>
+                      {{ item.reportFormatType?.name }} file will be automatically downloaded
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div v-if="pdfUrl" class="report-viewer__quick-actions">
+                <h4 class="report-viewer__quick-actions-title">
+                  Quick Actions
+                </h4>
+                <div class="report-viewer__quick-actions-buttons">
+                  <Button
+                    icon="pi pi-download"
+                    label="Download"
+                    class="p-button-outlined p-button-sm"
+                    @click="downloadCurrentReport"
+                  />
+                  <Button
+                    icon="pi pi-external-link"
+                    label="New Tab"
+                    class="p-button-outlined p-button-sm"
+                    @click="openInNewTab"
+                  />
+                  <Button
+                    v-if="isShareSupported"
+                    icon="pi pi-share-alt"
+                    label="Share"
+                    class="p-button-outlined p-button-sm"
+                    @click="shareReport"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Parameters State -->
+          <div v-else-if="currentReport && !hasParameters" class="report-viewer__no-parameters">
+            <div class="report-viewer__no-parameters-content">
+              <div class="report-viewer__no-parameters-icon">
+                <i class="pi pi-check-circle" />
+              </div>
+              <h4 class="report-viewer__no-parameters-title">
+                Ready to Generate
+              </h4>
+              <p class="report-viewer__no-parameters-text">
+                This report doesn't require any parameters. You can generate it directly.
+              </p>
+
+              <!-- Format selection for no-parameter reports -->
+              <div class="report-viewer__format-section mt-4">
+                <label class="report-viewer__format-label">
+                  <i class="pi pi-download mr-2" />
+                  Export Format
+                </label>
+                <Dropdown
+                  v-model="item.reportFormatType"
+                  :options="REPORT_FORMATS"
+                  option-label="name"
+                  placeholder="Select Format"
+                  class="w-full"
+                >
+                  <template #value="slotProps">
+                    <div v-if="slotProps.value" class="flex align-items-center gap-2">
+                      <i :class="slotProps.value.icon" />
+                      <span>{{ slotProps.value.name }}</span>
+                    </div>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="flex align-items-center gap-2">
+                      <i :class="slotProps.option.icon" />
+                      <div>
+                        <div>{{ slotProps.option.name }}</div>
+                        <small class="text-gray-500">{{ slotProps.option.description }}</small>
+                      </div>
+                    </div>
+                  </template>
+                </Dropdown>
+              </div>
+
+              <Button
+                :label="isGenerating ? 'Generating...' : 'Generate Report'"
+                :icon="isGenerating ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                class="w-full mt-3 report-viewer__generate-btn"
+                :loading="isGenerating"
+                :disabled="!canGenerate"
+                @click="executeReport"
+              />
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="report-viewer__empty">
+            <div class="report-viewer__empty-content">
+              <div class="report-viewer__empty-icon">
+                <i class="pi pi-file-o" />
+              </div>
+              <h4 class="report-viewer__empty-title">
+                No Report Selected
+              </h4>
+              <p class="report-viewer__empty-text">
+                Please select a report from the URL parameter or navigation to view its parameters and generate reports.
+              </p>
+              <div class="report-viewer__empty-help">
+                <div class="report-viewer__help-content">
+                  <i class="pi pi-lightbulb" />
+                  <div>
+                    <p class="report-viewer__help-title">
+                      How to use:
+                    </p>
+                    <p class="report-viewer__help-text">
+                      Add <code>?reportId=YOUR_REPORT_ID</code> to the URL to load a specific report.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Enhanced PDF Preview -->
+      <div class="report-viewer__preview">
+        <div class="report-viewer__preview-container">
+          <!-- Enhanced Viewer Header -->
+          <div class="report-viewer__preview-header">
+            <div class="report-viewer__preview-header-content">
+              <div class="report-viewer__preview-icon">
+                <i class="pi pi-eye" />
+              </div>
+              <div class="flex flex-column">
                 <div class="flex align-items-center gap-2">
-                  <label for="email3">Criteria</label>
-                  <div class="w-full lg:w-auto">
-                    <Dropdown
-                      v-model="filterToSearch.criterial" :options="[...ENUM_FILTER]" option-label="name"
-                      placeholder="Criteria" return-object="false" class="align-items-center w-full" show-clear
+                  <h3 class="report-viewer__preview-title">
+                    Report Preview
+                  </h3>
+                </div>
+                <p class="report-viewer__preview-subtitle">
+                  {{ pdfUrl ? 'Your generated report' : 'Generated reports will appear here' }}
+                </p>
+              </div>
+              <div class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+                <Tag severity="success" icon="pi pi-check">
+                  Report Generated
+                </Tag>
+                <span class="text-sm text-gray-600">
+                  {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enhanced Viewer Content -->
+          <div class="report-viewer__preview-content">
+            <!-- PDF Display with enhanced features -->
+            <div v-if="item?.reportFormatType?.id === 'PDF' && pdfUrl" class="report-viewer__pdf-container">
+              <object
+                :data="pdfUrl"
+                type="application/pdf"
+                class="report-viewer__pdf-object"
+              >
+                <div class="report-viewer__pdf-fallback">
+                  <div class="report-viewer__pdf-fallback-content">
+                    <i class="pi pi-file-pdf" />
+                    <h4>PDF Viewer Not Supported</h4>
+                    <p>Your browser doesn't support inline PDF viewing</p>
+                    <Button
+                      label="Download PDF"
+                      icon="pi pi-download"
+                      @click="downloadCurrentReport"
                     />
                   </div>
                 </div>
-                <div class="flex align-items-center gap-2">
-                  <label for="email">Search</label>
-                  <div class="w-full lg:w-auto">
-                    <IconField icon-position="left" class="w-full">
-                      <InputText v-model="filterToSearch.search" type="text" placeholder="Search" class="w-full" />
-                      <InputIcon class="pi pi-search" />
-                    </IconField>
-                  </div>
+              </object>
+            </div>
+
+            <!-- Enhanced Empty State for Preview -->
+            <div v-else class="report-viewer__preview-empty">
+              <div class="report-viewer__preview-empty-content">
+                <div class="report-viewer__preview-empty-icon">
+                  <i :class="getFormatIcon(item?.reportFormatType?.id || 'PDF')" />
                 </div>
-                <div class="flex align-items-center">
-                  <Button v-tooltip.top="'Search'" class="w-3rem mx-2" icon="pi pi-search" :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter" />
-                  <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash" :disabled="disabledClearSearch" :loading="loadingSearch" @click="clearFilterToSearch" />
+                <h4 class="report-viewer__preview-empty-title">
+                  {{ item?.reportFormatType?.id === 'PDF' ? 'PDF Preview' : `${item?.reportFormatType?.name || 'File'} Download` }}
+                </h4>
+                <p class="report-viewer__preview-empty-text">
+                  {{ item?.reportFormatType?.id === 'PDF'
+                    ? 'PDF reports will be displayed here after generation'
+                    : `${item?.reportFormatType?.name || 'Files'} will be automatically downloaded when generated`
+                  }}
+                </p>
+
+                <!-- Preview features info -->
+                <div v-if="item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-features">
+                  <h5 class="report-viewer__preview-features-title">
+                    Preview Features:
+                  </h5>
+                  <ul class="report-viewer__preview-features-list">
+                    <li><i class="pi pi-eye" /> Inline viewing</li>
+                    <li><i class="pi pi-search-plus" /> Zoom controls</li>
+                    <li><i class="pi pi-download" /> Download option</li>
+                    <li><i class="pi pi-external-link" /> Open in new tab</li>
+                  </ul>
+                </div>
+
+                <div v-if="!item.jasperReportCode" class="report-viewer__preview-empty-info">
+                  <i class="pi pi-info-circle" />
+                  <span>Select a report and configure parameters to generate preview</span>
                 </div>
               </div>
-            </AccordionTab>
-          </Accordion>
-          <EditFormV2
-            v-if="showForm"
-            :key="formReload"
-            :fields="fields"
-            :item="item"
-            :show-actions="false"
-            :show-actions-inline="true"
-            :loading-save="loadingSaveAllGetReport"
-            container-class="grid pt-3 px-0"
-            @reactive-update-field="item = $event"
-            @cancel="clearForm"
-            @delete="requireConfirmationToDelete($event)"
-            @submit="requireConfirmationToSave($event)"
-          >
-            <template
-              v-for="field in fields.filter(field => field.field !== 'reportFormatType' && (field.dataType === 'select' || field.dataType === 'multiselect' || field.dataType === 'local-select'))"
-              :key="field.field" #[`field-${field.field}`]="{ item: data, onUpdate }"
-            >
-              <span v-if="field.dataType === 'local-select'">
-                <Dropdown
-                  v-model="data[field.field]"
-                  :options="field.kwArgs.dataValueStatic ? [...JSON.parse(field.kwArgs.dataValueStatic)] : []"
-                  option-label="name"
-                  placeholder="Select a City"
-                  class="w-full"
-                />
-              </span>
-              <span v-if="field.dataType === 'select'">
-                <DebouncedAutoCompleteComponent
-                  v-if="!loadingSaveAll"
-                  id="autocomplete"
-                  field="name"
-                  item-value="id"
-                  :model="data[field.field]"
-                  :suggestions="[...suggestionsData]"
-                  @change="($event) => {
-                    onUpdate(field.field, $event)
-                  }"
-                  @load="async ($event) => {
-                    let keyValue = ''
-                    let filter = []
-                    // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
-                    if (field.kwArgs && field.kwArgs.dependentField) {
-                      keyValue = JSON.parse(field.kwArgs.dependentField).name
-                      filter = [
-                        {
-                          key: field.kwArgs.filterKeyValue,
-                          operator: 'EQUALS',
-                          value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
-                          logicalOperation: 'AND',
-                        },
-                        {
-                          key: 'code',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'name',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'status',
-                          operator: 'EQUALS',
-                          value: 'ACTIVE',
-                          logicalOperation: 'AND',
-                        },
-                      ]
-                    }
-                    else {
-                      filter = [
-                        {
-                          key: 'code',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'name',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'status',
-                          operator: 'EQUALS',
-                          value: 'ACTIVE',
-                          logicalOperation: 'AND',
-                        },
-                      ]
-                    }
-                    await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
-                  }"
-                />
-                <Skeleton v-else height="2rem" class="mb-2" />
-              </span>
-              <span v-if="field.dataType === 'multiselect'">
-                <DebouncedMultiSelectComponent
-                  v-if="!loadingSaveAll"
-                  id="autocomplete"
-                  field="name"
-                  item-value="id"
-                  :max-selected-labels="3"
-                  class="w-full h-2rem align-items-center"
-                  :model="data[field.field]"
-                  :suggestions="[...suggestionsData]"
-                  @change="($event) => {
-                    onUpdate(field.field, $event)
-                  }"
-                  @load="async ($event) => {
-                    let keyValue = ''
-                    let filter = []
-                    // Esto es para buscar el keyValue del campo dependiente, para poder referenciarlo y obtener su valor
-                    if (field.kwArgs && field.kwArgs.dependentField) {
-                      keyValue = JSON.parse(field.kwArgs.dependentField).name
-                      filter = [
-                        {
-                          key: field.kwArgs.filterKeyValue,
-                          operator: 'EQUALS',
-                          value: typeof data[keyValue] === 'object' ? data[keyValue].id : '',
-                          logicalOperation: 'AND',
-                        },
-                        {
-                          key: 'code',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'name',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'status',
-                          operator: 'EQUALS',
-                          value: 'ACTIVE',
-                          logicalOperation: 'AND',
-                        },
-                      ]
-                    }
-                    else {
-                      filter = [
-                        {
-                          key: 'code',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'name',
-                          operator: 'LIKE',
-                          value: $event,
-                          logicalOperation: 'OR',
-                        },
-                        {
-                          key: 'status',
-                          operator: 'EQUALS',
-                          value: 'ACTIVE',
-                          logicalOperation: 'AND',
-                        },
-                      ]
-                    }
-                    await getDinamicData($event, field.objApi?.moduleApi, field.objApi?.uriApi, filter)
-                  }"
-                />
-                <Skeleton v-else height="2rem" class="mb-2" />
-              </span>
-            </template>
-
-            <template #field-reportFormatType="{ item: data, onUpdate }">
-              <Dropdown
-                v-if="!loadingSaveAllGetReport"
-                v-model="data.reportFormatType"
-                :options="[...REPORT_FORMATS_TYPE]"
-                option-label="name"
-                @update:model-value="($event) => {
-                  onUpdate('reportFormatType', $event)
-                }"
-              />
-              <Skeleton v-else height="2rem" class="mb-2" />
-            </template>
-          </EditFormV2>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div v-if="item?.reportFormatType?.id === 'PDF'" class="card p-2">
-        <object :data="pdfUrl" type="application/pdf" width="100%" height="800px">
-          <p>Your browser does not support PDF. <a :href="pdfUrl">Download PDF</a>.</p>
-        </object>
-      </div>
     </div>
-    <Toast position="top-center" :base-z-index="5" group="tc" />
+
+    <!-- Enhanced Toast and Popup components -->
+    <Toast position="top-center" :base-z-index="5000" group="tc" />
     <ConfirmPopup group="headless" />
   </div>
 </template>
 
-<style scoped lang="scss">
-.custom-card-header {
-  margin-bottom: 0px;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
+<style scoped>
+@import '@/assets/styles/pages/report-viewer-layout.scss';
+@import '@/assets/styles/pages/report-viewer-components.scss';
 </style>

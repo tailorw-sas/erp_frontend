@@ -21,9 +21,9 @@ spec:
           value: 6LfifQAqAAAAAAOHfDjN6BIYoVTXbu_vVtBJr2lY
         - name: NUXT_RECAPTCHA_SECRET_KEY
           value: 6LfifQAqAAAAAFDBc1ZyeTY2cdfYC8V3qdGPR1j-
-        - name: AUTH_ORIGIN
+        - name: NUXT_AUTH_ORIGIN
           value: https://erpdev.tailorw.net/
-        - name: AUTH_SECRET
+        - name: NUXT_AUTH_SECRET
           value: 5299f11c-95d4-47f9-a970-bd74aabd91f3
         - name: VITE_APP_CLIENT_ID
           value: 91be4d3d-dd35-45f1-a7fa-85aaf43e743d
