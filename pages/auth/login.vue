@@ -10,7 +10,7 @@ definePageMeta({
   layout: 'empty',
   auth: {
     unauthenticatedOnly: true,
-    navigateAuthenticatedTo: '/dashboard', // ✅ Redirigir a dashboard
+    navigateAuthenticatedTo: '/', // ✅ Redirigir a index
   }
 })
 
@@ -170,10 +170,10 @@ async function login() {
 
     // Si está autenticado, hacer la redirección
     if (status.value === 'authenticated') {
-      Logger.log('🎉 User is authenticated, redirecting to dashboard...')
+      Logger.log('🎉 User is authenticated, redirecting to index...')
 
-      // ✅ CAMBIO: Redirigir a /dashboard
-      await navigateTo('/dashboard')
+      // ✅ CAMBIO: Redirigir a /
+      await navigateTo('/')
     }
     else {
       // Si aún no está autenticado, esperar un poco más
@@ -181,14 +181,14 @@ async function login() {
 
       setTimeout(async () => {
         if (status.value === 'authenticated') {
-          Logger.log('🎉 User authenticated after delay, redirecting to dashboard...')
-          // ✅ También aquí cambiar a /dashboard
-          await navigateTo('/dashboard')
+          Logger.log('🎉 User authenticated after delay, redirecting to index...')
+          // ✅ También aquí cambiar a /
+          await navigateTo('/')
         }
         else {
           Logger.error('❌ Authentication state not updated, trying fallback redirect')
-          // ✅ Fallback también a /dashboard
-          window.location.href = '/dashboard'
+          // ✅ Fallback también a /
+          window.location.href = '/'
         }
       }, 1000)
     }
@@ -301,7 +301,7 @@ async function login() {
           </div>
 
           <div class="illustration-container">
-            <img src="/assets/images/home.webp" alt="Financial Hub Dashboard" class="brand-illustration">
+            <img src="/assets/images/home.webp" alt="Financial Hub" class="brand-illustration">
           </div>
 
           <div class="brand-footer">

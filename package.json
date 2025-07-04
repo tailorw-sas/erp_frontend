@@ -28,7 +28,6 @@
     "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
-    "next-auth": "4.22.1",
     "nuxt": "^3.11.2",
     "pinia": "^2.1.7",
     "primeflex": "^3.3.1",
@@ -42,7 +41,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^2.11.5",
     "@nuxtjs/tailwindcss": "^6.12.0",
-    "@sidebase/nuxt-auth": "^0.6.7",
+    "@sidebase/nuxt-auth": "^0.7.0",
     "@types/lodash": "^4.17.4",
     "@types/node": "^20.11.30",
     "@types/uuid": "^10.0.0",
@@ -55,8 +54,5 @@
     "sass": "^1.77.2",
     "typescript": "^5.4.3",
     "vue-tsc": "^2.0.7"
-  },
-  "overrides": {
-    "next-auth": "4.22.1"
   }
 }
