@@ -11,6 +11,7 @@ import com.kynsoft.report.domain.rules.jasperReport.ManageReportNameMustBeNullRu
 import com.kynsoft.report.domain.services.IDBConnectionService;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
 import com.kynsoft.report.domain.services.IReportParameterService;
+import com.kynsoft.report.infrastructure.enums.JasperParameterCategory;
 import net.sf.jasperreports.engine.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -102,8 +103,8 @@ public class CreateJasperReportTemplateCommandHandler implements ICommandHandler
 
                     this.reportParameterService.create(new JasperReportParameterDto(
                             UUID.randomUUID(), param.getName(), param.getValueClassName(),
-                            paramValue.toString(), "", "", "", reportTemplateDto, "",
-                            "", 0, "", "", ""
+                            paramValue.toString(), "", "", "", reportTemplateDto, 0,
+                            "", "", "", JasperParameterCategory.REPORT
                     ));
 
                 } catch (Exception e) {

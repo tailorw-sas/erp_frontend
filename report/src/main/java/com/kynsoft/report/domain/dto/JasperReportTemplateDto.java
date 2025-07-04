@@ -15,12 +15,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JasperReportTemplateDto {
-    private  UUID id;
-    private  String code;
-    private  String name;
-    private  String description;
-    private  String file;
-    private  JasperReportTemplateType type;
+    private UUID id;
+    private String code;
+    private String name;
+    private String description;
+    private String file;
+    private JasperReportTemplateType type;
     private Status status;
     private LocalDateTime createdAt;
     private Double menuPosition;
