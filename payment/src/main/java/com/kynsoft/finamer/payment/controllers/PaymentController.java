@@ -15,6 +15,9 @@ import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaym
 import com.kynsoft.finamer.payment.application.command.payment.create.CreatePaymentRequest;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentCommand;
 import com.kynsoft.finamer.payment.application.command.payment.delete.DeletePaymentMessage;
+import com.kynsoft.finamer.payment.application.command.payment.expense.CreateExpenseFromCreditCommand;
+import com.kynsoft.finamer.payment.application.command.payment.expense.CreateExpenseFromCreditMessage;
+import com.kynsoft.finamer.payment.application.command.payment.expense.CreateExpenseFromCreditRequest;
 import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetCommand;
 import com.kynsoft.finamer.payment.application.command.payment.setVariables.SetMessage;
 import com.kynsoft.finamer.payment.application.command.payment.update.UpdatePaymentCommand;
@@ -162,4 +165,11 @@ public class PaymentController {
         return ResponseEntity.ok(data);
     }
 
+    @PostMapping("/expense")
+    public ResponseEntity<?> createExpenses(@RequestBody CreateExpenseFromCreditRequest request){
+        CreateExpenseFromCreditCommand command = CreateExpenseFromCreditCommand.fromRequest(request);
+        CreateExpenseFromCreditMessage response = mediator.send(command);
+
+        return ResponseEntity.ok(response);
+    }
 }

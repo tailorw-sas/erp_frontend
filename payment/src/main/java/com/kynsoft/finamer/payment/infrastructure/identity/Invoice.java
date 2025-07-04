@@ -131,6 +131,7 @@ public class Invoice {
                 bookings != null ? bookings.stream().map(_booking -> {
                     ManageBookingDto bookingDto = _booking.toAggregateSimple();
                     bookingDto.setInvoice(_booking.getInvoice().toAggregateParent());
+                    if(_booking.getParent() != null) bookingDto.setParent(_booking.getParent().toAggregateSimple());
                     return bookingDto;
                 }).collect(Collectors.toList()) : null,
                 hasAttachment,
