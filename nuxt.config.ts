@@ -61,39 +61,39 @@ export default defineNuxtConfig({
   },
 
   // 🔧 Configuración de Vite optimizada
-  vite: {
-    clearScreen: false, // esto desactiva el overlay
-    server: {
-      hmr: {
-        overlay: false
-      }
-    },
-    define: {
-      'process.client': process.env.NODE_ENV !== 'production' ? true : 'typeof window !== "undefined"',
-      'process.server': process.env.NODE_ENV !== 'production' ? false : 'typeof window === "undefined"'
-    },
-    optimizeDeps: {
-      include: ['primevue/button', 'primevue/inputtext'] // Añade los componentes que uses
-    }
-  },
+  // vite: {
+  //   clearScreen: false, // esto desactiva el overlay
+  //   server: {
+  //     hmr: {
+  //       overlay: false
+  //     }
+  //   },
+  //   define: {
+  //     'process.client': process.env.NODE_ENV !== 'production' ? true : 'typeof window !== "undefined"',
+  //     'process.server': process.env.NODE_ENV !== 'production' ? false : 'typeof window === "undefined"'
+  //   },
+  //   optimizeDeps: {
+  //     include: ['primevue/button', 'primevue/inputtext'] // Añade los componentes que uses
+  //   }
+  // },
 
   // 🔧 Configuración SSR más robusta
-  ssr: true, // Mantener SSR pero con configuración mejorada
+  // ssr: true, // Mantener SSR pero con configuración mejorada
 
-  // 🔧 Configuración de Nitro para mejor manejo de errores
-  nitro: {
-    routeRules: {
-      '/dashboard/**': {
-        ssr: true,
-        experimentalNoScripts: false
-      }
-    },
-    esbuild: {
-      options: {
-        target: 'esnext'
-      }
-    }
-  },
+  // // 🔧 Configuración de Nitro para mejor manejo de errores
+  // nitro: {
+  //   routeRules: {
+  //     '/dashboard/**': {
+  //       ssr: true,
+  //       experimentalNoScripts: false
+  //     }
+  //   },
+  //   esbuild: {
+  //     options: {
+  //       target: 'esnext'
+  //     }
+  //   }
+  // },
 
   // 🔧 Configuración adicional para debugging
   debug: process.env.NODE_ENV === 'development',

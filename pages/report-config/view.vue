@@ -1240,15 +1240,6 @@ function shareReport() {
   }
 }
 
-// PDF Viewer functions
-function zoomIn() {
-  Logger.log('Zoom in')
-}
-
-function zoomOut() {
-  Logger.log('Zoom out')
-}
-
 // ========== WATCHERS ==========
 watch(() => route.query.reportId, (newReportId) => {
   if (newReportId && typeof newReportId === 'string') {
