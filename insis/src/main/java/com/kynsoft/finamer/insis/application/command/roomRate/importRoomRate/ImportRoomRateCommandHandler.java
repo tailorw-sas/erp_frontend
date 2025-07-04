@@ -55,24 +55,26 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
         //List<BookingDto> bookingsToImport = getBookingsToImport(command.getBookings());
         List<RoomRateDto> availableRoomRates = getAvailableRoomRates(command.getRoomRates());
 
-        ImportProcessDto importProcess = createImportProcess(command.getId(), command.getRoomRates().size(), employee.getId(), 0, 0);
-        saveImportRoomRates(importProcess, availableRoomRates);
+        ImportProcessDto importProcess = this.createImportProcess(command.getId(), command.getRoomRates().size(), employee.getId());
+        this.saveImportRoomRates(importProcess, availableRoomRates);
 
         RulesChecker.checkRule(new ImportRoomRateSizeRule(command.roomRates.size(), availableRoomRates.size()));
 
-        setRoomRatesInProcess(availableRoomRates);
+        this.setRoomRatesInProcess(availableRoomRates);
+
         //Llamada a Kafka
-        //sendRoomRatesToProcess(importProcess, employee, availableRoomRates);
+        this.sendRoomRatesToProcess(importProcess, employee, availableRoomRates);
         //Llamada por HTTP
-        sendRoomRatesToHttpProcess(importProcess, employee, availableRoomRates);
-        updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
+        //sendRoomRatesToHttpProcess(importProcess, employee, availableRoomRates);
+
+        this.updateImportProcessStatus(importProcess, ImportProcessStatus.IN_PROCESS);
     }
 
     private ManageEmployeeDto getEmployee(UUID id){
         return employeeService.findById(id);
     }
 
-    private ImportProcessDto createImportProcess(UUID processId, int roomRatesSize, UUID employeeId, int totalSucessful, int totalFailed){
+    private ImportProcessDto createImportProcess(UUID processId, int roomRatesSize, UUID employeeId){
         ImportProcessDto dto = new ImportProcessDto(
                 processId,
                 ImportProcessStatus.CREATED,
@@ -80,8 +82,8 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
                 null,
                 roomRatesSize,
                 employeeId,
-                totalSucessful,
-                totalFailed
+                0,
+                0
         );
 
         return service.create(dto);
@@ -118,7 +120,7 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
             roomRate.setStatus(RoomRateStatus.IN_PROCESS);
             roomRate.setUpdatedAt(LocalDateTime.now());
         });
-        roomRateService.updateMany(roomRatesToImport);
+        this.roomRateService.updateMany(roomRatesToImport);
     }
 
     private void sendRoomRatesToProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<RoomRateDto> roomRates){
