@@ -59,14 +59,14 @@ export {
 // FIELD COMPONENTS
 // ===============================
 export { default as BaseField } from '../components/fields/BaseField.vue'
-export { default as TextField } from '../components/fields/TextField.vue'
+export { default as TextField } from '../components/fields/TextFieldV2.vue'
 export { default as NumberField } from '../components/fields/NumberField.vue'
 export { default as SelectField } from '../components/fields/SelectField.vue'
 export { default as DateField } from '../components/fields/DateField.vue'
 export { default as CheckboxField } from '../components/fields/CheckboxField.vue'
 
 // Lazy-loaded components (for better performance)
-export const PasswordField = () => import('../components/fields/PasswordField.vue')
+export const PasswordField = () => import('../components/fields/PasswordFieldV2.vue')
 // export const AutocompleteField = () => import('../components/fields/AutocompleteField.vue')
 // export const RadioField = () => import('../components/fields/RadioField.vue')
 // export const ToggleField = () => import('../components/fields/ToggleField.vue')

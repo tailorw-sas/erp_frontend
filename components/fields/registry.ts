@@ -5,10 +5,10 @@ import type { FieldType, FormFieldComponent, FormFieldRegistry } from '../../typ
 // Lazy-loaded field components for better performance
 export const fieldComponents = {
   // Text-based fields
-  text: defineAsyncComponent(() => import('./TextField.vue')),
-  email: defineAsyncComponent(() => import('./TextField.vue')),
+  text: defineAsyncComponent(() => import('./TextFieldV2.vue')),
+  email: defineAsyncComponent(() => import('./TextFieldV2.vue')),
   // password: defineAsyncComponent(() => import('./PasswordField.vue')), // Not implemented yet
-  textarea: defineAsyncComponent(() => import('./TextField.vue')),
+  textarea: defineAsyncComponent(() => import('./TextFieldV2.vue')),
 
   // Number fields
   // number: defineAsyncComponent(() => import('./NumberField.vue')), // Not implemented yet

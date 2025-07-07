@@ -57,18 +57,25 @@ export class GenericService {
     options?: RequestOptions
   ): Promise<T> {
     const { $api } = useNuxtApp()
+    const controller = new AbortController()
+    let timeoutId: any
+
+    if (options?.signal) {
+      options.signal.addEventListener('abort', () => controller.abort())
+    }
+
+    if (options?.timeout) {
+      timeoutId = setTimeout(() => controller.abort(), options.timeout)
+    }
 
     const requestOptions: any = {
       method,
-      headers: {
-        ...this.config.defaultHeaders,
-        ...options?.headers
-      }
+      headers: { ...this.config.defaultHeaders, ...options?.headers },
+      signal: controller.signal
     }
 
     if (body) {
       if (body instanceof FormData) {
-        // Remove Content-Type for FormData to let browser set boundary
         delete requestOptions.headers['Content-Type']
         requestOptions.body = body
       }
@@ -77,27 +84,15 @@ export class GenericService {
       }
     }
 
-    // Handle timeout and signal
-    if (options?.timeout || options?.signal) {
-      const controller = new AbortController()
-
-      if (options.signal) {
-        options.signal.addEventListener('abort', () => controller.abort())
-      }
-
-      if (options.timeout) {
-        setTimeout(() => controller.abort(), options.timeout)
-      }
-
-      requestOptions.signal = controller.signal
-    }
-
     try {
-      return await $api<T>(url, requestOptions)
+      const result = await $api<T>(url, requestOptions)
+      if (timeoutId) { clearTimeout(timeoutId) }
+      return result
     }
     catch (error: any) {
+      if (timeoutId) { clearTimeout(timeoutId) }
       if (error.name === 'AbortError') {
-        throw new Error('Request timed out or was cancelled')
+        throw new Error(`Request to ${url} timed out after ${options?.timeout} ms`)
       }
       throw error
     }
