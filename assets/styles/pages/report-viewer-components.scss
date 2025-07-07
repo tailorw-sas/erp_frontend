@@ -1,8 +1,7 @@
 /* ===================================================================
-   REPORT VIEWER - COMPONENT STYLES - PROFESSIONAL ENTERPRISE GRADE
-   Form fields, buttons, interactions, and component-specific styling
+   REPORT VIEWER - ENHANCED COMPONENT STYLES
+   Form fields, buttons, interactions, progress indicators
    Compatible with PrimeVue + PrimeFlex + Design System
-   (DateField styles extracted - component is now autonomous)
    =================================================================== */
 
 // ===============================
@@ -12,29 +11,43 @@
 @import '../../../node_modules/primeflex/primeflex.scss';
 @import '../variables';
 
-// Component-specific variables
+// Enhanced component-specific variables
 $report-viewer-field-height: 2.75rem;
 $report-viewer-field-height-mobile: 3rem;
 
-// Status colors
-$status-loading: #3b82f6 !default;
+// Enhanced status colors
+$status-loading: #3b82f6;
 $status-success: $success-color;
-$status-warning: $warning-color;
+$status-warning: #f59e0b;
 $status-error: $error-color;
+$status-cancelled: #6b7280;
+
+// Button colors
+$btn-primary-start: #3b82f6;
+$btn-primary-end: #1d4ed8;
+$btn-success-start: #10b981;
+$btn-success-end: #059669;
+$btn-danger-start: #ef4444;
+$btn-danger-end: #dc2626;
+$btn-secondary-start: #6b7280;
+$btn-secondary-end: #4b5563;
 
 // ===============================
-// COMPONENT MIXINS
+// ENHANCED COMPONENT MIXINS
 // ===============================
 
-@mixin format-option {
-  padding: $spacing-lg;
-  border: 2px solid $gray-200;
-  border-radius: $border-radius-lg;
-  cursor: pointer;
-  transition: $transition;
-  background: white;
+@mixin enhanced-button($start-color, $end-color, $hover-transform: translateY(-2px)) {
+  background: linear-gradient(135deg, $start-color 0%, $end-color 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: $border-radius-lg !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   position: relative;
   overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(mix($start-color, $end-color), 0.3) !important;
   
   &::before {
     content: '';
@@ -43,15 +56,65 @@ $status-error: $error-color;
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+  }
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, lighten($start-color, 5%) 0%, darken($end-color, 5%) 100%) !important;
+    transform: $hover-transform !important;
+    box-shadow: 0 8px 30px rgba(mix($start-color, $end-color), 0.4) !important;
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(1px) !important;
+    box-shadow: 0 2px 8px rgba(mix($start-color, $end-color), 0.3) !important;
+  }
+  
+  &:disabled {
+    background: linear-gradient(135deg, $gray-400, $gray-500) !important;
+    transform: none !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    
+    &::before {
+      display: none;
+    }
+  }
+}
+
+@mixin format-option-enhanced {
+  padding: $spacing-lg;
+  border: 2px solid #e5e7eb;
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
     transition: left 0.5s;
   }
   
   &:hover {
     border-color: $primary-color;
-    background: $gray-50;
-    transform: translateY(-2px);
-    box-shadow: $shadow-lg;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), white);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
     
     &::before {
       left: 100%;
@@ -60,300 +123,303 @@ $status-error: $error-color;
   
   &--selected {
     border-color: $primary-color;
-    background: linear-gradient(135deg, $primary-light 0%, rgba(255,255,255,0.95) 100%);
-    box-shadow: 0 4px 20px rgba(71, 85, 105, 0.2);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(255,255,255,0.95) 100%);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
+    transform: translateY(-2px);
     
     &::after {
       content: '✓';
       position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 20px;
-      height: 20px;
-      background: $primary-color;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      animation: checkmark-appear 0.3s ease-out;
     }
   }
 }
 
-@mixin progress-indicator {
+@mixin progress-indicator-enhanced {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: $spacing-md;
   
   .p-progressspinner {
-    width: 24px !important;
-    height: 24px !important;
+    width: 28px !important;
+    height: 28px !important;
     
     .p-progressspinner-circle {
       stroke: $primary-color;
       stroke-width: 3;
+      filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
     }
   }
 }
 
 // ===============================
-// COMPONENT STYLES
+// ENHANCED COMPONENT STYLES
 // ===============================
 
 .report-viewer {
   
   // ===============================
-  // CSS VARIABLES FOR ENHANCED FORMS
+  // ENHANCED CSS VARIABLES
   // ===============================
   
   --enhanced-form-field-height: #{$report-viewer-field-height};
   --enhanced-form-field-height-mobile: #{$report-viewer-field-height-mobile};
-  --enhanced-form-field-height-compact: 2.25rem;
-  --enhanced-form-font-size-compact: #{$font-size-small};
   --enhanced-form-border-radius: #{$border-radius-lg};
-  --enhanced-form-border-radius-small: #{$border-radius};
-  --enhanced-form-border-width: 2px;
-  --enhanced-form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --enhanced-form-transition-fast: all 0.15s ease;
-  --enhanced-form-shadow: #{$shadow-sm};
-  --enhanced-form-shadow-lg: #{$shadow-lg};
-  --enhanced-form-focus-border: #{$primary-color};
+  --enhanced-form-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --enhanced-form-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --enhanced-form-shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
   --enhanced-form-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  --enhanced-form-error-border: #{$error-color};
-  --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
-  --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
   
   // ===============================
-  // STATUS PROGRESS COMPONENTS
+  // 🎯 ENHANCED STATUS PROGRESS
   // ===============================
   
   &__status {
     &-progress {
-      @include progress-indicator;
+      @include progress-indicator-enhanced;
       
       &-details {
         display: flex;
         flex-direction: column;
         gap: $spacing-xs;
-        min-width: 140px;
+        min-width: 160px;
+        text-align: center;
       }
       
       &-text {
-        font-size: $font-size-tiny;
+        font-size: $font-size-small;
         color: $gray-600;
+        font-weight: 500;
         text-align: center;
-        font-weight: $font-weight-medium;
+        background: rgba(59, 130, 246, 0.05);
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius;
+        border: 1px solid rgba(59, 130, 246, 0.1);
       }
     }
   }
   
   // ===============================
-  // 🎯 ENHANCED FORMS - ENTERPRISE PROFESSIONAL LEVEL
+  // 🎯 ENHANCED FORM COMPONENTS
   // ===============================
   
   &__parameters-content {
     
-    // ===============================
-    // ESTRUCTURA UNIFICADA - TODOS LOS COMPONENTES USAN BaseField
-    // ===============================
-    .form-field {
+    // Enhanced grid system
+    .grid {
+      margin: 0 !important;
+      row-gap: 1.5rem !important;
+      column-gap: 1rem !important;
+    }
+    
+    // Universal form field styling
+    :deep(.form-field) {
       margin-bottom: 0 !important;
+      animation: fadeInUp 0.4s ease-out;
       
       .form-field__label {
         display: block !important;
         font-weight: 600 !important;
         color: $gray-800 !important;
-        margin: 0 0 0.375rem 0 !important; // 6px exactos - UNIFICADO TOTAL
+        margin: 0 0 0.5rem 0 !important;
         padding: 0 !important;
-        font-size: 0.9rem !important;
-        letter-spacing: 0.02em !important;
+        font-size: 0.925rem !important;
+        letter-spacing: 0.025em !important;
         line-height: 1.4 !important;
+        transition: color 0.3s ease;
         
-        // Required indicator
         &::after {
           content: ' *' !important;
           color: $error-color !important;
           font-weight: bold !important;
-          margin-left: 0.125rem !important;
-          display: none !important; // Hidden by default
-        }
-        
-        // Show asterisk only when field is required
-        .form-field[required="true"] &::after,
-        .form-field--required &::after {
-          display: inline !important;
-        }
-      }
-      
-      .form-field__input-container {
-        margin: 0 !important;
-        padding: 0 !important;
-        
-        .form-field__input-wrapper {
-          margin: 0 !important;
-          padding: 0 !important;
+          margin-left: 0.25rem !important;
+          display: none !important;
         }
       }
     }
     
-    // DEEP SELECTORS para máxima compatibilidad
-    :deep(.form-field) {
-      margin-bottom: 0 !important;
-      
+    :deep(.form-field--required) {
+      .form-field__label::after {
+        display: inline !important;
+        animation: pulse-required 2s infinite;
+      }
+    }
+    
+    :deep(.form-field[required="true"]) {
+      .form-field__label::after {
+        display: inline !important;
+        animation: pulse-required 2s infinite;
+      }
+    }
+    
+    :deep(.form-field:focus-within) {
       .form-field__label {
-        margin: 0 0 0.375rem 0 !important;
-        padding: 0 !important;
-        font-weight: 600 !important;
-        color: $gray-800 !important;
-        font-size: 0.9rem !important;
-        letter-spacing: 0.02em !important;
-        line-height: 1.4 !important;
+        color: $primary-color !important;
+        transform: translateY(-1px);
       }
     }
     
-    :deep(.form-field__label) {
-      font-weight: 600 !important;
-      color: $gray-800 !important;
-      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
-      padding: 0 !important;
-      font-size: 0.9rem !important;
-      letter-spacing: 0.02em !important;
-      line-height: 1.4 !important;
-    }
-    
-    // GRID SPACING OPTIMIZADO
-    .grid {
-      margin: 0 !important;
-      row-gap: 1.25rem !important; // Compensado para el spacing reducido
-      column-gap: 1rem !important;
-    }
-    
-    // ELIMINAR MARGINS EXTRA DE CONTAINERS
-    > .col-12,
-    > div,
-    .col-12 {
-      margin-bottom: 0 !important;
-      padding-bottom: 0 !important;
-      
-      &:last-child {
-        margin-bottom: 0 !important;
-      }
-    }
-    
-    // ===============================
-    // 🎯 ENHANCED FORM FIELDS - ENTERPRISE LEVEL
-    // ===============================
-    
-    // CONTAINER STYLING
-    :deep(.col-12) {
-      margin-bottom: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-    }
-    
-    // UNIVERSAL FIELD SIZING
+    // Enhanced input styling
     :deep(.p-inputtext),
     :deep(.p-inputnumber),
-    :deep(.p-password) {
+    :deep(.p-password),
+    :deep(.p-dropdown),
+    :deep(.p-calendar) {
       width: 100% !important;
-      max-width: none !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
       height: var(--enhanced-form-field-height) !important;
+      border: 2px solid #e5e7eb !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      font-size: 0.95rem !important;
+      padding: 0 0.75rem !important;
+      
+      &:focus {
+        border-color: $primary-color !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px);
+      }
+      
+      &:hover:not(:focus) {
+        border-color: #cbd5e1 !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &.p-invalid {
+        border-color: $error-color !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+        animation: shake-error 0.5s ease-in-out;
+      }
+    }
+    
+    // Enhanced dropdown styling
+    :deep(.p-dropdown) {
+      background: white !important;
+    }
+    
+    :deep(.p-dropdown:not(.p-disabled):hover) {
+      border-color: $primary-color !important;
+    }
+    
+    :deep(.p-dropdown .p-dropdown-trigger) {
+      color: $primary-color !important;
+      width: 3rem !important;
+      border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0 !important;
+      
+      .p-dropdown-trigger-icon {
+        transition: transform 0.3s ease;
+      }
+    }
+    
+    :deep(.p-dropdown.p-dropdown-open .p-dropdown-trigger .p-dropdown-trigger-icon) {
+      transform: rotate(180deg);
+    }
+    
+    // Enhanced multiselect styling
+    :deep(.p-multiselect) {
       min-height: var(--enhanced-form-field-height) !important;
     }
     
-    // ===============================
-    // UNIVERSAL FORM LABELS - BEAUTIFUL UX
-    // ===============================
-    :deep(.form-field__label) {
-      font-weight: 600 !important;
-      color: $gray-800 !important;
-      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
-      padding: 0 !important;
-      font-size: 0.9rem !important;
-      letter-spacing: 0.02em !important;
-      line-height: 1.4 !important;
+    :deep(.p-multiselect .p-multiselect-token) {
+      background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%)) !important;
+      color: white !important;
+      border-radius: $border-radius !important;
+      padding: 0.25rem 0.5rem !important;
+      margin: 0.125rem !important;
+      font-size: 0.875rem !important;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+      transition: all 0.2s ease;
     }
     
-    :deep(.form-field--required .form-field__label::after) {
-      content: ' *' !important;
-      color: $error-color !important;
-      font-weight: bold !important;
-      margin-left: 0.125rem !important;
+    :deep(.p-multiselect .p-multiselect-token:hover) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
     }
     
-    // WRAPPER CONTAINERS
-    :deep(.form-field__input-container),
-    :deep(.form-field__input-wrapper) {
-      width: 100% !important;
-      display: flex !important;
-      align-items: stretch !important;
-      box-sizing: border-box !important;
+    :deep(.p-multiselect .p-multiselect-token .p-multiselect-token-icon) {
+      color: white !important;
+      margin-left: 0.25rem !important;
     }
     
-    // FOCUS STATES
-    :deep(.form-field:focus-within) {
-      animation: field-focus 0.3s ease-out !important;
-    }
-  }
-  
-  // ===============================
-  // 📝 LOCAL SELECT FIELD STYLES - SIMPLIFICADO
-  // ===============================
-  
-  .local-select-field {
-    margin-bottom: 0 !important;
-    width: 100% !important;
-    animation: fadeInUp 0.3s ease-out !important;
-    
-    // SOLO PARA COMPATIBILIDAD LEGACY
-    // (El nuevo SelectField usa BaseField y no necesita estos estilos)
-    
-    .form-field__input-wrapper {
-      width: 100% !important;
-      position: relative !important;
-      display: flex !important;
-      align-items: stretch !important;
-      box-sizing: border-box !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .form-field__error-messages {
+    // Enhanced error messages
+    :deep(.form-field__error-messages) {
       margin-top: 0.5rem !important;
-      
-      .form-field__error-message {
-        display: flex !important;
-        align-items: center !important;
-        gap: 0.375rem !important;
-        color: $error-color !important;
-        font-size: 0.875rem !important;
-        line-height: 1.4 !important;
-        margin-bottom: 0.25rem !important;
-        
-        &:last-child {
-          margin-bottom: 0 !important;
-        }
-        
-        .pi {
-          font-size: 0.875rem !important;
-          flex-shrink: 0 !important;
-        }
-      }
+    }
+    
+    :deep(.form-field__error-messages .form-field__error-message) {
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      color: $error-color !important;
+      font-size: 0.875rem !important;
+      line-height: 1.4 !important;
+      margin-bottom: 0.25rem !important;
+      padding: 0.5rem 0.75rem;
+      background: rgba(239, 68, 68, 0.05);
+      border-radius: $border-radius;
+      border-left: 3px solid $error-color;
+      animation: slideInError 0.3s ease-out;
+    }
+    
+    :deep(.form-field__error-messages .form-field__error-message:last-child) {
+      margin-bottom: 0 !important;
+    }
+    
+    :deep(.form-field__error-messages .form-field__error-message .pi) {
+      font-size: 0.875rem !important;
+      flex-shrink: 0 !important;
+      color: $error-color;
     }
   }
   
   // ===============================
-  // FORMAT OPTIONS COMPONENTS
+  // 🎨 ENHANCED FORMAT OPTIONS
   // ===============================
   
   &__format {
+    &-section {
+      margin-bottom: $spacing-xl;
+      animation: fadeInUp 0.5s ease-out;
+    }
+    
+    &-label {
+      @extend .flex, .align-items-center;
+      font-size: $font-size-base;
+      font-weight: $font-weight-bold;
+      color: $gray-800;
+      margin-bottom: $spacing-lg;
+      
+      .pi {
+        margin-right: $spacing-sm;
+        color: $primary-color;
+        font-size: $font-size-lg;
+      }
+    }
+    
+    &-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+      margin-top: $spacing-md;
+    }
+    
     &-option {
-      @include format-option;
+      @include format-option-enhanced;
       
       &-header {
         display: flex;
@@ -362,7 +428,16 @@ $status-error: $error-color;
         margin-bottom: $spacing-sm;
         
         i {
-          font-size: $font-size-lg;
+          font-size: $font-size-xl;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: $border-radius;
+          background: rgba(59, 130, 246, 0.1);
+          color: $primary-color;
+          transition: all 0.3s ease;
         }
       }
       
@@ -370,75 +445,449 @@ $status-error: $error-color;
         font-weight: $font-weight-bold;
         color: $gray-900;
         font-size: $font-size-base;
+        margin: 0;
       }
       
       &-description {
         margin: 0;
         font-size: $font-size-small;
         color: $gray-600;
-        line-height: 1.4;
+        line-height: 1.5;
+        margin-top: $spacing-xs;
+      }
+      
+      &:hover {
+        &-header i {
+          background: $primary-color;
+          color: white;
+          transform: scale(1.1);
+        }
+      }
+      
+      &--selected {
+        &-header i {
+          background: $primary-color;
+          color: white;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
       }
     }
   }
   
   // ===============================
-  // BUTTON COMPONENTS
+  // 🚀 ENHANCED BUTTONS
   // ===============================
   
   &__generate-btn {
-    @include button-base;
-    width: 100%;
-    height: $report-viewer-field-height !important;
-    min-height: $report-viewer-field-height !important;
-    background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: $font-weight-bold !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
+    @include enhanced-button($btn-primary-start, $btn-primary-end);
+    width: 100% !important;
+    height: var(--enhanced-form-field-height) !important;
+    min-height: var(--enhanced-form-field-height) !important;
     margin-bottom: $spacing-md;
-    border-radius: $border-radius-lg !important;
-    box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3) !important;
-    transition: $transition-slow !important;
+    font-size: 1rem !important;
+    
+    .pi {
+      margin-right: 0.5rem !important;
+      font-size: 1.1rem !important;
+    }
+    
+    &:loading {
+      .pi-spinner {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+  
+  // Enhanced action buttons in progress states
+  &__progress-actions,
+  &__error-actions,
+  &__cancelled-actions,
+  &__success-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    
+    .p-button {
+      height: 3rem !important;
+      font-weight: 600 !important;
+      border-radius: $border-radius-lg !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      
+      &.p-button-primary {
+        @include enhanced-button($btn-primary-start, $btn-primary-end);
+      }
+      
+      &.p-button-danger {
+        @include enhanced-button($btn-danger-start, $btn-danger-end);
+      }
+      
+      &.p-button-success {
+        @include enhanced-button($btn-success-start, $btn-success-end);
+      }
+      
+      &.p-button-outlined {
+        background: white !important;
+        border: 2px solid #e5e7eb !important;
+        color: $gray-700 !important;
+        
+        &:hover:not(:disabled) {
+          background: #f8fafc !important;
+          border-color: $primary-color !important;
+          color: $primary-color !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15) !important;
+        }
+      }
+      
+      &.p-button-secondary {
+        @include enhanced-button($btn-secondary-start, $btn-secondary-end);
+      }
+      
+      .pi {
+        margin-right: 0.5rem !important;
+        font-size: 1rem !important;
+      }
+    }
+  }
+  
+  // ===============================
+  // 🎯 QUICK ACTIONS ENHANCED
+  // ===============================
+  
+  &__quick-actions {
+    padding-top: $spacing-lg;
+    border-top: 1px solid #e5e7eb;
+    margin-top: $spacing-lg;
+    animation: fadeInUp 0.6s ease-out;
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-800;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      
+      &::before {
+        content: '⚡';
+        font-size: 1.2rem;
+      }
+    }
+    
+    &-buttons {
+      @extend .flex;
+      gap: $spacing-sm;
+      
+      @media (max-width: $breakpoint-md) {
+        flex-direction: column;
+      }
+      
+      .p-button {
+        flex: 1;
+        justify-content: center;
+        height: 2.5rem !important;
+        font-weight: 500 !important;
+        border-radius: $border-radius !important;
+        transition: var(--enhanced-form-transition) !important;
+        border: 2px solid #e5e7eb !important;
+        background: white !important;
+        color: $gray-700 !important;
+        
+        &:hover:not(:disabled) {
+          transform: translateY(-2px) !important;
+          border-color: $primary-color !important;
+          color: $primary-color !important;
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15) !important;
+        }
+        
+        .pi {
+          margin-right: 0.375rem !important;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // 📊 ENHANCED PROGRESS BARS
+  // ===============================
+  
+  &__progress-bar-container {
+    margin: 1.5rem 0;
     position: relative;
-    overflow: hidden;
     
     &::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s;
+      top: -0.25rem;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
     }
     
-    &:hover:not(:disabled) {
-      background: linear-gradient(135deg, $primary-hover 0%, $gray-800 100%) !important;
-      transform: translateY(-2px) !important;
-      box-shadow: $shadow-xl !important;
+    :deep(.p-progressbar) {
+      height: 16px !important;
+      border-radius: 8px !important;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+      overflow: hidden !important;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+      border: 1px solid #cbd5e1;
       
-      &::before {
-        left: 100%;
+      .p-progressbar-value {
+        border-radius: 8px !important;
+        background: linear-gradient(90deg, $btn-primary-start 0%, $btn-primary-end 50%, lighten($btn-primary-start, 10%) 100%) !important;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 50%;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent);
+          border-radius: 8px 8px 0 0;
+        }
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 30px;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+          animation: progress-shine 1.5s ease-in-out infinite;
+        }
       }
-    }
-    
-    &:active {
-      transform: translateY(1px) !important;
-    }
-    
-    &:disabled {
-      background: linear-gradient(135deg, $gray-400, $gray-500) !important;
-      transform: none !important;
-      box-shadow: $shadow-sm !important;
-      cursor: not-allowed !important;
-      opacity: 0.7;
     }
   }
   
   // ===============================
-  // RESPONSIVE COMPONENT ADJUSTMENTS
+  // 🎨 ENHANCED LOADING STATE
+  // ===============================
+  
+  &__loading {
+    @extend .flex, .justify-content-center, .align-items-center;
+    padding: $spacing-3xl;
+    min-height: 300px;
+    
+    &-content {
+      @extend .flex, .flex-column, .align-items-center;
+      gap: $spacing-lg;
+      text-align: center;
+      animation: pulse-loading 2s infinite;
+      
+      .p-progressspinner {
+        filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
+      }
+      
+      p {
+        margin: 0;
+        color: $gray-600;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+        background: rgba(59, 130, 246, 0.05);
+        padding: $spacing-sm $spacing-md;
+        border-radius: $border-radius;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+  
+  // ===============================
+  // 🎯 ENHANCED NO-PARAMETERS STATE
+  // ===============================
+  
+  &__no-parameters {
+    padding: $spacing-3xl $spacing-xl;
+    text-align: center;
+    animation: fadeInUp 0.6s ease-out;
+    
+    &-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    &-icon {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $success-color, lighten($success-color, 15%));
+      color: white;
+      @extend .flex, .align-items-center, .justify-content-center;
+      margin: 0 auto $spacing-xl;
+      font-size: $font-size-3xl;
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+      animation: success-pulse 2s infinite;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $success-color, lighten($success-color, 20%));
+        z-index: -1;
+        opacity: 0.3;
+        animation: pulse 2s infinite;
+      }
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      background: linear-gradient(135deg, $gray-900, $gray-600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    &-text {
+      margin: 0 0 $spacing-xl 0;
+      color: $gray-600;
+      line-height: 1.6;
+      font-size: $font-size-base;
+    }
+  }
+  
+  // ===============================
+  // 🎨 ENHANCED EMPTY STATE
+  // ===============================
+  
+  &__empty {
+    padding: $spacing-3xl $spacing-xl;
+    text-align: center;
+    animation: fadeInUp 0.6s ease-out;
+    
+    &-content {
+      max-width: 450px;
+      margin: 0 auto;
+    }
+    
+    &-icon {
+      width: 5.5rem;
+      height: 5.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      color: #64748b;
+      @extend .flex, .align-items-center, .justify-content-center;
+      margin: 0 auto $spacing-xl;
+      font-size: $font-size-4xl;
+      box-shadow: $shadow-lg;
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        z-index: -1;
+        opacity: 0.5;
+      }
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+    }
+    
+    &-text {
+      margin: 0 0 $spacing-xl 0;
+      color: $gray-600;
+      line-height: 1.6;
+      font-size: $font-size-base;
+    }
+    
+    &-help {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-radius: $border-radius-lg;
+      padding: $spacing-lg;
+      border: 1px solid #e2e8f0;
+      box-shadow: $shadow-sm;
+    }
+  }
+  
+  &__help {
+    &-content {
+      @extend .flex;
+      gap: $spacing-md;
+      text-align: left;
+      align-items: flex-start;
+      
+      i {
+        color: $primary-color;
+        font-size: $font-size-xl;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-xs 0;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-800;
+    }
+    
+    &-text {
+      margin: 0;
+      font-size: $font-size-base;
+      color: $gray-600;
+      line-height: 1.6;
+      
+      code {
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: $font-size-small;
+        color: $gray-800;
+        border: 1px solid #cbd5e1;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  // ===============================
+  // 🎨 ENHANCED ICONS & UTILITIES
+  // ===============================
+  
+  // File type icons with enhanced colors
+  .pi-file-pdf { 
+    color: #dc2626; 
+    filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.2));
+  }
+  
+  .pi-file-excel { 
+    color: #059669; 
+    filter: drop-shadow(0 2px 4px rgba(5, 150, 105, 0.2));
+  }
+  
+  .pi-table { 
+    color: #0369a1; 
+    filter: drop-shadow(0 2px 4px rgba(3, 105, 161, 0.2));
+  }
+  
+  .pi-spin { 
+    animation: spin 1s linear infinite; 
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+  }
+  
+  // ===============================
+  // 📱 ENHANCED RESPONSIVE DESIGN
   // ===============================
   
   @media (max-width: $breakpoint-lg) {
@@ -447,11 +896,20 @@ $status-error: $error-color;
     &__generate-btn {
       height: 3rem !important;
       min-height: 3rem !important;
+      font-size: 1.05rem !important;
     }
     
     &__parameters-content {
       .grid {
         row-gap: 1.75rem !important;
+      }
+    }
+    
+    &__format-option {
+      padding: $spacing-md;
+      
+      &-header i {
+        font-size: $font-size-lg;
       }
     }
   }
@@ -465,60 +923,60 @@ $status-error: $error-color;
       font-size: 1.1rem !important;
     }
     
-    .local-select-field {
-      .form-field__label {
-        font-size: 1rem !important;
-        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
-        padding: 0 !important;
+    &__parameters-content {
+      :deep(.form-field) {
+        .form-field__label {
+          font-size: 1rem !important;
+          margin: 0 0 0.5rem 0 !important;
+        }
       }
       
-      .form-field__error-message {
-        font-size: 0.9rem !important;
-        gap: 0.5rem !important;
+      :deep(.p-inputtext),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect) {
+        font-size: 1rem !important;
+        padding: 0 1rem !important;
       }
     }
     
-    &__parameters-content {
-      .grid {
-        row-gap: 1.75rem !important;
-      }
-      
-      .form-field .form-field__label {
+    &__progress-actions,
+    &__error-actions,
+    &__cancelled-actions,
+    &__success-actions {
+      .p-button {
+        height: 3.25rem !important;
         font-size: 1rem !important;
-        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
-        padding: 0 !important;
       }
+    }
+    
+    &__quick-actions-buttons {
+      flex-direction: column;
       
-      :deep(.form-field__label) {
-        font-size: 1rem !important;
-        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
-        padding: 0 !important;
+      .p-button {
+        height: 3rem !important;
       }
     }
   }
   
   @media (max-width: 480px) {
     --enhanced-form-field-height: 3.5rem;
+    
+    &__format-grid {
+      grid-template-columns: 1fr !important;
+    }
+    
+    &__progress-container,
+    &__error-container,
+    &__cancelled-container,
+    &__success-container {
+      padding: 1rem;
+    }
   }
 }
 
 // ===============================
-// UTILITY CLASSES & ICONS
+// 🎬 ENHANCED KEYFRAME ANIMATIONS
 // ===============================
-
-.pi-file-pdf { color: $error-color; }
-.pi-file-excel { color: $success-color; }
-.pi-table { color: #0369a1; }
-.pi-spin { animation: spin 1s linear infinite; }
-
-// ===============================
-// KEYFRAME ANIMATIONS
-// ===============================
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 @keyframes fadeInUp {
   from {
@@ -531,56 +989,166 @@ $status-error: $error-color;
   }
 }
 
-@keyframes field-focus {
-  0% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-1px) scale(1.001); }
-  100% { transform: translateY(-1px) scale(1); }
-}
-
-// ===============================
-// ANIMATION APPLICATIONS
-// ===============================
-
-.report-viewer__parameters,
-.report-viewer__preview {
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.report-viewer__generate-btn {
-  position: relative !important;
-  overflow: hidden !important;
-  
-  &::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: -100% !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
-    transition: left 0.5s ease !important;
+@keyframes checkmark-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-45deg);
   }
-  
-  &:hover:not(:disabled)::before {
-    left: 100% !important;
-  }
-  
-  &:active {
-    transform: translateY(1px) !important;
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
   }
 }
 
+@keyframes pulse-required {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes shake-error {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-2px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(2px); 
+  }
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes progress-shine {
+  0% {
+    transform: translateX(-30px);
+  }
+  100% {
+    transform: translateX(100px);
+  }
+}
+
+@keyframes pulse-loading {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes success-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-8px); 
+  }
+}
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 // ===============================
-// ACCESSIBILITY ENHANCEMENTS
+// 🎯 ENHANCED FOCUS & ACCESSIBILITY
 // ===============================
 
 .report-viewer {
   :deep(*:focus) {
-    outline: 2px solid rgba($primary-color, 0.5) !important;
+    outline: 2px solid rgba($primary-color, 0.6) !important;
     outline-offset: 2px !important;
+    transition: outline 0.2s ease !important;
+  }
+  
+  :deep(.p-button:focus) {
+    outline: 2px solid rgba($primary-color, 0.6) !important;
+    outline-offset: 3px !important;
   }
   
   @media (prefers-contrast: high) {
     --enhanced-form-border-width: 3px;
+    
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect) {
+      border-width: 3px !important;
+    }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
+
+// ===============================
+// 🎨 ENHANCED THEME VARIATIONS
+// ===============================
+
+@media (prefers-color-scheme: dark) {
+  .report-viewer {
+    &__parameters,
+    &__preview {
+      background: #1e293b;
+      border-color: #334155;
+      color: #f1f5f9;
+    }
+    
+    &__parameters-content,
+    &__preview-content {
+      background: #0f172a;
+    }
+    
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect) {
+      background: #1e293b !important;
+      border-color: #475569 !important;
+      color: #f1f5f9 !important;
+    }
+  }
+}
+
+/* ===================================================================
+   END OF ENHANCED COMPONENT STYLES
+   =================================================================== */

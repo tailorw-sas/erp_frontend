@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, reactive, readonly, ref, watch } from 'vue'
+import { computed, nextTick, onUnmounted, reactive, readonly, ref, watch, watchEffect } from 'vue'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
@@ -9,9 +9,10 @@ import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
-import Divider from 'primevue/divider'
 import Toast from 'primevue/toast'
 import ConfirmPopup from 'primevue/confirmpopup'
+import Timeline from 'primevue/timeline'
+import Steps from 'primevue/steps'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
@@ -25,27 +26,82 @@ import type {
 } from '~/types/form'
 import { createDynamicField } from '~/types/form'
 
-// ========== TYPES & INTERFACES ==========
+// ========== PHASE 1: UPDATED TYPES & INTERFACES ==========
+
 interface FieldValues {
   [key: string]: any
+}
+
+// ✅ NEW: Updated interfaces to match backend ApiResponse<T>
+interface ApiResponse<T> {
+  success: boolean
+  message?: string
+  data?: T
+  error?: ErrorResponse
+}
+
+interface ErrorResponse {
+  error: string
+  details: string
+  code?: string
+  timestamp?: string
+  validationErrors?: string[]
+}
+
+interface ReportSubmissionResponse {
+  requestId: string
+  clientRequestId?: string
+  message: string
+  status: string
+  timestamp: number
+}
+
+interface ReportStatusResponse {
+  requestId: string
+  clientRequestId?: string
+  jasperReportCode: string
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  errorMessage?: string
+  createdAt: string
+  updatedAt: string
+  reportFormatType: string
+  fileSizeBytes?: number
+}
+
+interface ReportDownloadResponse {
+  base64Report: string
+  fileSizeBytes: number
+  fileName: string
+  contentType: string
+}
+
+// ✅ NEW: Specific state types for better UX
+type ReportWorkflowState =
+  | { type: 'idle' }
+  | { type: 'submitting', clientRequestId: string }
+  | { type: 'polling', serverRequestId: string, clientRequestId: string, attempt: number, maxAttempts: number }
+  | { type: 'completed', serverRequestId: string, report: ReportDownloadResponse }
+  | { type: 'failed', error: string, canRetry: boolean, serverRequestId?: string }
+  | { type: 'cancelled' }
+
+interface ReportProgress {
+  percentage: number
+  message: string
+  currentStep: number
+  totalSteps: number
+  elapsedTime: number
+  estimatedTimeRemaining?: number
 }
 
 interface ReportConfig {
   readonly moduleApi: string
   readonly uriApiReportGenerate: string
-  readonly timeout?: number
-  readonly retryAttempts?: number
-  readonly retryDelay?: number
-}
-
-interface ReportProgress {
-  status: 'idle' | 'generating' | 'success' | 'error' | 'timeout'
-  message?: string
-  progress?: number
-}
-
-interface ReportResponse {
-  readonly base64Report: string
+  readonly uriApiReportStatus: string
+  readonly uriApiReportDownload: string
+  readonly uriApiReportCleanup: string
+  readonly pollingInterval: number
+  readonly maxPollingAttempts: number
+  readonly timeout: number
 }
 
 interface ReportFormat {
@@ -55,7 +111,7 @@ interface ReportFormat {
   readonly description: string
 }
 
-// ========== BACKEND INTERFACES ==========
+// ========== BACKEND INTERFACES (unchanged) ==========
 interface BackendReportParameter {
   readonly id: string
   readonly paramName: string
@@ -80,7 +136,7 @@ interface BackendReportInfo {
   readonly parameters?: BackendReportParameter[]
 }
 
-// ========== FRONTEND INTERFACES ==========
+// ========== FRONTEND INTERFACES (unchanged) ==========
 interface ReportParameter {
   readonly id?: string
   readonly paramName: string
@@ -91,7 +147,7 @@ interface ReportParameter {
   readonly dataValueStatic?: string
   readonly filtersBase?: any[]
   readonly dependentField?: string
-  readonly filterKeyValue?: string // ✅ ADDED: Missing property
+  readonly filterKeyValue?: string
   readonly debounceTimeMs?: number
   readonly maxSelectedLabels?: number
   readonly required?: boolean
@@ -109,7 +165,6 @@ interface ReportInfo {
   readonly parameters?: ReportParameter[]
 }
 
-// ========== TYPED FIELD CONFIGURATIONS ==========
 interface FieldConfigurationMap {
   readonly multiselect: () => ReportFormField
   readonly select: () => ReportFormField
@@ -128,7 +183,6 @@ interface NormalizedOption {
   readonly defaultValue?: boolean
 }
 
-// ✅ FIXED: Using mutable ReportFormField type for assignment compatibility
 interface MutableReportFormField extends Omit<ReportFormField, 'objApi' | 'kwArgs'> {
   objApi?: DynamicApiConfig
   kwArgs?: DynamicFieldArgs
@@ -177,25 +231,570 @@ const loadingReport = ref(false)
 // Report generator config
 const reportConfig = reactive<ReportConfig>({
   moduleApi: 'report',
-  uriApiReportGenerate: 'reports/execute-report',
-  timeout: 600000,
-  retryAttempts: 2,
-  retryDelay: 3000
+  uriApiReportGenerate: 'reports/generate-async',
+  uriApiReportStatus: 'reports/status',
+  uriApiReportDownload: 'reports/download',
+  uriApiReportCleanup: 'reports/cleanup',
+  pollingInterval: 3000, // 3 seconds
+  maxPollingAttempts: 200, // 10 minutes total (200 * 3s)
+  timeout: 60000 // 30 seconds for initial submission
 })
 
-// ========== UTILITY FUNCTIONS - MODULAR APPROACH ==========
+// ========== PHASE 2: SPECIALIZED COMPOSABLES ==========
 
-/**
- * Normalizes options from various formats into a consistent structure
- * @param options - Raw options array
- * @returns Normalized options array
- */
+// ✅ NEW: Report Submission Composable
+function useReportSubmission(config: ReportConfig) {
+  const isSubmitting = ref(false)
+  const submissionError = ref<string | null>(null)
+
+  async function submitReport(payload: any): Promise<{ serverRequestId: string, clientRequestId: string } | null> {
+    isSubmitting.value = true
+    submissionError.value = null
+
+    try {
+      Logger.info('🚀 [SUBMISSION] Starting report submission:', payload)
+
+      const response = await GenericService.create<ApiResponse<ReportSubmissionResponse>>(
+        config.moduleApi,
+        config.uriApiReportGenerate,
+        payload,
+        { timeout: config.timeout }
+      )
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.error || 'Failed to submit report')
+      }
+
+      const submissionData = response.data
+      Logger.info('✅ [SUBMISSION] Report submitted successfully:', submissionData)
+
+      return {
+        serverRequestId: submissionData.requestId,
+        clientRequestId: submissionData.clientRequestId || payload.requestId
+      }
+    }
+    catch (error: any) {
+      const errorMessage = error.message || 'Failed to submit report'
+      submissionError.value = errorMessage
+      Logger.error('❌ [SUBMISSION] Failed:', error)
+      return null
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
+  function resetSubmission() {
+    isSubmitting.value = false
+    submissionError.value = null
+  }
+
+  return {
+    isSubmitting: readonly(isSubmitting),
+    submissionError: readonly(submissionError),
+    submitReport,
+    resetSubmission
+  }
+}
+
+// ✅ NEW: Report Polling Composable
+function useReportPolling(config: ReportConfig) {
+  const isPolling = ref(false)
+  const pollingAttempt = ref(0)
+  const pollingError = ref<string | null>(null)
+  const currentStatus = ref<ReportStatusResponse | null>(null)
+
+  let pollingInterval: NodeJS.Timeout | null = null
+  let startTime: number = 0
+
+  async function checkReportStatus(serverRequestId: string): Promise<ReportStatusResponse | null> {
+    try {
+      Logger.info(`🔍 [POLLING] Checking status for: ${serverRequestId} (attempt ${pollingAttempt.value + 1})`)
+
+      const response = await GenericService.getById<ApiResponse<ReportStatusResponse>>(
+        config.moduleApi,
+        config.uriApiReportStatus,
+        serverRequestId,
+        undefined,
+        undefined,
+        { timeout: 10000 }
+      )
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.error || 'Failed to get report status')
+      }
+
+      currentStatus.value = response.data
+      Logger.info(`📊 [POLLING] Status: ${response.data.status}`)
+
+      return response.data
+    }
+    catch (error: any) {
+      Logger.error('❌ [POLLING] Status check failed:', error)
+      throw error
+    }
+  }
+
+  function startPolling(serverRequestId: string, onStatusUpdate: (status: ReportStatusResponse) => void, onComplete: (status: ReportStatusResponse) => void, onError: (error: string) => void) {
+    if (isPolling.value) {
+      stopPolling()
+    }
+
+    isPolling.value = true
+    pollingAttempt.value = 0
+    pollingError.value = null
+    startTime = Date.now()
+
+    Logger.info(`🔄 [POLLING] Starting polling for: ${serverRequestId}`)
+
+    pollingInterval = setInterval(async () => {
+      pollingAttempt.value++
+
+      try {
+        const status = await checkReportStatus(serverRequestId)
+
+        if (!status) {
+          throw new Error('No status received')
+        }
+
+        onStatusUpdate(status)
+
+        // Check completion states
+        if (status.status === 'COMPLETED') {
+          Logger.info('✅ [POLLING] Report completed successfully')
+          stopPolling()
+          onComplete(status)
+          return
+        }
+
+        if (status.status === 'FAILED') {
+          Logger.error('❌ [POLLING] Report failed:', status.errorMessage)
+          stopPolling()
+          onError(status.errorMessage || 'Report generation failed')
+          return
+        }
+
+        // Check timeout
+        if (pollingAttempt.value >= config.maxPollingAttempts) {
+          Logger.warn('⏰ [POLLING] Max attempts reached')
+          stopPolling()
+          onError(`Report generation timeout after ${config.maxPollingAttempts} attempts`)
+        }
+      }
+      catch (error: any) {
+        const errorMessage = error.message || 'Polling error'
+        Logger.error('❌ [POLLING] Error:', error)
+
+        // Stop polling on persistent errors
+        if (pollingAttempt.value >= 5) {
+          stopPolling()
+          onError(`Polling failed: ${errorMessage}`)
+        }
+      }
+    }, config.pollingInterval)
+  }
+
+  function stopPolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+    }
+    isPolling.value = false
+    Logger.info('🛑 [POLLING] Stopped')
+  }
+
+  function getElapsedTime(): number {
+    return startTime > 0 ? Date.now() - startTime : 0
+  }
+
+  return {
+    isPolling: readonly(isPolling),
+    pollingAttempt: readonly(pollingAttempt),
+    pollingError: readonly(pollingError),
+    currentStatus: readonly(currentStatus),
+    startPolling,
+    stopPolling,
+    checkReportStatus,
+    getElapsedTime
+  }
+}
+
+// ✅ NEW: Report Download Composable
+function useReportDownload(config: ReportConfig) {
+  async function downloadReport(serverRequestId: string): Promise<ReportDownloadResponse | null> {
+    try {
+      Logger.info(`📥 [DOWNLOAD] Starting download for: ${serverRequestId}`)
+
+      const response = await GenericService.getById<ApiResponse<ReportDownloadResponse>>(
+        config.moduleApi,
+        config.uriApiReportDownload,
+        serverRequestId
+      )
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.error || 'Failed to download report')
+      }
+
+      Logger.info('✅ [DOWNLOAD] Report downloaded successfully')
+      return response.data
+    }
+    catch (error: any) {
+      Logger.error('❌ [DOWNLOAD] Failed:', error)
+      throw error
+    }
+  }
+
+  async function cleanupReport(serverRequestId: string): Promise<boolean> {
+    try {
+      Logger.info(`🧹 [CLEANUP] Cleaning up: ${serverRequestId}`)
+
+      const response = await GenericService.delete<ApiResponse<any>>(
+        config.moduleApi,
+        config.uriApiReportCleanup,
+        serverRequestId
+      )
+
+      if (response.success) {
+        Logger.info('✅ [CLEANUP] Report cleaned up successfully')
+        return true
+      }
+      else {
+        Logger.warn('⚠️ [CLEANUP] Cleanup failed:', response.error?.error)
+        return false
+      }
+    }
+    catch (error: any) {
+      Logger.warn('⚠️ [CLEANUP] Error:', error)
+      return false
+    }
+  }
+
+  return {
+    downloadReport,
+    cleanupReport
+  }
+}
+
+// ✅ NEW: Main Async Report Generation Orchestrator
+function useAsyncReportGeneration(config: ReportConfig) {
+  // State management
+  const workflowState = ref<ReportWorkflowState>({ type: 'idle' })
+  const progress = reactive<ReportProgress>({
+    percentage: 0,
+    message: 'Ready to generate report',
+    currentStep: 0,
+    totalSteps: 3,
+    elapsedTime: 0
+  })
+  const pdfUrl = ref('')
+
+  // Use specialized composables
+  const { isSubmitting, submissionError, submitReport, resetSubmission } = useReportSubmission(config)
+  const { isPolling, pollingAttempt, currentStatus, startPolling, stopPolling, getElapsedTime } = useReportPolling(config)
+  const { downloadReport, cleanupReport } = useReportDownload(config)
+
+  // Progress tracking
+  let progressInterval: NodeJS.Timeout | null = null
+
+  // ✅ NEW: Reactive progress calculation
+  const isActive = computed(() =>
+    workflowState.value.type === 'submitting'
+    || workflowState.value.type === 'polling'
+  )
+
+  const canRetry = computed(() =>
+    workflowState.value.type === 'failed' && workflowState.value.canRetry
+  )
+
+  const canCancel = computed(() =>
+    workflowState.value.type === 'polling'
+  )
+
+  // ✅ NEW: Real-time progress updates
+  watchEffect(() => {
+    if (isActive.value) {
+      if (!progressInterval) {
+        startProgressTracking()
+      }
+    }
+    else {
+      stopProgressTracking()
+    }
+  })
+
+  function startProgressTracking() {
+    const startTime = Date.now()
+
+    progressInterval = setInterval(() => {
+      progress.elapsedTime = Date.now() - startTime
+
+      if (workflowState.value.type === 'submitting') {
+        progress.percentage = Math.min(15, progress.elapsedTime / 1000 * 5)
+        progress.message = 'Submitting report request...'
+        progress.currentStep = 1
+      }
+      else if (workflowState.value.type === 'polling') {
+        const state = workflowState.value
+        const progressFromAttempts = (state.attempt / state.maxAttempts) * 70
+        progress.percentage = 15 + progressFromAttempts
+        progress.message = `Processing report... (${state.attempt}/${state.maxAttempts})`
+        progress.currentStep = 2
+
+        // Estimate remaining time
+        if (state.attempt > 5) {
+          const avgTimePerAttempt = progress.elapsedTime / state.attempt
+          progress.estimatedTimeRemaining = (state.maxAttempts - state.attempt) * avgTimePerAttempt
+        }
+      }
+    }, 1000)
+  }
+
+  function stopProgressTracking() {
+    if (progressInterval) {
+      clearInterval(progressInterval)
+      progressInterval = null
+    }
+  }
+
+  // ✅ NEW: Main generation workflow
+  async function generateReportAsync(payload: any): Promise<void> {
+    try {
+      // Reset state
+      cleanup()
+      workflowState.value = {
+        type: 'submitting',
+        clientRequestId: payload.requestId
+      }
+      progress.percentage = 0
+      progress.currentStep = 1
+
+      // Phase 1: Submit report
+      const submissionResult = await submitReport(payload)
+
+      if (!submissionResult) {
+        workflowState.value = {
+          type: 'failed',
+          error: submissionError.value || 'Submission failed',
+          canRetry: true
+        }
+        return
+      }
+
+      // Phase 2: Start polling
+      workflowState.value = {
+        type: 'polling',
+        serverRequestId: submissionResult.serverRequestId,
+        clientRequestId: submissionResult.clientRequestId,
+        attempt: 0,
+        maxAttempts: config.maxPollingAttempts
+      }
+
+      progress.currentStep = 2
+      progress.message = 'Starting report processing...'
+
+      // Start polling with callbacks
+      startPolling(
+        submissionResult.serverRequestId,
+        // onStatusUpdate
+        (status: ReportStatusResponse) => {
+          if (workflowState.value.type === 'polling') {
+            workflowState.value.attempt = pollingAttempt.value
+          }
+        },
+        // onComplete
+        async (status: ReportStatusResponse) => {
+          await handleReportCompletion(submissionResult.serverRequestId)
+        },
+        // onError
+        (error: string) => {
+          workflowState.value = {
+            type: 'failed',
+            error,
+            canRetry: true,
+            serverRequestId: submissionResult.serverRequestId
+          }
+          progress.currentStep = 2
+          progress.message = error
+        }
+      )
+    }
+    catch (error: any) {
+      Logger.error('❌ [GENERATION] Unexpected error:', error)
+      workflowState.value = {
+        type: 'failed',
+        error: error.message || 'Unexpected error occurred',
+        canRetry: true
+      }
+    }
+  }
+
+  async function handleReportCompletion(serverRequestId: string) {
+    try {
+      progress.currentStep = 3
+      progress.message = 'Downloading report...'
+      progress.percentage = 90
+
+      // Download report
+      const reportData = await downloadReport(serverRequestId)
+
+      if (!reportData) {
+        throw new Error('Failed to download report data')
+      }
+
+      // Process file
+      const fileUrl = processReportFile(reportData)
+
+      if (fileUrl) {
+        workflowState.value = {
+          type: 'completed',
+          serverRequestId,
+          report: reportData
+        }
+        progress.percentage = 100
+        progress.currentStep = 3
+        progress.message = 'Report generated successfully!'
+
+        // Auto cleanup after successful completion
+        setTimeout(() => {
+          cleanupReport(serverRequestId)
+        }, 60000) // Cleanup after 1 minute
+      }
+    }
+    catch (error: any) {
+      Logger.error('❌ [COMPLETION] Error:', error)
+      workflowState.value = {
+        type: 'failed',
+        error: error.message || 'Failed to process completed report',
+        canRetry: false,
+        serverRequestId
+      }
+    }
+  }
+
+  function processReportFile(reportData: ReportDownloadResponse): string | null {
+    try {
+      // Cleanup previous file
+      if (pdfUrl.value) {
+        URL.revokeObjectURL(pdfUrl.value)
+        pdfUrl.value = ''
+      }
+
+      const byteCharacters = atob(reportData.base64Report)
+      const byteArray = new Uint8Array(byteCharacters.length)
+
+      // Process in chunks for better performance
+      const chunkSize = 1024 * 1024
+      for (let i = 0; i < byteCharacters.length; i += chunkSize) {
+        const chunk = byteCharacters.slice(i, i + chunkSize)
+        for (let j = 0; j < chunk.length; j++) {
+          byteArray[i + j] = chunk.charCodeAt(j)
+        }
+      }
+
+      const blob = new Blob([byteArray], { type: reportData.contentType })
+      const blobUrl = URL.createObjectURL(blob)
+
+      // Handle based on content type
+      if (reportData.contentType === 'application/pdf') {
+        pdfUrl.value = blobUrl
+      }
+      else {
+        downloadFile(blobUrl, reportData.fileName)
+      }
+
+      return blobUrl
+    }
+    catch (error) {
+      Logger.error('❌ [FILE PROCESSING] Error:', error)
+      return null
+    }
+  }
+
+  function downloadFile(url: string, filename: string) {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // Cleanup after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  async function retryGeneration(payload: any): Promise<void> {
+    if (canRetry.value) {
+      await generateReportAsync(payload)
+    }
+  }
+
+  function cancelGeneration(): void {
+    if (canCancel.value) {
+      stopPolling()
+      workflowState.value = { type: 'cancelled' }
+      progress.message = 'Generation cancelled by user'
+
+      // Cleanup server resources if we have a server request ID
+      if (workflowState.value.type === 'polling') {
+        cleanupReport(workflowState.value.serverRequestId)
+      }
+    }
+  }
+
+  function cleanup() {
+    stopPolling()
+    stopProgressTracking()
+    resetSubmission()
+
+    if (pdfUrl.value) {
+      URL.revokeObjectURL(pdfUrl.value)
+      pdfUrl.value = ''
+    }
+
+    workflowState.value = { type: 'idle' }
+    progress.percentage = 0
+    progress.message = 'Ready to generate report'
+    progress.currentStep = 0
+    progress.elapsedTime = 0
+    progress.estimatedTimeRemaining = undefined
+  }
+
+  function reset() {
+    cleanup()
+  }
+
+  return {
+    // State
+    workflowState: readonly(workflowState),
+    progress: readonly(progress),
+    pdfUrl: readonly(pdfUrl),
+
+    // Computed
+    isActive,
+    canRetry,
+    canCancel,
+
+    // Actions
+    generateReportAsync,
+    retryGeneration,
+    cancelGeneration,
+    cleanup,
+    reset,
+
+    // File operations
+    downloadFile,
+
+    // Cleanup
+    cleanupReport
+  }
+}
+
+// ========== UTILITY FUNCTIONS (unchanged) ==========
 function normalizeOptions(options: any[]): NormalizedOption[] {
   if (!options || !Array.isArray(options) || options.length === 0) {
     return []
   }
 
-  // Handle backend localselect format: {id, name, slug, defaultValue}
   if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'id' in opt)) {
     return options.map(opt => ({
       name: opt.name,
@@ -207,7 +806,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
     }))
   }
 
-  // Already normalized with 'name'
   if (options.every(opt => opt && typeof opt === 'object' && 'name' in opt && 'value' in opt)) {
     return options.map(opt => ({
       name: opt.name,
@@ -219,7 +817,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
     }))
   }
 
-  // Has 'label' instead of 'name'
   if (options.every(opt => opt && typeof opt === 'object' && 'label' in opt && 'value' in opt)) {
     return options.map(opt => ({
       name: opt.label,
@@ -231,7 +828,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
     }))
   }
 
-  // String array
   if (options.every(opt => typeof opt === 'string')) {
     return options.map(opt => ({
       name: opt,
@@ -242,7 +838,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
     }))
   }
 
-  // Mixed objects fallback
   if (options.every(opt => opt && typeof opt === 'object')) {
     return options.map((opt, index) => {
       const displayName = opt.label || opt.name || opt.text || opt.value || `Option ${index + 1}`
@@ -257,7 +852,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
     })
   }
 
-  // Ultimate fallback
   return options.map((opt, index) => ({
     name: String(opt),
     label: String(opt),
@@ -267,11 +861,6 @@ function normalizeOptions(options: any[]): NormalizedOption[] {
   }))
 }
 
-/**
- * Maps backend parameter to frontend parameter with proper typing
- * @param backendParam - Backend parameter definition
- * @returns Mapped frontend parameter
- */
 function mapBackendParameter(backendParam: BackendReportParameter): ReportParameter {
   const mappedParam: ReportParameter = {
     id: backendParam.id,
@@ -285,7 +874,6 @@ function mapBackendParameter(backendParam: BackendReportParameter): ReportParame
     parameterCategory: backendParam.parameterCategory || 'REPORT',
   }
 
-  // Add module/service for dynamic components
   if (backendParam.module?.trim()) {
     Object.assign(mappedParam, { module: backendParam.module.trim() })
   }
@@ -294,17 +882,14 @@ function mapBackendParameter(backendParam: BackendReportParameter): ReportParame
     Object.assign(mappedParam, { service: backendParam.service.trim() })
   }
 
-  // Handle dependent field relationships
   if (backendParam.dependentField?.trim()) {
     Object.assign(mappedParam, { dependentField: backendParam.dependentField.trim() })
   }
 
-  // ✅ ADDED: Map filterKeyValue directly
   if (backendParam.filterKeyValue?.trim()) {
     Object.assign(mappedParam, { filterKeyValue: backendParam.filterKeyValue.trim() })
   }
 
-  // Map filterKeyValue to filtersBase structure (keep for compatibility)
   if (backendParam.filterKeyValue?.trim()) {
     Object.assign(mappedParam, {
       filtersBase: [{
@@ -324,11 +909,6 @@ function mapBackendParameter(backendParam: BackendReportParameter): ReportParame
   return mappedParam
 }
 
-/**
- * Creates form field from parameter with proper type safety
- * @param param - Report parameter
- * @returns Configured form field
- */
 function createFieldFromParameter(param: ReportParameter): ReportFormField {
   const baseProps = {
     id: param.id,
@@ -351,7 +931,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
     baseProps.class = `${baseProps.class} required`
   }
 
-  // API Configuration
   const apiConfig: DynamicApiConfig | undefined = param.module && param.service
     ? {
         moduleApi: param.module,
@@ -359,7 +938,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
       }
     : undefined
 
-  // Dynamic Arguments
   const kwArgs: DynamicFieldArgs = {
     filtersBase: param.filtersBase || [],
     dependentField: param.dependentField,
@@ -370,7 +948,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
     maxItems: 50
   }
 
-  // ✅ FIXED: Properly typed field configurations
   const fieldConfigs: FieldConfigurationMap = {
     multiselect: (): ReportFormField => {
       return createDynamicField(
@@ -414,7 +991,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
           const rawData = JSON.parse(param.dataValueStatic.replace(/\n/g, ''))
           options = normalizeOptions(rawData)
 
-          // Find default value
           const defaultOption = options.find(opt => opt.defaultValue === true)
           if (defaultOption) {
             defaultValue = defaultOption.value
@@ -491,205 +1067,6 @@ function createFieldFromParameter(param: ReportParameter): ReportFormField {
   return generatedField
 }
 
-// ========== COMPOSABLES ==========
-function useReportGenerator(config: ReportConfig) {
-  const pdfUrl = ref('')
-  const reportProgress = reactive<ReportProgress>({
-    status: 'idle',
-    progress: 0
-  })
-
-  const defaultConfig = {
-    timeout: 600000, // 10 minutes
-    retryAttempts: 2,
-    retryDelay: 3000,
-    ...config
-  }
-
-  const isGenerating = computed(() => reportProgress.status === 'generating')
-  const canRetry = computed(() => reportProgress.status === 'error' || reportProgress.status === 'timeout')
-
-  let progressInterval: NodeJS.Timeout | null = null
-
-  async function generateReport(payload: any): Promise<string | null> {
-    let attempt = 0
-
-    while (attempt <= defaultConfig.retryAttempts) {
-      try {
-        reportProgress.status = 'generating'
-        reportProgress.progress = 0
-        reportProgress.message = attempt > 0
-          ? `Retry attempt ${attempt}/${defaultConfig.retryAttempts}...`
-          : 'Initializing report generation...'
-
-        // Simulate progress for better UX
-        progressInterval = setInterval(() => {
-          if ((reportProgress.progress || 0) < 90) {
-            reportProgress.progress = (reportProgress.progress || 0) + Math.random() * 10
-          }
-        }, 1000)
-
-        const response = await GenericService.createReport<ReportResponse>(
-          defaultConfig.moduleApi,
-          defaultConfig.uriApiReportGenerate,
-          payload,
-          defaultConfig.timeout
-        )
-
-        if (progressInterval) {
-          clearInterval(progressInterval)
-          progressInterval = null
-        }
-        reportProgress.progress = 100
-
-        if (response?.base64Report) {
-          reportProgress.status = 'success'
-          reportProgress.message = 'Report generated successfully'
-          return response.base64Report
-        }
-
-        throw new Error('Invalid server response - no report data received')
-      }
-      catch (error: any) {
-        attempt++
-
-        if (progressInterval) {
-          clearInterval(progressInterval)
-          progressInterval = null
-        }
-
-        Logger.error(`Generation attempt ${attempt} failed:`, error)
-
-        if (error.message?.includes('cancelled') || error.message?.includes('timed out')) {
-          reportProgress.status = 'timeout'
-          reportProgress.message = 'Request timed out. Please try again with different parameters or contact support.'
-          break
-        }
-
-        if (attempt <= defaultConfig.retryAttempts) {
-          reportProgress.message = `Attempt ${attempt} failed. Retrying in ${defaultConfig.retryDelay / 1000} seconds...`
-          await new Promise(resolve => setTimeout(resolve, defaultConfig.retryDelay))
-        }
-        else {
-          reportProgress.status = 'error'
-          reportProgress.message = `Failed to generate report after ${defaultConfig.retryAttempts} attempts. ${error.message}`
-        }
-      }
-    }
-
-    return null
-  }
-
-  function processReportFile(base64Report: string, formatType: string): string | null {
-    try {
-      // Cleanup previous file
-      if (pdfUrl.value) {
-        URL.revokeObjectURL(pdfUrl.value)
-        pdfUrl.value = ''
-      }
-
-      const byteCharacters = atob(base64Report)
-      const byteArray = new Uint8Array(byteCharacters.length)
-
-      // Process in chunks for better performance
-      const chunkSize = 1024 * 1024
-      for (let i = 0; i < byteCharacters.length; i += chunkSize) {
-        const chunk = byteCharacters.slice(i, i + chunkSize)
-        for (let j = 0; j < chunk.length; j++) {
-          byteArray[i + j] = chunk.charCodeAt(j)
-        }
-      }
-
-      const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
-      const { mimeType, extension } = getFileTypeInfo(formatType)
-
-      const blob = new Blob([byteArray], { type: mimeType })
-      const blobUrl = URL.createObjectURL(blob)
-
-      if (formatType === 'PDF') {
-        pdfUrl.value = blobUrl
-      }
-      else {
-        downloadFile(blobUrl, `report-${timestamp}.${extension}`)
-      }
-
-      return blobUrl
-    }
-    catch (error) {
-      Logger.error('Error processing file:', error)
-      reportProgress.status = 'error'
-      reportProgress.message = 'Error processing the generated file'
-      return null
-    }
-  }
-
-  function downloadFile(url: string, filename: string) {
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    // Cleanup after a delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
-
-  function getFileTypeInfo(formatType: string) {
-    const formats = {
-      XLS: {
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        extension: 'xlsx'
-      },
-      CSV: {
-        mimeType: 'text/csv',
-        extension: 'csv'
-      },
-      PDF: {
-        mimeType: 'application/pdf',
-        extension: 'pdf'
-      },
-    }
-
-    return formats[formatType as keyof typeof formats] || formats.PDF
-  }
-
-  function cleanup() {
-    if (pdfUrl.value) {
-      URL.revokeObjectURL(pdfUrl.value)
-      pdfUrl.value = ''
-    }
-    if (progressInterval) {
-      clearInterval(progressInterval)
-      progressInterval = null
-    }
-    reportProgress.status = 'idle'
-    reportProgress.message = undefined
-    reportProgress.progress = 0
-  }
-
-  function resetProgress() {
-    if (progressInterval) {
-      clearInterval(progressInterval)
-      progressInterval = null
-    }
-    reportProgress.status = 'idle'
-    reportProgress.message = undefined
-    reportProgress.progress = 0
-  }
-
-  return {
-    pdfUrl: readonly(pdfUrl),
-    reportProgress: readonly(reportProgress),
-    isGenerating,
-    canRetry,
-    generateReport,
-    processReportFile,
-    cleanup,
-    resetProgress
-  }
-}
-
 function useReportParameters() {
   function validateParameter(param: ReportParameter, value: any): boolean {
     if (param.required && (!value || (Array.isArray(value) && value.length === 0))) {
@@ -718,7 +1095,6 @@ function useReportParameters() {
   const isValidDate = (value: any): boolean => {
     if (!value) { return false }
 
-    // Verificar diferentes formatos de fecha
     const dateValue = new Date(value)
     const isValid = !Number.isNaN(dateValue.getTime())
 
@@ -746,11 +1122,14 @@ function useReportParameters() {
   }
 
   function buildPayload(formData: any, reportCode: string, formatType: any) {
+    // ✅ NEW: Generate UUID for client request ID
+    const clientRequestId = crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
     const payload = {
       parameters: {} as Record<string, any>,
       reportFormatType: typeof formatType === 'object' ? formatType.id : formatType,
       jasperReportCode: reportCode,
-      requestId: Date.now().toString(),
+      requestId: clientRequestId, // Client-generated UUID
       metadata: {
         timestamp: dayjs().toISOString(),
         userAgent: navigator.userAgent
@@ -765,18 +1144,14 @@ function useReportParameters() {
           return false
         }
 
-        // Busca el parámetro en la definición
         const paramDef = currentReport.value?.parameters?.find(p => p.paramName === key)
         return paramDef?.parameterCategory === 'REPORT'
       })
       .reduce((acc, key) => {
         const rawValue = formData[key]
-
-        // ✅ ESPECIAL: Manejar campos de fecha de forma diferente
         const isDateField = key.toLowerCase().includes('date')
 
         if (isDateField) {
-          // Solo incluir fechas si tienen valor válido
           if (rawValue && rawValue !== '' && rawValue !== null) {
             const processedValue = processParameterValue(rawValue)
             if (processedValue && processedValue !== null) {
@@ -785,7 +1160,6 @@ function useReportParameters() {
           }
         }
         else {
-        // Manejar campos no-fecha normalmente
           const processedValue = processParameterValue(rawValue)
           if (processedValue !== null && processedValue !== undefined && processedValue !== '') {
             acc[key] = processedValue
@@ -814,26 +1188,9 @@ function useFieldBuilder() {
 }
 
 // ========== INITIALIZE COMPOSABLES ==========
-const {
-  pdfUrl,
-  reportProgress,
-  isGenerating,
-  canRetry,
-  generateReport,
-  processReportFile,
-  cleanup,
-  resetProgress
-} = useReportGenerator(reportConfig)
-
-const {
-  buildPayload,
-  validateAllParameters
-} = useReportParameters()
-
-const {
-  createFieldFromParameter: createField,
-  mapBackendParameter: mapParameter
-} = useFieldBuilder()
+const asyncReportGeneration = useAsyncReportGeneration(reportConfig)
+const { buildPayload, validateAllParameters } = useReportParameters()
+const { createFieldFromParameter: createField, mapBackendParameter: mapParameter } = useFieldBuilder()
 
 // ========== COMPUTED PROPERTIES ==========
 const reportTitle = computed(() => {
@@ -849,13 +1206,66 @@ const hasParameters = computed(() => {
 })
 
 const canGenerate = computed(() => {
-  return !isGenerating.value
+  return !asyncReportGeneration.isActive.value
     && item.value.jasperReportCode
     && item.value.reportFormatType
 })
 
+// ✅ NEW: Enhanced progress display
 const progressPercentage = computed(() => {
-  return Math.round(reportProgress.progress || 0)
+  return Math.round(asyncReportGeneration.progress.percentage || 0)
+})
+
+const formattedElapsedTime = computed(() => {
+  const seconds = Math.floor(asyncReportGeneration.progress.elapsedTime / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+})
+
+const formattedEstimatedTime = computed(() => {
+  if (!asyncReportGeneration.progress.estimatedTimeRemaining) { return null }
+
+  const seconds = Math.floor(asyncReportGeneration.progress.estimatedTimeRemaining / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `~${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+})
+
+// ✅ NEW: Timeline data for better UX
+const timelineEvents = computed(() => {
+  const events = []
+  const state = asyncReportGeneration.workflowState.value
+
+  // Submit step
+  events.push({
+    status: state.type === 'idle' ? 'outlined' : 'filled',
+    date: state.type !== 'idle' ? 'Submitted' : 'Pending',
+    icon: 'pi pi-send',
+    color: state.type === 'idle' ? '#9C27B0' : '#673AB7'
+  })
+
+  // Processing step
+  if (state.type === 'polling' || state.type === 'completed' || (state.type === 'failed' && state.serverRequestId)) {
+    events.push({
+      status: state.type === 'polling' ? 'filled' : state.type === 'completed' ? 'filled' : 'outlined',
+      date: state.type === 'polling' ? 'Processing...' : state.type === 'completed' ? 'Processed' : 'Failed',
+      icon: 'pi pi-cog',
+      color: state.type === 'polling' ? '#FF9800' : state.type === 'completed' ? '#4CAF50' : '#F44336'
+    })
+  }
+
+  // Complete step
+  if (state.type === 'completed') {
+    events.push({
+      status: 'filled',
+      date: 'Completed',
+      icon: 'pi pi-check',
+      color: '#4CAF50'
+    })
+  }
+
+  return events
 })
 
 // ========== METHODS ==========
@@ -909,23 +1319,18 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 
   try {
     showForm.value = false
-
-    // Clear existing fields
     fields.value = []
 
     if (reportData?.parameters && reportData.parameters.length > 0) {
       reportData.parameters.forEach((param: ReportParameter) => {
-        // Create field definition
         const fieldDef = createField(param) as MutableReportFormField
 
-        // Set default value if available
         let initialValue: any
         switch (param.componentType) {
           case 'multiselect':
             initialValue = []
             break
           case 'date':
-            // ✅ Inicializar como null para fechas, NO como string vacío
             initialValue = null
             break
           default:
@@ -939,10 +1344,8 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
           initialValue = fieldDef.defaultValue
         }
 
-        // Initialize field value
         item.value[param.paramName] = initialValue
 
-        // ✅ FIXED: Enhanced API configuration for dynamic fields using mutable interface
         if (['select', 'multiselect'].includes(param.componentType) && param.module && param.service) {
           fieldDef.objApi = {
             moduleApi: param.module,
@@ -952,9 +1355,8 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
             ...param,
             filtersBase: param.filtersBase || [],
             dependentField: param.dependentField,
-            filterKeyValue: param.filterKeyValue, // ✅ ADDED: Pass filterKeyValue to SelectField
+            filterKeyValue: param.filterKeyValue,
             debounceTimeMs: param.debounceTimeMs || 300,
-            // ✅ NEW: Add getter function for parent values
             getParentValues: () => item.value
           }
         }
@@ -981,6 +1383,7 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
   }
 }
 
+// ✅ NEW: Enhanced report execution with new async workflow
 async function executeReport() {
   if (!canGenerate.value) {
     toast.add({
@@ -991,8 +1394,6 @@ async function executeReport() {
     })
     return
   }
-
-  resetProgress()
 
   try {
     // Validate parameters if report has them
@@ -1007,23 +1408,23 @@ async function executeReport() {
       item.value.reportFormatType
     )
 
-    const base64Report = await generateReport(payload)
+    Logger.info('🚀 [EXECUTE] Starting async report generation:', payload)
 
-    if (base64Report) {
-      const processedUrl = processReportFile(base64Report, item.value.reportFormatType.id)
+    // Use the new async generation workflow
+    await asyncReportGeneration.generateReportAsync(payload)
 
-      if (processedUrl) {
-        toast.add({
-          severity: 'success',
-          summary: 'Report Generated',
-          detail: `Your ${item.value.reportFormatType.name} report is ready`,
-          life: 5000
-        })
-      }
+    // Show success notification when completed
+    if (asyncReportGeneration.workflowState.value.type === 'completed') {
+      toast.add({
+        severity: 'success',
+        summary: 'Report Generated',
+        detail: `Your ${item.value.reportFormatType.name} report is ready`,
+        life: 5000
+      })
     }
   }
   catch (error) {
-    Logger.error('Error executing report:', error)
+    Logger.error('❌ [EXECUTE] Error:', error)
     toast.add({
       severity: 'error',
       summary: 'Generation Failed',
@@ -1033,14 +1434,32 @@ async function executeReport() {
   }
 }
 
+// ✅ NEW: Enhanced retry functionality
 async function retryGeneration() {
-  if (canRetry.value) {
-    await executeReport()
+  if (asyncReportGeneration.canRetry.value) {
+    const payload = buildPayload(
+      item.value,
+      item.value.jasperReportCode,
+      item.value.reportFormatType
+    )
+    await asyncReportGeneration.retryGeneration(payload)
+  }
+}
+
+// ✅ NEW: Cancel functionality
+function cancelGeneration() {
+  if (asyncReportGeneration.canCancel.value) {
+    asyncReportGeneration.cancelGeneration()
+    toast.add({
+      severity: 'info',
+      summary: 'Generation Cancelled',
+      detail: 'Report generation has been cancelled',
+      life: 3000
+    })
   }
 }
 
 function clearForm() {
-  // Reset form values but keep report code and format
   const reportCode = item.value.jasperReportCode
   const reportFormat = item.value.reportFormatType
 
@@ -1049,7 +1468,6 @@ function clearForm() {
     reportFormatType: reportFormat
   }
 
-  // Reinitialize parameter values
   if (currentReport.value?.parameters) {
     currentReport.value.parameters.forEach((param: ReportParameter) => {
       item.value[param.paramName] = param.componentType === 'multiselect' ? [] : ''
@@ -1061,42 +1479,33 @@ function clearForm() {
 }
 
 // ========== EVENT HANDLERS ==========
-// ✅ ENHANCED: Improved field update handler with better error handling
 function handleFieldUpdate(event: any) {
   const name = event.name || event.fieldName || event.field
   const value = event.value
 
   const oldValue = item.value[name]
-
-  // Update the value FIRST
   item.value[name] = value
 
-  // Clear validation error for this field
   if (formValidationErrors.value[name]) {
     delete formValidationErrors.value[name]
   }
 
-  // Handle dependency cascading AFTER the value is set
   if (JSON.stringify(oldValue) !== JSON.stringify(value)) {
     handleDependencyCascade(name, value, oldValue)
   }
 }
 
-// ✅ ENHANCED: Improved dependency cascade with better error handling
 function handleDependencyCascade(changedFieldName: string, newValue: any, oldValue: any) {
-  // Skip if value didn't actually change
   if (JSON.stringify(newValue) === JSON.stringify(oldValue)) {
     return
   }
 
-  // Find all fields that depend on the changed field
   const dependentFields = fields.value.filter((field) => {
     const dependentField = field.kwArgs?.dependentField
     return dependentField === changedFieldName
   })
 
   if (dependentFields.length > 0) {
-    // ✅ Batch updates para mejor performance
     const updates: Record<string, any> = {}
 
     dependentFields.forEach((depField) => {
@@ -1104,11 +1513,9 @@ function handleDependencyCascade(changedFieldName: string, newValue: any, oldVal
       updates[depField.name] = resetValue
     })
 
-    // ✅ Aplicar todos los updates de una vez
     Object.assign(item.value, updates)
 
     dependentFields.forEach((depField) => {
-      // Reset dependent field value IMMEDIATELY
       if (depField.multiple) {
         item.value[depField.name] = []
       }
@@ -1116,22 +1523,16 @@ function handleDependencyCascade(changedFieldName: string, newValue: any, oldVal
         item.value[depField.name] = null
       }
 
-      // Trigger immediate reactive update
       nextTick(() => {
-        // Force formReload to ensure SelectField remounts with new dependencies
         // formReload.value++
       })
     })
   }
 }
 
-// ✅ ENHANCED: Improved field update handler
-
 function handleReactiveUpdate(values: FieldValues) {
-  // ✅ Definir campos que NUNCA deben ser sobrescritos por el formulario
   const CRITICAL_FIELDS = ['jasperReportCode', 'reportFormatType']
 
-  // Extraer valores críticos actuales
   const preservedValues = CRITICAL_FIELDS.reduce((acc, field) => {
     if (item.value[field] !== undefined && item.value[field] !== null) {
       acc[field] = item.value[field]
@@ -1139,10 +1540,9 @@ function handleReactiveUpdate(values: FieldValues) {
     return acc
   }, {} as Record<string, any>)
 
-  // Merge con protección
   item.value = {
-    ...values, // Campos del formulario
-    ...preservedValues // Campos críticos preservados
+    ...values,
+    ...preservedValues
   }
 }
 
@@ -1150,10 +1550,8 @@ function handleCancel() {
   clearForm()
 }
 
-// ✅ ENHANCED: Improved validation error handler with better error checking
 function handleValidationErrors(event: any) {
   try {
-    // Handle FormValidationEvent properly with safe checking
     if (event && typeof event === 'object' && 'errors' in event) {
       const errorRecord: Record<string, string[]> = {}
 
@@ -1178,7 +1576,6 @@ function handleValidationErrors(event: any) {
       formValidationErrors.value = errorRecord
     }
     else if (event && typeof event === 'object') {
-      // Handle direct error object
       const errorRecord: Record<string, string[]> = {}
 
       Object.keys(event).forEach((key) => {
@@ -1215,27 +1612,27 @@ function getFormatIcon(formatId: string): string {
 }
 
 function downloadCurrentReport() {
-  if (pdfUrl.value) {
+  if (asyncReportGeneration.pdfUrl.value) {
     const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
     const link = document.createElement('a')
-    link.href = pdfUrl.value
+    link.href = asyncReportGeneration.pdfUrl.value
     link.download = `report-${timestamp}.pdf`
     link.click()
   }
 }
 
 function openInNewTab() {
-  if (pdfUrl.value) {
-    window.open(pdfUrl.value, '_blank', 'noopener,noreferrer')
+  if (asyncReportGeneration.pdfUrl.value) {
+    window.open(asyncReportGeneration.pdfUrl.value, '_blank', 'noopener,noreferrer')
   }
 }
 
 function shareReport() {
-  if (typeof navigator !== 'undefined' && (navigator as any).share && pdfUrl.value) {
+  if (typeof navigator !== 'undefined' && (navigator as any).share && asyncReportGeneration.pdfUrl.value) {
     (navigator as any).share({
       title: `Report: ${currentReport.value?.name}`,
       text: 'Generated report',
-      url: pdfUrl.value
+      url: asyncReportGeneration.pdfUrl.value
     }).catch((err: any) => Logger.error('Error sharing:', err))
   }
 }
@@ -1249,7 +1646,7 @@ watch(() => route.query.reportId, (newReportId) => {
 
 // ========== LIFECYCLE ==========
 onUnmounted(() => {
-  cleanup()
+  asyncReportGeneration.cleanup()
 })
 
 // ========== COMPUTED PROPERTIES - Additional ==========
@@ -1286,94 +1683,6 @@ const isShareSupported = computed(() => {
       </div>
     </div>
 
-    <!-- Enhanced Progress/Status Messages -->
-    <div v-if="reportProgress.status !== 'idle'" class="report-viewer__status">
-      <!-- Generation Progress -->
-      <div v-if="isGenerating" class="report-viewer__status-card report-viewer__status-card--loading">
-        <div class="report-viewer__status-content">
-          <div class="report-viewer__status-progress">
-            <ProgressSpinner style="width: 24px; height: 24px" />
-            <div class="report-viewer__progress-details">
-              <ProgressBar
-                :value="progressPercentage"
-                class="report-viewer__progress-bar"
-                :show-value="false"
-              />
-              <span class="report-viewer__progress-text">{{ progressPercentage }}%</span>
-            </div>
-          </div>
-          <div>
-            <h4 class="report-viewer__status-title">
-              Generating Report
-            </h4>
-            <p class="report-viewer__status-message">
-              {{ reportProgress.message }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Success Message -->
-      <div v-if="reportProgress.status === 'success'" class="report-viewer__status-card report-viewer__status-card--success">
-        <div class="report-viewer__status-content">
-          <i class="pi pi-check-circle" />
-          <div>
-            <h4 class="report-viewer__status-title">
-              Report Generated Successfully
-            </h4>
-            <p class="report-viewer__status-message">
-              {{ reportProgress.message }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Timeout Warning with Retry -->
-      <div v-if="reportProgress.status === 'timeout'" class="report-viewer__status-card report-viewer__status-card--warning">
-        <div class="report-viewer__status-content">
-          <i class="pi pi-clock" />
-          <div class="flex-1">
-            <h4 class="report-viewer__status-title">
-              Request Timeout
-            </h4>
-            <p class="report-viewer__status-message">
-              {{ reportProgress.message }}
-            </p>
-          </div>
-          <Button
-            label="Retry"
-            icon="pi pi-refresh"
-            class="p-button-warning p-button-outlined"
-            size="small"
-            @click="retryGeneration"
-          />
-        </div>
-      </div>
-
-      <!-- Error Message with Retry -->
-      <div v-if="reportProgress.status === 'error'" class="report-viewer__status-card report-viewer__status-card--error">
-        <div class="report-viewer__status-content">
-          <i class="pi pi-exclamation-triangle" />
-          <div class="flex-1">
-            <h4 class="report-viewer__status-title">
-              Generation Failed
-            </h4>
-            <p class="report-viewer__status-message">
-              {{ reportProgress.message }}
-            </p>
-          </div>
-          <Button
-            label="Retry"
-            icon="pi pi-refresh"
-            class="p-button-danger p-button-outlined"
-            size="small"
-            @click="retryGeneration"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content Grid -->
     <div class="report-viewer__main">
       <!-- Left Panel: Enhanced Parameters -->
       <div class="report-viewer__parameters">
@@ -1398,7 +1707,7 @@ const isShareSupported = computed(() => {
                 v-tooltip.top="'Reset Parameters'"
                 icon="pi pi-refresh"
                 class="p-button-text p-button-sm"
-                :disabled="isGenerating"
+                :disabled="asyncReportGeneration.isActive.value"
                 @click="clearForm"
               />
             </div>
@@ -1419,7 +1728,7 @@ const isShareSupported = computed(() => {
               :fields="fields as FormField[]"
               :initial-values="item"
               :show-actions="false"
-              :loading="isGenerating"
+              :loading="asyncReportGeneration.isActive.value"
               :validate-on-change="true"
               data-test-id="report-form"
               @field-change="handleFieldUpdate"
@@ -1428,7 +1737,7 @@ const isShareSupported = computed(() => {
               @cancel="handleCancel"
             >
               <template
-                v-for="fieldItem in fields.filter((f) => f.required)"
+                v-for="fieldItem in fields.filter((f: FormField) => f.required)"
                 :key="`header-${fieldItem.field}`"
                 #[`header-${fieldItem.field}`]="{ field }"
               >
@@ -1438,6 +1747,7 @@ const isShareSupported = computed(() => {
                 </div>
               </template>
             </EnhancedFormComponent>
+
             <!-- Enhanced Action Section -->
             <div class="report-viewer__actions">
               <!-- Export Format Selection -->
@@ -1465,17 +1775,19 @@ const isShareSupported = computed(() => {
                 </div>
               </div>
 
-              <!-- Generation Controls -->
+              <!-- ✅ NEW: Enhanced Generation Controls with Steps -->
               <div class="report-viewer__generation-controls">
+                <!-- Main Generation Button -->
                 <Button
-                  :label="isGenerating ? 'Generating...' : 'Generate Report'"
-                  :icon="isGenerating ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                  :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
+                  :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
                   class="report-viewer__generate-button report-viewer__generate-btn"
-                  :loading="isGenerating"
+                  :loading="asyncReportGeneration.isActive.value"
                   :disabled="!canGenerate"
                   @click="executeReport"
                 />
 
+                <!-- Generation Info -->
                 <div class="report-viewer__generation-info">
                   <div class="flex align-items-center gap-2 text-sm text-gray-600">
                     <i class="pi pi-info-circle" />
@@ -1486,11 +1798,25 @@ const isShareSupported = computed(() => {
                       {{ item.reportFormatType?.name }} file will be automatically downloaded
                     </span>
                   </div>
+
+                  <!-- ✅ NEW: Real-time progress info -->
+                  <div v-if="asyncReportGeneration.isActive.value" class="mt-2">
+                    <div class="flex align-items-center gap-2 text-xs text-gray-500">
+                      <i class="pi pi-clock" />
+                      <span>{{ asyncReportGeneration.progress.message }}</span>
+                    </div>
+                    <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="flex align-items-center gap-2 text-xs text-gray-500 mt-1">
+                      <i class="pi pi-refresh" />
+                      <span>
+                        Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <!-- Quick Actions -->
-              <div v-if="pdfUrl" class="report-viewer__quick-actions">
+              <div v-if="asyncReportGeneration.pdfUrl.value" class="report-viewer__quick-actions">
                 <h4 class="report-viewer__quick-actions-title">
                   Quick Actions
                 </h4>
@@ -1563,14 +1889,27 @@ const isShareSupported = computed(() => {
                 </Dropdown>
               </div>
 
-              <Button
-                :label="isGenerating ? 'Generating...' : 'Generate Report'"
-                :icon="isGenerating ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
-                class="w-full mt-3 report-viewer__generate-btn"
-                :loading="isGenerating"
-                :disabled="!canGenerate"
-                @click="executeReport"
-              />
+              <!-- ✅ NEW: Enhanced generation button for no-parameters -->
+              <div class="mt-4">
+                <Button
+                  :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
+                  :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                  class="w-full report-viewer__generate-btn"
+                  :loading="asyncReportGeneration.isActive.value"
+                  :disabled="!canGenerate"
+                  @click="executeReport"
+                />
+
+                <!-- Progress info for no-parameters -->
+                <div v-if="asyncReportGeneration.isActive.value" class="mt-2 text-center">
+                  <div class="text-xs text-gray-500">
+                    {{ asyncReportGeneration.progress.message }}
+                  </div>
+                  <div v-if="formattedElapsedTime" class="text-xs text-gray-400 mt-1">
+                    Elapsed: {{ formattedElapsedTime }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1620,10 +1959,11 @@ const isShareSupported = computed(() => {
                   </h3>
                 </div>
                 <p class="report-viewer__preview-subtitle">
-                  {{ pdfUrl ? 'Your generated report' : 'Generated reports will appear here' }}
+                  {{ asyncReportGeneration.pdfUrl.value ? 'Your generated report' : 'Generated reports will appear here' }}
                 </p>
               </div>
-              <div class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+              <!-- ✅ Status indicator -->
+              <div v-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
                 <Tag severity="success" icon="pi pi-check">
                   Report Generated
                 </Tag>
@@ -1631,15 +1971,209 @@ const isShareSupported = computed(() => {
                   {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
                 </span>
               </div>
+              <div v-else-if="asyncReportGeneration.isActive.value" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+                <Tag severity="info" icon="pi pi-spin pi-spinner">
+                  Processing
+                </Tag>
+                <span class="text-sm text-gray-600">
+                  {{ formattedElapsedTime }}
+                </span>
+              </div>
             </div>
           </div>
 
           <!-- Enhanced Viewer Content -->
           <div class="report-viewer__preview-content">
-            <!-- PDF Display with enhanced features -->
-            <div v-if="item?.reportFormatType?.id === 'PDF' && pdfUrl" class="report-viewer__pdf-container">
+            <!-- ✅ PROGRESS SECTION - Always visible when active -->
+            <div v-if="asyncReportGeneration.isActive.value" class="report-viewer__progress-section">
+              <div class="report-viewer__progress-container">
+                <!-- Process Steps -->
+                <div class="report-viewer__steps-container">
+                  <Steps
+                    :model="[
+                      { label: 'Submit', icon: 'pi pi-send' },
+                      { label: 'Processing', icon: 'pi pi-cog' },
+                      { label: 'Complete', icon: 'pi pi-check' },
+                    ]"
+                    :active-step="asyncReportGeneration.progress.currentStep"
+                    readonly
+                    class="report-viewer__steps"
+                  />
+                </div>
+
+                <!-- Progress Status -->
+                <div class="report-viewer__progress-status">
+                  <div class="flex align-items-center justify-content-between mb-2">
+                    <h4 class="report-viewer__progress-title">
+                      <i v-if="asyncReportGeneration.workflowState.value.type === 'submitting'" class="pi pi-send mr-2" />
+                      <i v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="pi pi-cog pi-spin mr-2" />
+
+                      <span v-if="asyncReportGeneration.workflowState.value.type === 'submitting'">
+                        Submitting Request
+                      </span>
+                      <span v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'">
+                        Processing Report
+                      </span>
+                    </h4>
+
+                    <div class="report-viewer__progress-percentage">
+                      {{ progressPercentage }}%
+                    </div>
+                  </div>
+
+                  <!-- Large Progress Bar -->
+                  <div class="report-viewer__progress-bar-container">
+                    <ProgressBar
+                      :value="progressPercentage"
+                      class="report-viewer__progress-bar-large"
+                      :show-value="false"
+                    />
+                  </div>
+
+                  <!-- Progress Message -->
+                  <div class="report-viewer__progress-message">
+                    {{ asyncReportGeneration.progress.message }}
+                  </div>
+
+                  <!-- Time Information -->
+                  <div class="report-viewer__time-info">
+                    <div class="flex justify-content-between align-items-center">
+                      <span class="text-sm text-gray-600">
+                        <i class="pi pi-clock mr-1" />
+                        Elapsed: {{ formattedElapsedTime }}
+                      </span>
+                      <span v-if="formattedEstimatedTime" class="text-sm text-gray-500">
+                        <i class="pi pi-hourglass mr-1" />
+                        ETA: {{ formattedEstimatedTime }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Polling Details -->
+                  <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="report-viewer__polling-details">
+                    <div class="flex justify-content-between align-items-center text-xs text-gray-500">
+                      <span>
+                        <i class="pi pi-refresh mr-1" />
+                        Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
+                      </span>
+                      <span>
+                        <i class="pi pi-server mr-1" />
+                        Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="report-viewer__progress-actions">
+                    <Button
+                      v-if="asyncReportGeneration.canCancel.value"
+                      label="Cancel Generation"
+                      icon="pi pi-times"
+                      class="p-button-danger p-button-outlined w-full"
+                      @click="cancelGeneration"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ ERROR STATE -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
+              <div class="report-viewer__error-container">
+                <div class="report-viewer__error-icon">
+                  <i class="pi pi-exclamation-triangle" />
+                </div>
+                <h4 class="report-viewer__error-title">
+                  Generation Failed
+                </h4>
+                <p class="report-viewer__error-message">
+                  {{ asyncReportGeneration.workflowState.value.error }}
+                </p>
+
+                <!-- Error Details -->
+                <div v-if="asyncReportGeneration.workflowState.value.serverRequestId" class="report-viewer__error-details">
+                  <small class="text-gray-500">
+                    Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
+                  </small>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__error-actions">
+                  <Button
+                    v-if="asyncReportGeneration.canRetry.value"
+                    label="Retry Generation"
+                    icon="pi pi-refresh"
+                    class="p-button-primary w-full mb-2"
+                    @click="retryGeneration"
+                  />
+                  <Button
+                    label="Reset Form"
+                    icon="pi pi-undo"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="clearForm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ CANCELLED STATE -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'cancelled'" class="report-viewer__cancelled-section">
+              <div class="report-viewer__cancelled-container">
+                <div class="report-viewer__cancelled-icon">
+                  <i class="pi pi-ban" />
+                </div>
+                <h4 class="report-viewer__cancelled-title">
+                  Generation Cancelled
+                </h4>
+                <p class="report-viewer__cancelled-message">
+                  Report generation was cancelled by user
+                </p>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__cancelled-actions">
+                  <Button
+                    label="Generate Again"
+                    icon="pi pi-play"
+                    class="p-button-primary w-full mb-2"
+                    @click="executeReport"
+                  />
+                  <Button
+                    label="Reset Form"
+                    icon="pi pi-undo"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="clearForm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ SUCCESS STATE WITH PDF -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed' && item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
+              <!-- Success Banner -->
+              <div class="report-viewer__success-banner">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-check-circle text-green-500" />
+                  <span class="font-semibold text-green-700">Report Generated Successfully!</span>
+                </div>
+                <div class="flex gap-2">
+                  <Button
+                    icon="pi pi-download"
+                    label="Download"
+                    class="p-button-sm p-button-outlined"
+                    @click="downloadCurrentReport"
+                  />
+                  <Button
+                    icon="pi pi-external-link"
+                    label="New Tab"
+                    class="p-button-sm p-button-outlined"
+                    @click="openInNewTab"
+                  />
+                </div>
+              </div>
+
+              <!-- PDF Viewer -->
               <object
-                :data="pdfUrl"
+                :data="asyncReportGeneration.pdfUrl.value"
                 type="application/pdf"
                 class="report-viewer__pdf-object"
               >
@@ -1658,7 +2192,58 @@ const isShareSupported = computed(() => {
               </object>
             </div>
 
-            <!-- Enhanced Empty State for Preview -->
+            <!-- ✅ SUCCESS STATE WITH NON-PDF -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__success-section">
+              <div class="report-viewer__success-container">
+                <div class="report-viewer__success-icon">
+                  <i class="pi pi-check-circle" />
+                </div>
+                <h4 class="report-viewer__success-title">
+                  Report Generated Successfully!
+                </h4>
+                <p class="report-viewer__success-message">
+                  Your {{ item.reportFormatType?.name }} report has been downloaded automatically
+                </p>
+
+                <!-- File Info -->
+                <div v-if="asyncReportGeneration.workflowState.value.report" class="report-viewer__file-info">
+                  <div class="report-viewer__file-details">
+                    <div class="flex align-items-center gap-2 mb-2">
+                      <i :class="getFormatIcon(item.reportFormatType?.id)" />
+                      <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__success-actions">
+                  <Button
+                    label="Generate Another Report"
+                    icon="pi pi-plus"
+                    class="p-button-primary w-full mb-2"
+                    @click="clearForm"
+                  />
+                  <Button
+                    label="Download Again"
+                    icon="pi pi-download"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="() => {
+                      const report = asyncReportGeneration.workflowState.value.report;
+                      if (report) {
+                        const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
+                        const url = URL.createObjectURL(blob);
+                        asyncReportGeneration.downloadFile(url, report.fileName);
+                      }
+                    }"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ IDLE/EMPTY STATE -->
             <div v-else class="report-viewer__preview-empty">
               <div class="report-viewer__preview-empty-content">
                 <div class="report-viewer__preview-empty-icon">
@@ -1674,7 +2259,7 @@ const isShareSupported = computed(() => {
                   }}
                 </p>
 
-                <!-- Preview features info -->
+                <!-- Preview features info for PDF -->
                 <div v-if="item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-features">
                   <h5 class="report-viewer__preview-features-title">
                     Preview Features:
@@ -1687,6 +2272,7 @@ const isShareSupported = computed(() => {
                   </ul>
                 </div>
 
+                <!-- Status info -->
                 <div v-if="!item.jasperReportCode" class="report-viewer__preview-empty-info">
                   <i class="pi pi-info-circle" />
                   <span>Select a report and configure parameters to generate preview</span>
