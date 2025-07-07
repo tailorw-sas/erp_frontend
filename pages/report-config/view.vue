@@ -1962,7 +1962,7 @@ const isShareSupported = computed(() => {
                   {{ asyncReportGeneration.pdfUrl.value ? 'Your generated report' : 'Generated reports will appear here' }}
                 </p>
               </div>
-              <!-- ✅ NEW: Enhanced status indicator -->
+              <!-- ✅ Status indicator -->
               <div v-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
                 <Tag severity="success" icon="pi pi-check">
                   Report Generated
@@ -1984,8 +1984,194 @@ const isShareSupported = computed(() => {
 
           <!-- Enhanced Viewer Content -->
           <div class="report-viewer__preview-content">
-            <!-- PDF Display with enhanced features -->
-            <div v-if="item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
+            <!-- ✅ PROGRESS SECTION - Always visible when active -->
+            <div v-if="asyncReportGeneration.isActive.value" class="report-viewer__progress-section">
+              <div class="report-viewer__progress-container">
+                <!-- Process Steps -->
+                <div class="report-viewer__steps-container">
+                  <Steps
+                    :model="[
+                      { label: 'Submit', icon: 'pi pi-send' },
+                      { label: 'Processing', icon: 'pi pi-cog' },
+                      { label: 'Complete', icon: 'pi pi-check' },
+                    ]"
+                    :active-step="asyncReportGeneration.progress.currentStep"
+                    readonly
+                    class="report-viewer__steps"
+                  />
+                </div>
+
+                <!-- Progress Status -->
+                <div class="report-viewer__progress-status">
+                  <div class="flex align-items-center justify-content-between mb-2">
+                    <h4 class="report-viewer__progress-title">
+                      <i v-if="asyncReportGeneration.workflowState.value.type === 'submitting'" class="pi pi-send mr-2" />
+                      <i v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="pi pi-cog pi-spin mr-2" />
+
+                      <span v-if="asyncReportGeneration.workflowState.value.type === 'submitting'">
+                        Submitting Request
+                      </span>
+                      <span v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'">
+                        Processing Report
+                      </span>
+                    </h4>
+
+                    <div class="report-viewer__progress-percentage">
+                      {{ progressPercentage }}%
+                    </div>
+                  </div>
+
+                  <!-- Large Progress Bar -->
+                  <div class="report-viewer__progress-bar-container">
+                    <ProgressBar
+                      :value="progressPercentage"
+                      class="report-viewer__progress-bar-large"
+                      :show-value="false"
+                    />
+                  </div>
+
+                  <!-- Progress Message -->
+                  <div class="report-viewer__progress-message">
+                    {{ asyncReportGeneration.progress.message }}
+                  </div>
+
+                  <!-- Time Information -->
+                  <div class="report-viewer__time-info">
+                    <div class="flex justify-content-between align-items-center">
+                      <span class="text-sm text-gray-600">
+                        <i class="pi pi-clock mr-1" />
+                        Elapsed: {{ formattedElapsedTime }}
+                      </span>
+                      <span v-if="formattedEstimatedTime" class="text-sm text-gray-500">
+                        <i class="pi pi-hourglass mr-1" />
+                        ETA: {{ formattedEstimatedTime }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Polling Details -->
+                  <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="report-viewer__polling-details">
+                    <div class="flex justify-content-between align-items-center text-xs text-gray-500">
+                      <span>
+                        <i class="pi pi-refresh mr-1" />
+                        Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
+                      </span>
+                      <span>
+                        <i class="pi pi-server mr-1" />
+                        Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="report-viewer__progress-actions">
+                    <Button
+                      v-if="asyncReportGeneration.canCancel.value"
+                      label="Cancel Generation"
+                      icon="pi pi-times"
+                      class="p-button-danger p-button-outlined w-full"
+                      @click="cancelGeneration"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ ERROR STATE -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
+              <div class="report-viewer__error-container">
+                <div class="report-viewer__error-icon">
+                  <i class="pi pi-exclamation-triangle" />
+                </div>
+                <h4 class="report-viewer__error-title">
+                  Generation Failed
+                </h4>
+                <p class="report-viewer__error-message">
+                  {{ asyncReportGeneration.workflowState.value.error }}
+                </p>
+
+                <!-- Error Details -->
+                <div v-if="asyncReportGeneration.workflowState.value.serverRequestId" class="report-viewer__error-details">
+                  <small class="text-gray-500">
+                    Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
+                  </small>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__error-actions">
+                  <Button
+                    v-if="asyncReportGeneration.canRetry.value"
+                    label="Retry Generation"
+                    icon="pi pi-refresh"
+                    class="p-button-primary w-full mb-2"
+                    @click="retryGeneration"
+                  />
+                  <Button
+                    label="Reset Form"
+                    icon="pi pi-undo"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="clearForm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ CANCELLED STATE -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'cancelled'" class="report-viewer__cancelled-section">
+              <div class="report-viewer__cancelled-container">
+                <div class="report-viewer__cancelled-icon">
+                  <i class="pi pi-ban" />
+                </div>
+                <h4 class="report-viewer__cancelled-title">
+                  Generation Cancelled
+                </h4>
+                <p class="report-viewer__cancelled-message">
+                  Report generation was cancelled by user
+                </p>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__cancelled-actions">
+                  <Button
+                    label="Generate Again"
+                    icon="pi pi-play"
+                    class="p-button-primary w-full mb-2"
+                    @click="executeReport"
+                  />
+                  <Button
+                    label="Reset Form"
+                    icon="pi pi-undo"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="clearForm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ SUCCESS STATE WITH PDF -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed' && item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
+              <!-- Success Banner -->
+              <div class="report-viewer__success-banner">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-check-circle text-green-500" />
+                  <span class="font-semibold text-green-700">Report Generated Successfully!</span>
+                </div>
+                <div class="flex gap-2">
+                  <Button
+                    icon="pi pi-download"
+                    label="Download"
+                    class="p-button-sm p-button-outlined"
+                    @click="downloadCurrentReport"
+                  />
+                  <Button
+                    icon="pi pi-external-link"
+                    label="New Tab"
+                    class="p-button-sm p-button-outlined"
+                    @click="openInNewTab"
+                  />
+                </div>
+              </div>
+
+              <!-- PDF Viewer -->
               <object
                 :data="asyncReportGeneration.pdfUrl.value"
                 type="application/pdf"
@@ -2006,31 +2192,58 @@ const isShareSupported = computed(() => {
               </object>
             </div>
 
-            <!-- ✅ NEW: Loading state in preview -->
-            <div v-else-if="asyncReportGeneration.isActive.value && item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-loading">
-              <div class="report-viewer__preview-loading-content">
-                <ProgressSpinner style="width: 48px; height: 48px" />
-                <h4 class="report-viewer__preview-loading-title">
-                  Generating PDF Preview
-                </h4>
-                <p class="report-viewer__preview-loading-text">
-                  {{ asyncReportGeneration.progress.message }}
-                </p>
-                <div class="report-viewer__preview-progress">
-                  <ProgressBar
-                    :value="progressPercentage"
-                    class="w-full"
-                    :show-value="true"
-                  />
+            <!-- ✅ SUCCESS STATE WITH NON-PDF -->
+            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__success-section">
+              <div class="report-viewer__success-container">
+                <div class="report-viewer__success-icon">
+                  <i class="pi pi-check-circle" />
                 </div>
-                <div class="flex gap-4 text-sm text-gray-600 mt-2">
-                  <span>Elapsed: {{ formattedElapsedTime }}</span>
-                  <span v-if="formattedEstimatedTime">ETA: {{ formattedEstimatedTime }}</span>
+                <h4 class="report-viewer__success-title">
+                  Report Generated Successfully!
+                </h4>
+                <p class="report-viewer__success-message">
+                  Your {{ item.reportFormatType?.name }} report has been downloaded automatically
+                </p>
+
+                <!-- File Info -->
+                <div v-if="asyncReportGeneration.workflowState.value.report" class="report-viewer__file-info">
+                  <div class="report-viewer__file-details">
+                    <div class="flex align-items-center gap-2 mb-2">
+                      <i :class="getFormatIcon(item.reportFormatType?.id)" />
+                      <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="report-viewer__success-actions">
+                  <Button
+                    label="Generate Another Report"
+                    icon="pi pi-plus"
+                    class="p-button-primary w-full mb-2"
+                    @click="clearForm"
+                  />
+                  <Button
+                    label="Download Again"
+                    icon="pi pi-download"
+                    class="p-button-secondary p-button-outlined w-full"
+                    @click="() => {
+                      const report = asyncReportGeneration.workflowState.value.report;
+                      if (report) {
+                        const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
+                        const url = URL.createObjectURL(blob);
+                        asyncReportGeneration.downloadFile(url, report.fileName);
+                      }
+                    }"
+                  />
                 </div>
               </div>
             </div>
 
-            <!-- Enhanced Empty State for Preview -->
+            <!-- ✅ IDLE/EMPTY STATE -->
             <div v-else class="report-viewer__preview-empty">
               <div class="report-viewer__preview-empty-content">
                 <div class="report-viewer__preview-empty-icon">
@@ -2046,7 +2259,7 @@ const isShareSupported = computed(() => {
                   }}
                 </p>
 
-                <!-- Preview features info -->
+                <!-- Preview features info for PDF -->
                 <div v-if="item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-features">
                   <h5 class="report-viewer__preview-features-title">
                     Preview Features:
@@ -2059,18 +2272,10 @@ const isShareSupported = computed(() => {
                   </ul>
                 </div>
 
-                <!-- ✅ NEW: Enhanced empty state info -->
+                <!-- Status info -->
                 <div v-if="!item.jasperReportCode" class="report-viewer__preview-empty-info">
                   <i class="pi pi-info-circle" />
                   <span>Select a report and configure parameters to generate preview</span>
-                </div>
-                <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__preview-empty-info">
-                  <i class="pi pi-exclamation-triangle text-red-500" />
-                  <span>Report generation failed. Please check the status panel and try again.</span>
-                </div>
-                <div v-else-if="asyncReportGeneration.workflowState.value.type === 'cancelled'" class="report-viewer__preview-empty-info">
-                  <i class="pi pi-ban text-orange-500" />
-                  <span>Report generation was cancelled.</span>
                 </div>
               </div>
             </div>
