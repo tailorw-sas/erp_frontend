@@ -22,7 +22,6 @@ public class ReportContentProviderFactory {
     @Value("${report.invoice.service}")
     private String invoiceServiceURL;
     public ReportContentProviderFactory(RestTemplate restTemplate, IReportGenerator reportGenerator,
-                                        IManageAttachmentTypeService attachmentTypeService,
                                         IMasterPaymentAttachmentService masterPaymentAttachmentService,
                                         IManageAttachmentTypeService manageAttachmentTypeService) {
         this.restTemplate = restTemplate;
