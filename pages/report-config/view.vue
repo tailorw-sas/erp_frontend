@@ -2149,28 +2149,6 @@ const isShareSupported = computed(() => {
 
             <!-- ✅ SUCCESS STATE WITH PDF -->
             <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed' && item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
-              <!-- Success Banner -->
-              <div class="report-viewer__success-banner">
-                <div class="flex align-items-center gap-2">
-                  <i class="pi pi-check-circle text-green-500" />
-                  <span class="font-semibold text-green-700">Report Generated Successfully!</span>
-                </div>
-                <div class="flex gap-2">
-                  <Button
-                    icon="pi pi-download"
-                    label="Download"
-                    class="p-button-sm p-button-outlined"
-                    @click="downloadCurrentReport"
-                  />
-                  <Button
-                    icon="pi pi-external-link"
-                    label="New Tab"
-                    class="p-button-sm p-button-outlined"
-                    @click="openInNewTab"
-                  />
-                </div>
-              </div>
-
               <!-- PDF Viewer -->
               <object
                 :data="asyncReportGeneration.pdfUrl.value"
