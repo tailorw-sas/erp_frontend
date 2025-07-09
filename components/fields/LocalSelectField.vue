@@ -34,6 +34,7 @@ const props = withDefaults(defineProps<LocalSelectFieldProps>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: any]
+  'update:value': [value: any] // 🎯 AGREGAR ESTE EMIT IMPORTANTE
   'blur': []
   'focus': []
   'clear': []
@@ -42,17 +43,27 @@ const emit = defineEmits<{
 
 const internalValue = ref(props.value)
 
-// Watch del valor prop para sincronizar
+// 🔄 WATCH BIDIRECCIONAL - CRÍTICO PARA SINCRONIZACIÓN
 watch(() => props.value, (newValue) => {
-  internalValue.value = newValue
+  if (newValue !== internalValue.value) {
+    Logger.log('🔄 Props value changed:', { from: internalValue.value, to: newValue })
+    internalValue.value = newValue
+  }
 }, { immediate: true })
 
-// Computed para el valor actual (compatible con BaseField)
-const currentValue = computed({
-  get: () => internalValue.value,
-  set: (newValue: any) => {
-    internalValue.value = newValue
-    handleValueUpdate(newValue)
+// 🔄 WATCH DEL VALOR INTERNO - SINCRONIZAR HACIA ARRIBA
+watch(internalValue, (newValue) => {
+  if (newValue !== props.value) {
+    Logger.log('🔄 Internal value changed:', { from: props.value, to: newValue })
+    // Emitir TODOS los eventos necesarios
+    emit('update:modelValue', newValue)
+    emit('update:value', newValue)
+    emit('change', newValue)
+
+    // Llamar onUpdate si existe
+    if (props.onUpdate) {
+      props.onUpdate(newValue)
+    }
   }
 })
 
@@ -81,7 +92,9 @@ function normalizeOptions(options: any[]): Array<{ name: string, value: any }> {
 }
 
 const normalizedOptions = computed(() => {
-  return normalizeOptions(props.field?.options || [])
+  const options = normalizeOptions(props.field?.options || [])
+  Logger.log('🎯 Normalized options:', options)
+  return options
 })
 
 const isDisabled = computed(() =>
@@ -105,23 +118,19 @@ const placeholder = computed(() => {
 const componentClasses = computed(() => {
   const classes = ['select-field__component', 'local-select-dropdown']
 
-  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES - SOLO MARCAR COMO INVÁLIDO SI HAY ERRORES REALES
   try {
     let hasRealError = false
 
     if (props.error) {
       if (Array.isArray(props.error)) {
-        // Solo si hay errores en el array y no está vacío
         hasRealError = props.error.length > 0 && props.error.some(error =>
           error && (typeof error === 'string' ? (error as string).trim() : true)
         )
       }
       else if (typeof props.error === 'string') {
-        // Solo si el string no está vacío
         hasRealError = (props.error as string).trim().length > 0
       }
       else if (props.error && typeof props.error === 'object') {
-        // Solo si es un objeto de error válido
         hasRealError = true
       }
     }
@@ -131,8 +140,7 @@ const componentClasses = computed(() => {
     }
   }
   catch (error) {
-    console.warn('🔍 [COMPONENT CLASSES] Error handling props.error:', error)
-    // No añadir clase de error si hay problemas procesando
+    Logger.warn('🔍 [COMPONENT CLASSES] Error handling props.error:', error)
   }
 
   if (props.field?.ui?.className) {
@@ -143,7 +151,7 @@ const componentClasses = computed(() => {
       classes.push(...uiClasses)
     }
     catch (error) {
-      console.warn('🔍 [COMPONENT CLASSES] Error handling ui.className:', error)
+      Logger.warn('🔍 [COMPONENT CLASSES] Error handling ui.className:', error)
     }
   }
 
@@ -155,7 +163,6 @@ const fieldStyle = computed(() => props.field?.ui?.style || {})
 
 // Computed para propiedades de accesibilidad
 const accessibilityProps = computed(() => {
-  // 🎯 MANEJO MÁS ESTRICTO DE ERRORES PARA ARIA
   let hasRealError = false
   try {
     if (props.error) {
@@ -173,7 +180,7 @@ const accessibilityProps = computed(() => {
     }
   }
   catch (error) {
-    console.warn('🔍 [ACCESSIBILITY PROPS] Error handling props.error:', error)
+    Logger.warn('🔍 [ACCESSIBILITY PROPS] Error handling props.error:', error)
     hasRealError = false
   }
 
@@ -185,10 +192,18 @@ const accessibilityProps = computed(() => {
   }
 })
 
-// Computed para el BaseField props
+// 🎯 FUNCIÓN PARA MANEJAR CAMBIOS DEL DROPDOWN
+function handleDropdownChange(newValue: any) {
+  Logger.log('🎯 Dropdown changed to:', newValue)
+  // Actualizar directamente el valor interno
+  // El watch se encargará de emitir los eventos
+  internalValue.value = newValue
+}
+
+// Computed para el BaseField props - SIN onUpdate para evitar conflictos
 const baseFieldProps = computed(() => ({
   field: props.field,
-  value: props.value ?? null,
+  value: internalValue.value, // 🎯 USAR EL VALOR INTERNO
   error: props.error,
   loading: props.loading,
   disabled: props.disabled,
@@ -204,22 +219,9 @@ const baseFieldProps = computed(() => ({
   variant: props.variant,
   class: props.class,
   config: props.config,
-  style: fieldStyle.value,
-  onUpdate: handleValueUpdate // Direct reference, no conflicting onUpdate
+  style: fieldStyle.value
+  // 🎯 NO INCLUIR onUpdate aquí para evitar conflictos
 }))
-
-// Event handlers compatibles con BaseField
-function handleValueUpdate(value: any) {
-  if (props.onUpdate) {
-    props.onUpdate(value)
-  }
-
-  if (value !== props.value) {
-    emit('update:modelValue', value)
-  }
-
-  emit('change', value)
-}
 
 function _handleBlur() {
   emit('blur')
@@ -230,24 +232,9 @@ function _handleFocus() {
 }
 
 function handleClear() {
-  const oldValue = internalValue.value
+  Logger.log('🧹 Clearing value')
   internalValue.value = null
-
-  if (oldValue !== null) {
-    handleValueUpdate(null)
-  }
-
   emit('clear')
-}
-
-function handleChange(event: any) {
-  const newValue = event?.value !== undefined ? event.value : event
-  currentValue.value = newValue
-}
-
-function handleFilter(_event: any) {
-  // Filter functionality removed - using console for debugging if needed
-  // console.log('Filter:', event.value)
 }
 
 // Función para obtener el display label
@@ -260,12 +247,26 @@ function getDisplayLabel(value: any): string {
   return option?.name || String(value)
 }
 
+// 🔍 FUNCIÓN DE DEBUG PARA VERIFICAR EL VALOR ACTUAL
+function getCurrentValue() {
+  Logger.log('🔍 Current value check:', {
+    internalValue: internalValue.value,
+    propsValue: props.value,
+    displayLabel: getDisplayLabel(internalValue.value)
+  })
+  return internalValue.value
+}
+
 // Expose functions for BaseField compatibility
 defineExpose({
-  focus: () => {}, // TODO: Implementar focus en el dropdown
-  blur: () => {}, // TODO: Implementar blur en el dropdown
+  focus: () => {},
+  blur: () => {},
   clear: handleClear,
-  getDisplayLabel
+  getDisplayLabel,
+  getCurrentValue, // 🔍 EXPONER PARA DEBUG
+  // 🎯 EXPONER EL VALOR INTERNO PARA VERIFICACIÓN
+  get value() { return internalValue.value },
+  get internalValue() { return internalValue.value }
 })
 </script>
 
@@ -275,10 +276,10 @@ defineExpose({
     v-if="field?.dataType === 'localselect'"
     v-bind="baseFieldProps"
   >
-    <template #input="{ fieldId, onUpdate, onBlur, onFocus }">
+    <template #input="{ fieldId }">
       <Dropdown
         :id="fieldId"
-        v-model="currentValue"
+        v-model="internalValue"
         :options="normalizedOptions"
         option-label="name"
         option-value="value"
@@ -286,17 +287,15 @@ defineExpose({
         :class="componentClasses"
         :style="fieldStyle"
         :filter="normalizedOptions.length > 10"
-        :show-clear="false"
+        :show-clear="clearable && !isDisabled && internalValue !== null && internalValue !== undefined"
         :disabled="isDisabled"
         :loading="props.loading || false"
         filter-placeholder="Search..."
         v-bind="accessibilityProps"
-        @update:model-value="onUpdate"
-        @blur="onBlur"
-        @focus="onFocus"
-        @change="handleChange"
+        @update:model-value="handleDropdownChange"
+        @blur="_handleBlur"
+        @focus="_handleFocus"
         @clear="handleClear"
-        @filter="handleFilter"
       >
         <!-- Option Template -->
         <template #option="{ option }">
@@ -368,6 +367,14 @@ defineExpose({
       <slot name="clear-icon" />
     </template>
   </BaseField>
+
+  <!-- 🔍 DEBUG: MOSTRAR VALOR ACTUAL (REMOVER EN PRODUCCIÓN) -->
+  <div v-if="false" style="margin-top: 8px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
+    <strong>Debug Info:</strong><br>
+    Internal Value: {{ internalValue }}<br>
+    Props Value: {{ props.value }}<br>
+    Display Label: {{ getDisplayLabel(internalValue) }}
+  </div>
 </template>
 
 <style scoped>
