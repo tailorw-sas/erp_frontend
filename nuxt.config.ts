@@ -23,24 +23,31 @@ export default defineNuxtConfig({
     }
   },
 
+  // ✅ FIX: Configuración de auth corregida
   auth: {
     globalAppMiddleware: {
       isEnabled: true
     },
-    baseURL: process.env.AUTH_ORIGIN || 'http://localhost:3000',
-    // Removido 'originEnvKey' que no existe en las opciones del módulo
-    // Si necesitas configurar el origin, hazlo en runtimeConfig.auth.baseURL
+    // ✅ Usar la variable correcta que existe en K8s
+    baseURL: process.env.AUTH_ORIGIN,
+
   },
 
   runtimeConfig: {
     auth: {
-      secret: process.env.NUXT_AUTH_SECRET || 'dev-secret',
-      baseURL: process.env.NUXT_AUTH_URL || 'http://localhost:3000/api/auth'
+      secret: process.env.NUXT_AUTH_SECRET,
+      baseURL: `${process.env.AUTH_ORIGIN}/api/auth`
     },
     recaptcha: {
       secretKey: process.env.NUXT_RECAPTCHA_SECRET_KEY || '',
     },
+
+    // ✅ Variables públicas (accesibles en cliente)
     public: {
+      // ✅ CRÍTICO: URL base del sitio
+      siteUrl: process.env.AUTH_ORIGIN,
+      authUrl: `${process.env.AUTH_ORIGIN}/api/auth`,
+
       recaptcha: {
         siteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || ''
       },
@@ -50,7 +57,12 @@ export default defineNuxtConfig({
     }
   },
 
-  // Agregar configuración de appConfig para reCAPTCHA
+  // ✅ Configuración de Nitro para producción
+  nitro: {
+    host: process.env.NITRO_HOST || '0.0.0.0',
+    port: Number.parseInt(process.env.NITRO_PORT || '3000'),
+  },
+
   appConfig: {
     recaptcha: {
       siteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || ''
@@ -58,7 +70,7 @@ export default defineNuxtConfig({
   },
 
   plugins: [
-    { src: '~/plugins/recaptcha.ts' }, // Re-habilitado con configuración correcta
+    { src: '~/plugins/recaptcha.ts' },
     { src: '~/plugins/api.ts' }
   ],
 
@@ -68,5 +80,4 @@ export default defineNuxtConfig({
       pathPrefix: false,
     },
   ],
-  // Otras configuraciones de Nitro pueden ir aquí
 })
