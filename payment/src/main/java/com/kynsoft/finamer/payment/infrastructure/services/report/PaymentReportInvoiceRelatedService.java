@@ -1,76 +1,50 @@
 package com.kynsoft.finamer.payment.infrastructure.services.report;
 
-import com.kynsof.share.core.infrastructure.util.PDFUtils;
-import com.kynsoft.finamer.payment.domain.dto.ManageBookingDto;
-import com.kynsoft.finamer.payment.domain.dto.ManageInvoiceDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDetailDto;
-import com.kynsoft.finamer.payment.domain.dto.PaymentDto;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentContentProvider;
-import com.kynsoft.finamer.payment.domain.services.IPaymentDetailService;
-import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
-import com.kynsoft.finamer.payment.domain.services.IPaymentService;
+import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentReportType;
+import com.kynsoft.finamer.payment.infrastructure.services.report.base.AbstractBasePaymentReportService;
+import com.kynsoft.finamer.payment.infrastructure.services.report.config.PaymentReportConfiguration;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.AbstractReportContentProvider;
 import com.kynsoft.finamer.payment.infrastructure.services.report.content.ReportContentProviderFactory;
-import org.springframework.beans.factory.annotation.Value;
+import com.kynsoft.finamer.payment.infrastructure.services.report.data.PaymentDataExtractorService;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service(PaymentReportInvoiceRelatedService.BEAN_ID)
-public class PaymentReportInvoiceRelatedService implements IPaymentReport {
-    public static final String BEAN_ID = "INVOICE_RELATED";
-    private final IPaymentService paymentService;
-    @Value("${report.code.invoice.booking:inv}")
-    private String reportCode;
+public class PaymentReportInvoiceRelatedService extends AbstractBasePaymentReportService {
 
-    private final IPaymentDetailService paymentDetailService;
+    public static final String BEAN_ID = "INVOICE_RELATED";
+
     private final ReportContentProviderFactory reportContentProviderFactory;
 
-    public PaymentReportInvoiceRelatedService(IPaymentService paymentService, IPaymentDetailService paymentDetailService,
+    public PaymentReportInvoiceRelatedService(PaymentDataExtractorService dataExtractorService,
+                                              PaymentReportConfiguration configuration,
                                               ReportContentProviderFactory reportContentProviderFactory) {
-        this.paymentService = paymentService;
-        this.paymentDetailService = paymentDetailService;
+        super(dataExtractorService, configuration);
         this.reportContentProviderFactory = reportContentProviderFactory;
     }
 
     @Override
-    public Optional<byte[]> generateReport(UUID paymentId) {
-        try {
-            PaymentDto paymentDto = paymentService.findById(paymentId);
-            List<InputStream> contentToMerge = new LinkedList<>();
-            this.getInvoiceRelate(paymentDto).forEach(invoiceId -> {
-                Optional<byte[]> invoiceRelateReportContent = this.getInvoiceRelateReportContent(invoiceId.toString());
-                invoiceRelateReportContent.ifPresent(content -> contentToMerge.add(new ByteArrayInputStream(content)));
-            });
-            if (!contentToMerge.isEmpty()) {
-                return Optional.of(PDFUtils.mergePDFtoByte(contentToMerge));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    protected List<byte[]> generateReportContents(UUID paymentId) {
+        String commaSeparatedInvoiceIds = dataExtractorService.getCommaSeparatedInvoiceIds(paymentId);
+
+        if (commaSeparatedInvoiceIds.isEmpty()) {
+            logger.debug("No related invoices found for payment: {}", paymentId);
+            return List.of();
         }
-        return Optional.empty();
 
-    }
-
-    private Optional<byte[]> getInvoiceRelateReportContent(String invoiceId) {
         AbstractReportContentProvider contentProvider = reportContentProviderFactory
                 .getReportContentProvider(EPaymentContentProvider.INVOICE_REPORT_CONTENT);
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("invoiceId", invoiceId);
-        return contentProvider.getContent(parameters,reportCode);
-    }
 
-    private List<UUID> getInvoiceRelate(PaymentDto paymentDto) {
-      List<PaymentDetailDto> paymentDetailDtos =  paymentDetailService.findByPaymentId(paymentDto.getId());
-      List<ManageBookingDto> manageBookingDtos =paymentDetailDtos.stream()
-              .map(PaymentDetailDto::getManageBooking)
-              .filter(Objects::nonNull).toList();
-      List<ManageInvoiceDto> manageInvoiceDtos = manageBookingDtos.stream()
-              .map(ManageBookingDto::getInvoice)
-              .filter(Objects::nonNull).toList();
-      return manageInvoiceDtos.stream().map(ManageInvoiceDto::getId).toList();
-    }
+        String reportCode = configuration.getReportCode(EPaymentReportType.INVOICE_RELATED);
+        Optional<byte[]> content = contentProvider.getContent(
+                createParameters("idInvoice", commaSeparatedInvoiceIds),
+                reportCode
+        );
 
+        return filterValidContents(List.of(content));
+    }
 }

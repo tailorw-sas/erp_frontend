@@ -1,88 +1,98 @@
 package com.kynsoft.finamer.payment.application.query.report;
 
-import com.itextpdf.text.DocumentException;
 import com.kynsof.share.core.domain.bus.query.IQueryHandler;
-import com.kynsof.share.core.infrastructure.util.PDFUtils;
 import com.kynsoft.finamer.payment.domain.dtoEnum.EPaymentReportType;
 import com.kynsoft.finamer.payment.domain.services.IPaymentReport;
 import com.kynsoft.finamer.payment.infrastructure.services.factory.PaymentReportProviderFactory;
+import com.kynsoft.finamer.payment.infrastructure.services.report.orchestrator.PaymentReportOrchestratorService;
 import com.kynsoft.finamer.payment.infrastructure.services.report.util.ReportUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 @Component
 public class PaymentReportQueryHandler implements IQueryHandler<PaymentReportQuery, PaymentReportResponse> {
-    private final PaymentReportProviderFactory paymentReportProviderFactory;
 
-    public PaymentReportQueryHandler(PaymentReportProviderFactory paymentReportProviderFactory) {
+    private static final Logger logger = LoggerFactory.getLogger(PaymentReportQueryHandler.class);
+
+    private final PaymentReportProviderFactory paymentReportProviderFactory;
+    private final PaymentReportOrchestratorService orchestratorService;
+
+    public PaymentReportQueryHandler(PaymentReportProviderFactory paymentReportProviderFactory,
+                                     PaymentReportOrchestratorService orchestratorService) {
         this.paymentReportProviderFactory = paymentReportProviderFactory;
+        this.orchestratorService = orchestratorService;
     }
 
     @Override
     public PaymentReportResponse handle(PaymentReportQuery query) {
-        PaymentReportRequest paymentReportRequest = query.getPaymentReportRequest();
-        List<EPaymentReportType> invoiceReportTypes = getPaymentTypeFromRequest(paymentReportRequest);
-        Map<EPaymentReportType,IPaymentReport> services = getServiceByPaymentType(invoiceReportTypes);
         try {
-            Optional<ByteArrayOutputStream> reportContent = getReportContent(services, Arrays.asList(paymentReportRequest.getPaymentId()));
+            PaymentReportRequest request = query.getPaymentReportRequest();
+            logger.info("Processing payment report request for {} payments with {} report types",
+                    request.getPaymentId().length, request.getPaymentType().length);
+
+            List<EPaymentReportType> reportTypes = validateAndParseReportTypes(request.getPaymentType());
+            Map<EPaymentReportType, IPaymentReport> reportServices = getReportServices(reportTypes);
+
+            Optional<ByteArrayOutputStream> reportContent = orchestratorService.generateCombinedReport(
+                    reportServices,
+                    Arrays.asList(request.getPaymentId())
+            );
+
             if (reportContent.isPresent()) {
-                return ReportUtil.createPaymentReportResponse(reportContent.get().toByteArray(), paymentReportRequest.getPaymentId().length > 0 ?
-                        "invoicing-report.pdf" : paymentReportRequest.getPaymentId()[0] + ".pdf");
+                String fileName = generateFileName(request.getPaymentId());
+                return ReportUtil.createPaymentReportResponse(reportContent.get().toByteArray(), fileName);
             }
-        } catch (DocumentException | IOException e) {
-            throw new RuntimeException(e);
+
+            logger.warn("No report content generated for request");
+            return null;
+
+        } catch (Exception e) {
+            logger.error("Error handling payment report query", e);
+            throw new RuntimeException("Failed to generate payment report", e);
         }
-        return null;
     }
 
-    private List<EPaymentReportType> getPaymentTypeFromRequest(PaymentReportRequest paymentReportRequest){
-        return Arrays.stream(paymentReportRequest.getPaymentType())
-                .map(EPaymentReportType::valueOf)
-                .toList();
-    }
-    private Map<EPaymentReportType,IPaymentReport> getServiceByPaymentType(List<EPaymentReportType> types){
-        Map<EPaymentReportType,IPaymentReport> services = new HashMap<>();
-        for (EPaymentReportType type : types) {
-            services.put(type,paymentReportProviderFactory.getPaymentReportService(type));
+    private List<EPaymentReportType> validateAndParseReportTypes(String[] reportTypeNames) {
+        List<EPaymentReportType> reportTypes = new ArrayList<>();
+
+        for (String typeName : reportTypeNames) {
+            try {
+                EPaymentReportType reportType = EPaymentReportType.valueOf(typeName);
+                if (paymentReportProviderFactory.isServiceAvailable(reportType)) {
+                    reportTypes.add(reportType);
+                } else {
+                    logger.warn("Report service not available for type: {}", reportType);
+                }
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid report type: {}", typeName);
+            }
         }
+
+        if (reportTypes.isEmpty()) {
+            throw new IllegalArgumentException("No valid report types provided");
+        }
+
+        return reportTypes;
+    }
+
+    private Map<EPaymentReportType, IPaymentReport> getReportServices(List<EPaymentReportType> reportTypes) {
+        Map<EPaymentReportType, IPaymentReport> services = new EnumMap<>(EPaymentReportType.class);
+
+        for (EPaymentReportType type : reportTypes) {
+            services.put(type, paymentReportProviderFactory.getPaymentReportService(type));
+        }
+
         return services;
     }
 
-    private Optional<ByteArrayOutputStream> getReportContent(Map<EPaymentReportType,IPaymentReport> reportService, List<String> paymentIds) throws DocumentException, IOException {
-        Map<EPaymentReportType, Optional<byte[]>> reportContent = new HashMap<>();
-        List<byte[]> result= new ArrayList<>();
-        for (String paymentId : paymentIds) {
-            for (Map.Entry<EPaymentReportType, IPaymentReport> entry : reportService.entrySet()) {
-                reportContent.put(entry.getKey(),entry.getValue().generateReport(UUID.fromString(paymentId)));
-            }
-            List<Optional<byte[]>> orderedContent=getOrderReportContent(reportContent);
-            List<InputStream> finalContent=orderedContent.stream()
-                    .filter(Optional::isPresent)
-                    .map(content->new ByteArrayInputStream(content.get()))
-                    .map(InputStream.class::cast)
-                    .toList();
-            if (!finalContent.isEmpty()) {
-                result.add(PDFUtils.mergePDFtoByte(finalContent));
-            }
+    private String generateFileName(String[] paymentIds) {
+        if (paymentIds.length == 1) {
+            return paymentIds[0] + ".pdf";
         }
-        if (!result.isEmpty())
-            return Optional.of(PDFUtils.mergePDF(result.stream().map(ByteArrayInputStream::new).map(InputStream.class::cast).toList()));
-        return Optional.empty();
-    }
-
-
-    private List<Optional<byte[]>> getOrderReportContent(Map<EPaymentReportType,Optional<byte[]>> content){
-        List<Optional<byte[]>> orderedContent = new LinkedList<>();
-        orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_DETAILS,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.INVOICE_RELATED_SUPPORT,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.PAYMENT_SUPPORT,Optional.empty()));
-        orderedContent.add(content.getOrDefault(EPaymentReportType.ALL_SUPPORT,Optional.empty()));
-        return orderedContent;
+        return "payment-report-" + paymentIds.length + "-payments.pdf";
     }
 }
