@@ -5,6 +5,74 @@ import Calendar from 'primevue/calendar'
 import type { FormFieldProps, ValidationError } from '../../types/form'
 import BaseField from './BaseField.vue'
 
+const props = withDefaults(defineProps<DateFieldProps>(), {
+  readonly: false,
+  required: false,
+  clearable: true,
+  autoFocus: false,
+  showToday: false,
+  highlightWeekends: false,
+  dateFormat: 'yy-mm-dd',
+  hourFormat: '24',
+  showIcon: true,
+  iconDisplay: 'button',
+  icon: 'pi pi-calendar',
+  showButtonBar: false,
+  showWeek: false,
+  showOtherMonths: true,
+  selectOtherMonths: false,
+  inline: false,
+  numberOfMonths: 1,
+  view: 'date',
+  touchUI: false,
+  manualInput: true,
+  yearNavigator: false,
+  monthNavigator: false,
+  hideOnDateTimeSelect: true,
+  keepInvalid: false,
+  slotChar: '_'
+})
+
+const emit = defineEmits<{
+  'update:modelValue': [value: Date | string | null]
+  'update:value': [value: Date | string | null]
+  'blur': []
+  'focus': []
+  'clear': []
+  'dateSelect': [value: Date]
+  'todayClick': [value: Date]
+  'clearClick': []
+  'monthChange': [event: { month: number, year: number }]
+  'yearChange': [event: { month: number, year: number }]
+  'show': []
+  'hide': []
+}>()
+
+// 🛠️ FUNCIONES DE UTILIDAD (AGREGAR AQUÍ)
+function formatDateToLocalString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function createLocalDateFromString(dateString: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return null
+  }
+
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function isSameDay(date1: Date | null, date2: Date | null): boolean {
+  if (!date1 || !date2) { return date1 === date2 }
+
+  return date1.getFullYear() === date2.getFullYear()
+    && date1.getMonth() === date2.getMonth()
+    && date1.getDate() === date2.getDate()
+}
+
 interface CalendarRef {
   $el?: HTMLElement
   show?: () => void
@@ -66,49 +134,6 @@ interface DateFieldProps extends Omit<FormFieldProps<Date | string | null>, 'val
   highlightWeekends?: boolean
 }
 
-const props = withDefaults(defineProps<DateFieldProps>(), {
-  readonly: false,
-  required: false,
-  clearable: true,
-  autoFocus: false,
-  showToday: false,
-  highlightWeekends: false,
-  dateFormat: 'yy-mm-dd',
-  hourFormat: '24',
-  showIcon: true,
-  iconDisplay: 'button',
-  icon: 'pi pi-calendar',
-  showButtonBar: false,
-  showWeek: false,
-  showOtherMonths: true,
-  selectOtherMonths: false,
-  inline: false,
-  numberOfMonths: 1,
-  view: 'date',
-  touchUI: false,
-  manualInput: true,
-  yearNavigator: false,
-  monthNavigator: false,
-  hideOnDateTimeSelect: true,
-  keepInvalid: false,
-  slotChar: '_'
-})
-
-const emit = defineEmits<{
-  'update:modelValue': [value: Date | string | null]
-  'update:value': [value: Date | string | null]
-  'blur': []
-  'focus': []
-  'clear': []
-  'dateSelect': [value: Date]
-  'todayClick': [value: Date]
-  'clearClick': []
-  'monthChange': [event: { month: number, year: number }]
-  'yearChange': [event: { month: number, year: number }]
-  'show': []
-  'hide': []
-}>()
-
 const calendarRef = ref<CalendarRef | null>(null)
 const isMounted = ref(false)
 const internalValue = ref<Date | null>(null)
@@ -128,8 +153,14 @@ watch(() => props.value, (newValue) => {
   }
 
   if (typeof newValue === 'string') {
-    const date = new Date(newValue)
-    internalValue.value = Number.isNaN(date.getTime()) ? null : date
+    const date = createLocalDateFromString(newValue)
+    if (date) {
+      internalValue.value = date
+    }
+    else {
+      const fallbackDate = new Date(newValue)
+      internalValue.value = Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate
+    }
   }
   else if (newValue instanceof Date) {
     internalValue.value = newValue
@@ -352,7 +383,7 @@ function handleValueUpdate(value: Date | null) {
 
   if (value instanceof Date) {
     if (props.field?.type === 'date' && !isDateTime.value) {
-      processedValue = value.toISOString().split('T')[0]
+      processedValue = formatDateToLocalString(value)
     }
     else {
       processedValue = value
@@ -447,7 +478,7 @@ function formatDisplayValue(date: Date | null): string {
       })
     }
 
-    return date.toLocaleDateString()
+    return formatDateToLocalString(date)
   }
   catch (error) {
     console.warn('Date formatting error:', error)
@@ -505,7 +536,10 @@ defineExpose({
   getToday,
   navigateToToday,
   calendarRef,
-  formatDisplayValue
+  formatDisplayValue,
+  formatDateToLocalString,
+  createLocalDateFromString,
+  isSameDay
 })
 </script>
 
