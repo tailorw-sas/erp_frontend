@@ -12,6 +12,17 @@ export default defineNuxtConfig({
   typescript: {
     shim: false
   },
+
+  // ✅ CONFIGURACIÓN PARA SOLUCIONAR PROBLEMAS DE SSR
+  vite: {
+    optimizeDeps: {
+      include: ['uuid', 'picomatch']
+    },
+    ssr: {
+      noExternal: ['uuid']
+    }
+  },
+
   auth: {
     globalAppMiddleware: {
       isEnabled: true
@@ -20,6 +31,7 @@ export default defineNuxtConfig({
     // Removido 'originEnvKey' que no existe en las opciones del módulo
     // Si necesitas configurar el origin, hazlo en runtimeConfig.auth.baseURL
   },
+
   runtimeConfig: {
     auth: {
       secret: process.env.NUXT_AUTH_SECRET || 'dev-secret',
@@ -37,23 +49,24 @@ export default defineNuxtConfig({
       showDeleteConfirm: false
     }
   },
+
   // Agregar configuración de appConfig para reCAPTCHA
   appConfig: {
     recaptcha: {
       siteKey: process.env.NUXT_PUBLIC_RECAPTCHA_SITE_KEY || ''
     }
   },
+
   plugins: [
     { src: '~/plugins/recaptcha.ts' }, // Re-habilitado con configuración correcta
     { src: '~/plugins/api.ts' }
   ],
+
   components: [
     {
       path: '~/components',
       pathPrefix: false,
     },
   ],
-  nitro: {
-    // Otras configuraciones de Nitro pueden ir aquí
-  }
+  // Otras configuraciones de Nitro pueden ir aquí
 })

@@ -16,6 +16,10 @@ import Steps from 'primevue/steps'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
+import { useErrorBoundary } from '~/composables/useErrorBoundary'
+import ErrorAlert from '~/components/ErrorAlert.vue'
+import ReportSkeleton from '~/components/skeletons/ReportSkeleton.vue'
+import ProgressSkeleton from '~/components/skeletons/ProgressSkeleton.vue'
 
 // ✅ FIXED: Import createDynamicField as value, not type
 import type {
@@ -1191,7 +1195,7 @@ function useFieldBuilder() {
 const asyncReportGeneration = useAsyncReportGeneration(reportConfig)
 const { buildPayload, validateAllParameters } = useReportParameters()
 const { createFieldFromParameter: createField, mapBackendParameter: mapParameter } = useFieldBuilder()
-
+const errorBoundary = useErrorBoundary({ maxRetries: 3, showToast: true, autoRetryDelay: 2000 })
 // ========== COMPUTED PROPERTIES ==========
 const reportTitle = computed(() => {
   return currentReport.value?.name || 'No Report Selected'
@@ -1298,13 +1302,11 @@ async function loadReport(reportId: string) {
     currentReport.value = mappedReport
     await loadReportParameters(mappedReport.id, mappedReport.code, mappedReport)
   }
-  catch (error) {
-    Logger.error('🧪 [ERROR] loadReport failed:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Load Failed',
-      detail: 'Failed to load report information',
-      life: 5000
+  catch (error: any) {
+    // ✅ Use error boundary
+    errorBoundary.captureError('form', error, {
+      reportId,
+      action: 'loadReport'
     })
   }
   finally {
@@ -1372,13 +1374,13 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
     await nextTick()
     showForm.value = true
   }
-  catch (error) {
-    Logger.error('Error loading parameters:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Parameter Load Failed',
-      detail: 'Failed to load report parameters',
-      life: 5000
+  catch (error: any) {
+    // ✅ Use error boundary
+    errorBoundary.captureError('form', error, {
+      reportId: id,
+      reportCode: code,
+      parameterCount: reportData?.parameters?.length || 0,
+      action: 'loadReportParameters'
     })
   }
 }
@@ -1386,12 +1388,7 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 // ✅ NEW: Enhanced report execution with new async workflow
 async function executeReport() {
   if (!canGenerate.value) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Cannot Generate',
-      detail: 'Please ensure all required fields are filled',
-      life: 3000
-    })
+    const errorId = errorBoundary.captureError('form', new Error('Cannot generate report: required fields missing'))
     return
   }
 
@@ -1399,7 +1396,10 @@ async function executeReport() {
     // Validate parameters if report has them
     if (currentReport.value?.parameters) {
       const isValid = validateAllParameters(currentReport.value.parameters, item.value)
-      if (!isValid) { return }
+      if (!isValid) {
+        errorBoundary.captureError('form', new Error('Form validation failed'))
+        return
+      }
     }
 
     const payload = buildPayload(
@@ -1419,17 +1419,17 @@ async function executeReport() {
         severity: 'success',
         summary: 'Report Generated',
         detail: `Your ${item.value.reportFormatType.name} report is ready`,
-        life: 5000
+        life: 5000,
+        group: 'success'
       })
     }
   }
-  catch (error) {
-    Logger.error('❌ [EXECUTE] Error:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Generation Failed',
-      detail: 'Failed to generate report. Please try again.',
-      life: 5000
+  catch (error: any) {
+    // ✅ Use error boundary instead of direct logging
+    errorBoundary.captureError('generation', error, {
+      reportCode: item.value.jasperReportCode,
+      formatType: item.value.reportFormatType?.id,
+      parameterCount: currentReport.value?.parameters?.length || 0
     })
   }
 }
@@ -1653,618 +1653,640 @@ onUnmounted(() => {
 const isShareSupported = computed(() => {
   return typeof navigator !== 'undefined' && (navigator as any).share
 })
+
+// Error handling methods
+async function handleErrorRetry(context: string) {
+  const latestError = errorBoundary.getLatestError(context)
+  if (!latestError) { return }
+
+  try {
+    switch (context) {
+      case 'generation':
+        const payload = buildPayload(
+          item.value,
+          item.value.jasperReportCode,
+          item.value.reportFormatType
+        )
+        await errorBoundary.retryOperation(
+          latestError.id,
+          () => asyncReportGeneration.generateReportAsync(payload),
+          (result) => {
+            Logger.info('✅ [ERROR RETRY] Generation retry successful')
+          },
+          (error) => {
+            Logger.error('❌ [ERROR RETRY] Generation retry failed:', error)
+          }
+        )
+        break
+
+      case 'submission':
+        // Retry logic for submission
+        await errorBoundary.retryOperation(
+          latestError.id,
+          () => executeReport()
+        )
+        break
+
+      default:
+        Logger.warn(`No retry handler for context: ${context}`)
+    }
+  }
+  catch (error: any) {
+    Logger.error(`[ERROR RETRY] Failed to retry ${context}:`, error)
+  }
+}
+
+function handleErrorDismiss(context: string) {
+  const latestError = errorBoundary.getLatestError(context)
+  if (latestError) {
+    errorBoundary.clearError(latestError.id)
+  }
+}
+
+function handleErrorReport() {
+  // Implementar lógica para reportar errores
+  toast.add({
+    severity: 'info',
+    summary: 'Report Issue',
+    detail: 'Error report functionality will be implemented soon',
+    life: 3000
+  })
+}
+
+function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
+  const state = asyncReportGeneration.workflowState.value
+
+  if (state.type === 'submitting') { return 'submitting' }
+  if (state.type === 'polling') { return 'processing' }
+  if (asyncReportGeneration.progress.currentStep === 3) { return 'downloading' }
+
+  return 'processing'
+}
 </script>
 
 <template>
   <div class="report-viewer">
-    <!-- Enhanced Header Section -->
-    <div class="report-viewer__header">
-      <div class="report-viewer__header-content">
-        <div class="report-viewer__header-info">
-          <div class="report-viewer__header-icon">
-            <i class="pi pi-chart-bar" />
+    <!-- ✅ ERROR ALERTS - Mostrar en la parte superior -->
+    <ErrorAlert
+      v-if="errorBoundary.hasErrors('generation')"
+      :error="errorBoundary.getLatestError('generation')"
+      :is-retrying="errorBoundary.isRetrying.has(errorBoundary.getLatestError('generation')?.id)"
+      @retry="handleErrorRetry('generation')"
+      @dismiss="handleErrorDismiss('generation')"
+      @report="handleErrorReport"
+    />
+
+    <ErrorAlert
+      v-if="errorBoundary.hasErrors('form')"
+      :error="errorBoundary.getLatestError('form')"
+      severity="warn"
+      @dismiss="handleErrorDismiss('form')"
+    />
+
+    <ErrorAlert
+      v-if="errorBoundary.hasErrors('submission')"
+      :error="errorBoundary.getLatestError('submission')"
+      :is-retrying="errorBoundary.isRetrying.has(errorBoundary.getLatestError('submission')?.id)"
+      @retry="handleErrorRetry('submission')"
+      @dismiss="handleErrorDismiss('submission')"
+    />
+
+    <!-- ✅ SKELETON LOADING STATE -->
+    <ReportSkeleton
+      v-if="loadingReport"
+      :field-count="6"
+      variant="form"
+    />
+
+    <!-- ✅ MAIN CONTENT - Solo mostrar cuando NO está cargando -->
+    <template v-else>
+      <div class="report-viewer__header">
+        <div class="report-viewer__header-content">
+          <div class="report-viewer__header-info">
+            <div class="report-viewer__header-icon">
+              <i class="pi pi-chart-bar" />
+            </div>
+            <div>
+              <h1 class="report-viewer__title">
+                Report Viewer
+              </h1>
+              <p class="report-viewer__subtitle">
+                Generate and preview reports with customizable parameters
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 class="report-viewer__title">
-              Report Viewer
-            </h1>
-            <p class="report-viewer__subtitle">
-              Generate and preview reports with customizable parameters
-            </p>
-          </div>
-        </div>
-        <div class="report-viewer__header-badge">
-          <i :class="currentReport ? 'pi pi-check-circle' : 'pi pi-info-circle'" />
-          <div class="report-viewer__header-badge-content">
-            <span class="report-viewer__header-badge-title">{{ reportTitle }}</span>
-            <small class="report-viewer__header-badge-subtitle">{{ reportDescription }}</small>
+          <div class="report-viewer__header-badge">
+            <i :class="currentReport ? 'pi pi-check-circle' : 'pi pi-info-circle'" />
+            <div class="report-viewer__header-badge-content">
+              <span class="report-viewer__header-badge-title">{{ reportTitle }}</span>
+              <small class="report-viewer__header-badge-subtitle">{{ reportDescription }}</small>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="report-viewer__main">
-      <!-- Left Panel: Enhanced Parameters -->
-      <div class="report-viewer__parameters">
-        <div class="report-viewer__parameters-container">
-          <!-- Panel Header -->
-          <div class="report-viewer__parameters-header">
-            <div class="report-viewer__parameters-header-content">
-              <div class="report-viewer__parameters-icon">
-                <i class="pi pi-sliders-h" />
-              </div>
-              <div>
-                <h3 class="report-viewer__parameters-title">
-                  Report Parameters
-                </h3>
-                <div class="report-viewer__parameters-subtitle">
-                  {{ hasParameters ? 'Configure your report settings' : 'No parameters required' }}
+      <div class="report-viewer__main">
+        <!-- Left Panel: Enhanced Parameters -->
+        <div class="report-viewer__parameters">
+          <div class="report-viewer__parameters-container">
+            <!-- Panel Header -->
+            <div class="report-viewer__parameters-header">
+              <div class="report-viewer__parameters-header-content">
+                <div class="report-viewer__parameters-icon">
+                  <i class="pi pi-sliders-h" />
                 </div>
-              </div>
-            </div>
-            <div v-if="currentReport" class="report-viewer__parameters-actions">
-              <Button
-                v-tooltip.top="'Reset Parameters'"
-                icon="pi pi-refresh"
-                class="p-button-text p-button-sm"
-                :disabled="asyncReportGeneration.isActive.value"
-                @click="clearForm"
-              />
-            </div>
-          </div>
-
-          <!-- Panel Content -->
-          <div v-if="hasParameters" class="report-viewer__parameters-content">
-            <div v-if="loadingReport" class="report-viewer__loading">
-              <div class="report-viewer__loading-content">
-                <ProgressSpinner style="width: 32px; height: 32px" />
-                <p>Loading report parameters...</p>
-              </div>
-            </div>
-
-            <EnhancedFormComponent
-              v-if="showForm"
-              :key="formReload"
-              :fields="fields as FormField[]"
-              :initial-values="item"
-              :show-actions="false"
-              :loading="asyncReportGeneration.isActive.value"
-              :validate-on-change="true"
-              data-test-id="report-form"
-              @field-change="handleFieldUpdate"
-              @update:values="handleReactiveUpdate"
-              @validation-change="handleValidationErrors"
-              @cancel="handleCancel"
-            >
-              <template
-                v-for="fieldItem in fields.filter((f: FormField) => f.required)"
-                :key="`header-${fieldItem.field}`"
-                #[`header-${fieldItem.field}`]="{ field }"
-              >
-                <div class="flex align-items-center gap-2">
-                  <span>{{ field.label }}</span>
-                  <Tag severity="danger" value="Required" class="text-xs" />
-                </div>
-              </template>
-            </EnhancedFormComponent>
-
-            <!-- Enhanced Action Section -->
-            <div class="report-viewer__actions">
-              <!-- Export Format Selection -->
-              <div class="report-viewer__format-section">
-                <label class="report-viewer__format-label">
-                  <i class="pi pi-download mr-2" />
-                  Export Format
-                </label>
-                <div class="report-viewer__format-grid">
-                  <div
-                    v-for="format in REPORT_FORMATS"
-                    :key="format.id"
-                    class="report-viewer__format-option"
-                    :class="{ 'report-viewer__format-option--selected': item.reportFormatType?.id === format.id }"
-                    @click="item.reportFormatType = format"
-                  >
-                    <div class="report-viewer__format-option-header">
-                      <i :class="format.icon" />
-                      <span class="report-viewer__format-option-name">{{ format.name }}</span>
-                    </div>
-                    <p class="report-viewer__format-option-description">
-                      {{ format.description }}
-                    </p>
+                <div>
+                  <h3 class="report-viewer__parameters-title">
+                    Report Parameters
+                  </h3>
+                  <div class="report-viewer__parameters-subtitle">
+                    {{ hasParameters ? 'Configure your report settings' : 'No parameters required' }}
                   </div>
                 </div>
               </div>
-
-              <!-- ✅ NEW: Enhanced Generation Controls with Steps -->
-              <div class="report-viewer__generation-controls">
-                <!-- Main Generation Button -->
+              <div v-if="currentReport" class="report-viewer__parameters-actions">
                 <Button
-                  :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
-                  :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
-                  class="report-viewer__generate-button report-viewer__generate-btn"
-                  :loading="asyncReportGeneration.isActive.value"
-                  :disabled="!canGenerate"
-                  @click="executeReport"
+                  v-tooltip.top="'Reset Parameters'"
+                  icon="pi pi-refresh"
+                  class="p-button-text p-button-sm"
+                  :disabled="asyncReportGeneration.isActive.value"
+                  @click="clearForm"
                 />
+              </div>
+            </div>
 
-                <!-- Generation Info -->
-                <div class="report-viewer__generation-info">
-                  <div class="flex align-items-center gap-2 text-sm text-gray-600">
-                    <i class="pi pi-info-circle" />
-                    <span v-if="item.reportFormatType?.id === 'PDF'">
-                      PDF will be displayed in the preview panel
-                    </span>
-                    <span v-else>
-                      {{ item.reportFormatType?.name }} file will be automatically downloaded
-                    </span>
+            <!-- Panel Content -->
+            <div v-if="hasParameters" class="report-viewer__parameters-content">
+              <!-- ✅ FORM SKELETON mientras no se muestra el form -->
+              <ReportSkeleton
+                v-if="!showForm"
+                :field-count="4"
+                variant="form"
+              />
+
+              <EnhancedFormComponent
+                v-if="showForm"
+                :key="formReload"
+                :fields="fields as FormField[]"
+                :initial-values="item"
+                :show-actions="false"
+                :loading="asyncReportGeneration.isActive.value"
+                :validate-on-change="true"
+                data-test-id="report-form"
+                @field-change="handleFieldUpdate"
+                @update:values="handleReactiveUpdate"
+                @validation-change="handleValidationErrors"
+                @cancel="handleCancel"
+              >
+                <template
+                  v-for="fieldItem in fields.filter((f: FormField) => f.required)"
+                  :key="`header-${fieldItem.field}`"
+                  #[`header-${fieldItem.field}`]="{ field }"
+                >
+                  <div class="flex align-items-center gap-2">
+                    <span>{{ field.label }}</span>
+                    <Tag severity="danger" value="Required" class="text-xs" />
                   </div>
+                </template>
+              </EnhancedFormComponent>
 
-                  <!-- ✅ NEW: Real-time progress info -->
-                  <div v-if="asyncReportGeneration.isActive.value" class="mt-2">
-                    <div class="flex align-items-center gap-2 text-xs text-gray-500">
-                      <i class="pi pi-clock" />
-                      <span>{{ asyncReportGeneration.progress.message }}</span>
+              <!-- Enhanced Action Section -->
+              <div class="report-viewer__actions">
+                <!-- Export Format Selection -->
+                <div class="report-viewer__format-section">
+                  <label class="report-viewer__format-label">
+                    <i class="pi pi-download mr-2" />
+                    Export Format
+                  </label>
+                  <div class="report-viewer__format-grid">
+                    <div
+                      v-for="format in REPORT_FORMATS"
+                      :key="format.id"
+                      class="report-viewer__format-option"
+                      :class="{ 'report-viewer__format-option--selected': item.reportFormatType?.id === format.id }"
+                      @click="item.reportFormatType = format"
+                    >
+                      <div class="report-viewer__format-option-header">
+                        <i :class="format.icon" />
+                        <span class="report-viewer__format-option-name">{{ format.name }}</span>
+                      </div>
+                      <p class="report-viewer__format-option-description">
+                        {{ format.description }}
+                      </p>
                     </div>
-                    <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="flex align-items-center gap-2 text-xs text-gray-500 mt-1">
-                      <i class="pi pi-refresh" />
-                      <span>
-                        Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
+                  </div>
+                </div>
+
+                <!-- ✅ NEW: Enhanced Generation Controls with Steps -->
+                <div class="report-viewer__generation-controls">
+                  <!-- Main Generation Button -->
+                  <Button
+                    :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
+                    :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                    class="report-viewer__generate-button report-viewer__generate-btn"
+                    :loading="asyncReportGeneration.isActive.value"
+                    :disabled="!canGenerate"
+                    @click="executeReport"
+                  />
+
+                  <!-- Generation Info -->
+                  <div class="report-viewer__generation-info">
+                    <div class="flex align-items-center gap-2 text-sm text-gray-600">
+                      <i class="pi pi-info-circle" />
+                      <span v-if="item.reportFormatType?.id === 'PDF'">
+                        PDF will be displayed in the preview panel
+                      </span>
+                      <span v-else>
+                        {{ item.reportFormatType?.name }} file will be automatically downloaded
                       </span>
                     </div>
-                  </div>
-                </div>
-              </div>
 
-              <!-- Quick Actions -->
-              <div v-if="asyncReportGeneration.pdfUrl.value" class="report-viewer__quick-actions">
-                <h4 class="report-viewer__quick-actions-title">
-                  Quick Actions
-                </h4>
-                <div class="report-viewer__quick-actions-buttons">
-                  <Button
-                    icon="pi pi-download"
-                    label="Download"
-                    class="p-button-outlined p-button-sm"
-                    @click="downloadCurrentReport"
-                  />
-                  <Button
-                    icon="pi pi-external-link"
-                    label="New Tab"
-                    class="p-button-outlined p-button-sm"
-                    @click="openInNewTab"
-                  />
-                  <Button
-                    v-if="isShareSupported"
-                    icon="pi pi-share-alt"
-                    label="Share"
-                    class="p-button-outlined p-button-sm"
-                    @click="shareReport"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- No Parameters State -->
-          <div v-else-if="currentReport && !hasParameters" class="report-viewer__no-parameters">
-            <div class="report-viewer__no-parameters-content">
-              <div class="report-viewer__no-parameters-icon">
-                <i class="pi pi-check-circle" />
-              </div>
-              <h4 class="report-viewer__no-parameters-title">
-                Ready to Generate
-              </h4>
-              <p class="report-viewer__no-parameters-text">
-                This report doesn't require any parameters. You can generate it directly.
-              </p>
-
-              <!-- Format selection for no-parameter reports -->
-              <div class="report-viewer__format-section mt-4">
-                <label class="report-viewer__format-label">
-                  <i class="pi pi-download mr-2" />
-                  Export Format
-                </label>
-                <Dropdown
-                  v-model="item.reportFormatType"
-                  :options="REPORT_FORMATS"
-                  option-label="name"
-                  placeholder="Select Format"
-                  class="w-full"
-                >
-                  <template #value="slotProps">
-                    <div v-if="slotProps.value" class="flex align-items-center gap-2">
-                      <i :class="slotProps.value.icon" />
-                      <span>{{ slotProps.value.name }}</span>
-                    </div>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="flex align-items-center gap-2">
-                      <i :class="slotProps.option.icon" />
-                      <div>
-                        <div>{{ slotProps.option.name }}</div>
-                        <small class="text-gray-500">{{ slotProps.option.description }}</small>
+                    <!-- ✅ NEW: Real-time progress info -->
+                    <div v-if="asyncReportGeneration.isActive.value" class="mt-2">
+                      <div class="flex align-items-center gap-2 text-xs text-gray-500">
+                        <i class="pi pi-clock" />
+                        <span>{{ asyncReportGeneration.progress.message }}</span>
+                      </div>
+                      <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="flex align-items-center gap-2 text-xs text-gray-500 mt-1">
+                        <i class="pi pi-refresh" />
+                        <span>
+                          Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
+                        </span>
                       </div>
                     </div>
-                  </template>
-                </Dropdown>
-              </div>
-
-              <!-- ✅ NEW: Enhanced generation button for no-parameters -->
-              <div class="mt-4">
-                <Button
-                  :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
-                  :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
-                  class="w-full report-viewer__generate-btn"
-                  :loading="asyncReportGeneration.isActive.value"
-                  :disabled="!canGenerate"
-                  @click="executeReport"
-                />
-
-                <!-- Progress info for no-parameters -->
-                <div v-if="asyncReportGeneration.isActive.value" class="mt-2 text-center">
-                  <div class="text-xs text-gray-500">
-                    {{ asyncReportGeneration.progress.message }}
                   </div>
-                  <div v-if="formattedElapsedTime" class="text-xs text-gray-400 mt-1">
-                    Elapsed: {{ formattedElapsedTime }}
+                </div>
+
+                <!-- Quick Actions -->
+                <div v-if="asyncReportGeneration.pdfUrl.value" class="report-viewer__quick-actions">
+                  <h4 class="report-viewer__quick-actions-title">
+                    Quick Actions
+                  </h4>
+                  <div class="report-viewer__quick-actions-buttons">
+                    <Button
+                      icon="pi pi-download"
+                      label="Download"
+                      class="p-button-outlined p-button-sm"
+                      @click="downloadCurrentReport"
+                    />
+                    <Button
+                      icon="pi pi-external-link"
+                      label="New Tab"
+                      class="p-button-outlined p-button-sm"
+                      @click="openInNewTab"
+                    />
+                    <Button
+                      v-if="isShareSupported"
+                      icon="pi pi-share-alt"
+                      label="Share"
+                      class="p-button-outlined p-button-sm"
+                      @click="shareReport"
+                    />
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Empty State -->
-          <div v-else class="report-viewer__empty">
-            <div class="report-viewer__empty-content">
-              <div class="report-viewer__empty-icon">
-                <i class="pi pi-file-o" />
+            <!-- No Parameters State -->
+            <div v-else-if="currentReport && !hasParameters" class="report-viewer__no-parameters">
+              <div class="report-viewer__no-parameters-content">
+                <div class="report-viewer__no-parameters-icon">
+                  <i class="pi pi-check-circle" />
+                </div>
+                <h4 class="report-viewer__no-parameters-title">
+                  Ready to Generate
+                </h4>
+                <p class="report-viewer__no-parameters-text">
+                  This report doesn't require any parameters. You can generate it directly.
+                </p>
+
+                <!-- Format selection for no-parameter reports -->
+                <div class="report-viewer__format-section mt-4">
+                  <label class="report-viewer__format-label">
+                    <i class="pi pi-download mr-2" />
+                    Export Format
+                  </label>
+                  <Dropdown
+                    v-model="item.reportFormatType"
+                    :options="REPORT_FORMATS"
+                    option-label="name"
+                    placeholder="Select Format"
+                    class="w-full"
+                  >
+                    <template #value="slotProps">
+                      <div v-if="slotProps.value" class="flex align-items-center gap-2">
+                        <i :class="slotProps.value.icon" />
+                        <span>{{ slotProps.value.name }}</span>
+                      </div>
+                    </template>
+                    <template #option="slotProps">
+                      <div class="flex align-items-center gap-2">
+                        <i :class="slotProps.option.icon" />
+                        <div>
+                          <div>{{ slotProps.option.name }}</div>
+                          <small class="text-gray-500">{{ slotProps.option.description }}</small>
+                        </div>
+                      </div>
+                    </template>
+                  </Dropdown>
+                </div>
+
+                <!-- ✅ NEW: Enhanced generation button for no-parameters -->
+                <div class="mt-4">
+                  <Button
+                    :label="asyncReportGeneration.isActive.value ? 'Generating...' : 'Generate Report'"
+                    :icon="asyncReportGeneration.isActive.value ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+                    class="w-full report-viewer__generate-btn"
+                    :loading="asyncReportGeneration.isActive.value"
+                    :disabled="!canGenerate"
+                    @click="executeReport"
+                  />
+
+                  <!-- Progress info for no-parameters -->
+                  <div v-if="asyncReportGeneration.isActive.value" class="mt-2 text-center">
+                    <div class="text-xs text-gray-500">
+                      {{ asyncReportGeneration.progress.message }}
+                    </div>
+                    <div v-if="formattedElapsedTime" class="text-xs text-gray-400 mt-1">
+                      Elapsed: {{ formattedElapsedTime }}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h4 class="report-viewer__empty-title">
-                No Report Selected
-              </h4>
-              <p class="report-viewer__empty-text">
-                Please select a report from the URL parameter or navigation to view its parameters and generate reports.
-              </p>
-              <div class="report-viewer__empty-help">
-                <div class="report-viewer__help-content">
-                  <i class="pi pi-lightbulb" />
-                  <div>
-                    <p class="report-viewer__help-title">
-                      How to use:
-                    </p>
-                    <p class="report-viewer__help-text">
-                      Add <code>?reportId=YOUR_REPORT_ID</code> to the URL to load a specific report.
-                    </p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="report-viewer__empty">
+              <div class="report-viewer__empty-content">
+                <div class="report-viewer__empty-icon">
+                  <i class="pi pi-file-o" />
+                </div>
+                <h4 class="report-viewer__empty-title">
+                  No Report Selected
+                </h4>
+                <p class="report-viewer__empty-text">
+                  Please select a report from the URL parameter or navigation to view its parameters and generate reports.
+                </p>
+                <div class="report-viewer__empty-help">
+                  <div class="report-viewer__help-content">
+                    <i class="pi pi-lightbulb" />
+                    <div>
+                      <p class="report-viewer__help-title">
+                        How to use:
+                      </p>
+                      <p class="report-viewer__help-text">
+                        Add <code>?reportId=YOUR_REPORT_ID</code> to the URL to load a specific report.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Panel: Enhanced PDF Preview -->
-      <div class="report-viewer__preview">
-        <div class="report-viewer__preview-container">
-          <!-- Enhanced Viewer Header -->
-          <div class="report-viewer__preview-header">
-            <div class="report-viewer__preview-header-content">
-              <div class="report-viewer__preview-icon">
-                <i class="pi pi-eye" />
-              </div>
-              <div class="flex flex-column">
-                <div class="flex align-items-center gap-2">
-                  <h3 class="report-viewer__preview-title">
-                    Report Preview
-                  </h3>
+        <!-- Right Panel: Enhanced PDF Preview -->
+        <div class="report-viewer__preview">
+          <div class="report-viewer__preview-container">
+            <!-- Enhanced Viewer Header -->
+            <div class="report-viewer__preview-header">
+              <div class="report-viewer__preview-header-content">
+                <div class="report-viewer__preview-icon">
+                  <i class="pi pi-eye" />
                 </div>
-                <p class="report-viewer__preview-subtitle">
-                  {{ asyncReportGeneration.pdfUrl.value ? 'Your generated report' : 'Generated reports will appear here' }}
-                </p>
-              </div>
-              <!-- ✅ Status indicator -->
-              <div v-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
-                <Tag severity="success" icon="pi pi-check">
-                  Report Generated
-                </Tag>
-                <span class="text-sm text-gray-600">
-                  {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
-                </span>
-              </div>
-              <div v-else-if="asyncReportGeneration.isActive.value" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
-                <Tag severity="info" icon="pi pi-spin pi-spinner">
-                  Processing
-                </Tag>
-                <span class="text-sm text-gray-600">
-                  {{ formattedElapsedTime }}
-                </span>
+                <div class="flex flex-column">
+                  <div class="flex align-items-center gap-2">
+                    <h3 class="report-viewer__preview-title">
+                      Report Preview
+                    </h3>
+                  </div>
+                  <p class="report-viewer__preview-subtitle">
+                    {{ asyncReportGeneration.pdfUrl.value ? 'Your generated report' : 'Generated reports will appear here' }}
+                  </p>
+                </div>
+                <!-- ✅ Status indicator -->
+                <div v-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+                  <Tag severity="success" icon="pi pi-check">
+                    Report Generated
+                  </Tag>
+                  <span class="text-sm text-gray-600">
+                    {{ dayjs().format('MMM DD, YYYY - HH:mm') }}
+                  </span>
+                </div>
+                <div v-else-if="asyncReportGeneration.isActive.value" class="report-viewer__pdf-info" style="margin-left: auto; text-align: right;">
+                  <Tag severity="info" icon="pi pi-spin pi-spinner">
+                    Processing
+                  </Tag>
+                  <span class="text-sm text-gray-600">
+                    {{ formattedElapsedTime }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Enhanced Viewer Content -->
-          <div class="report-viewer__preview-content">
-            <!-- ✅ PROGRESS SECTION - Always visible when active -->
-            <div v-if="asyncReportGeneration.isActive.value" class="report-viewer__progress-section">
-              <div class="report-viewer__progress-container">
-                <!-- Process Steps -->
-                <div class="report-viewer__steps-container">
-                  <Steps
-                    :model="[
-                      { label: 'Submit', icon: 'pi pi-send' },
-                      { label: 'Processing', icon: 'pi pi-cog' },
-                      { label: 'Complete', icon: 'pi pi-check' },
-                    ]"
-                    :active-step="asyncReportGeneration.progress.currentStep"
-                    readonly
-                    class="report-viewer__steps"
-                  />
-                </div>
+            <!-- Enhanced Viewer Content -->
+            <div class="report-viewer__preview-content">
+              <!-- ✅ PROGRESS SKELETON - Cuando está activo -->
+              <ProgressSkeleton
+                v-if="asyncReportGeneration.isActive.value"
+                :current-step="asyncReportGeneration.progress.currentStep"
+                :show-polling-details="asyncReportGeneration.workflowState.value.type === 'polling'"
+                :variant="getProgressVariant()"
+                :animated="true"
+              />
 
-                <!-- Progress Status -->
-                <div class="report-viewer__progress-status">
-                  <div class="flex align-items-center justify-content-between mb-2">
-                    <h4 class="report-viewer__progress-title">
-                      <i v-if="asyncReportGeneration.workflowState.value.type === 'submitting'" class="pi pi-send mr-2" />
-                      <i v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="pi pi-cog pi-spin mr-2" />
+              <!-- ✅ ERROR STATE -->
+              <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
+                <div class="report-viewer__error-container">
+                  <div class="report-viewer__error-icon">
+                    <i class="pi pi-exclamation-triangle" />
+                  </div>
+                  <h4 class="report-viewer__error-title">
+                    Generation Failed
+                  </h4>
+                  <p class="report-viewer__error-message">
+                    {{ asyncReportGeneration.workflowState.value.error }}
+                  </p>
 
-                      <span v-if="asyncReportGeneration.workflowState.value.type === 'submitting'">
-                        Submitting Request
-                      </span>
-                      <span v-else-if="asyncReportGeneration.workflowState.value.type === 'polling'">
-                        Processing Report
-                      </span>
-                    </h4>
-
-                    <div class="report-viewer__progress-percentage">
-                      {{ progressPercentage }}%
-                    </div>
+                  <!-- Error Details -->
+                  <div v-if="asyncReportGeneration.workflowState.value.serverRequestId" class="report-viewer__error-details">
+                    <small class="text-gray-500">
+                      Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
+                    </small>
                   </div>
 
-                  <!-- Large Progress Bar -->
-                  <div class="report-viewer__progress-bar-container">
-                    <ProgressBar
-                      :value="progressPercentage"
-                      class="report-viewer__progress-bar-large"
-                      :show-value="false"
+                  <!-- Action Buttons -->
+                  <div class="report-viewer__error-actions">
+                    <Button
+                      v-if="asyncReportGeneration.canRetry.value"
+                      label="Retry Generation"
+                      icon="pi pi-refresh"
+                      class="p-button-primary w-full mb-2"
+                      @click="retryGeneration"
+                    />
+                    <Button
+                      label="Reset Form"
+                      icon="pi pi-undo"
+                      class="p-button-secondary p-button-outlined w-full"
+                      @click="clearForm"
                     />
                   </div>
+                </div>
+              </div>
 
-                  <!-- Progress Message -->
-                  <div class="report-viewer__progress-message">
-                    {{ asyncReportGeneration.progress.message }}
+              <!-- ✅ CANCELLED STATE -->
+              <div v-else-if="asyncReportGeneration.workflowState.value.type === 'cancelled'" class="report-viewer__cancelled-section">
+                <div class="report-viewer__cancelled-container">
+                  <div class="report-viewer__cancelled-icon">
+                    <i class="pi pi-ban" />
                   </div>
+                  <h4 class="report-viewer__cancelled-title">
+                    Generation Cancelled
+                  </h4>
+                  <p class="report-viewer__cancelled-message">
+                    Report generation was cancelled by user
+                  </p>
 
-                  <!-- Time Information -->
-                  <div class="report-viewer__time-info">
-                    <div class="flex justify-content-between align-items-center">
-                      <span class="text-sm text-gray-600">
-                        <i class="pi pi-clock mr-1" />
-                        Elapsed: {{ formattedElapsedTime }}
-                      </span>
-                      <span v-if="formattedEstimatedTime" class="text-sm text-gray-500">
-                        <i class="pi pi-hourglass mr-1" />
-                        ETA: {{ formattedEstimatedTime }}
-                      </span>
+                  <!-- Action Buttons -->
+                  <div class="report-viewer__cancelled-actions">
+                    <Button
+                      label="Generate Again"
+                      icon="pi pi-play"
+                      class="p-button-primary w-full mb-2"
+                      @click="executeReport"
+                    />
+                    <Button
+                      label="Reset Form"
+                      icon="pi pi-undo"
+                      class="p-button-secondary p-button-outlined w-full"
+                      @click="clearForm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- ✅ SUCCESS STATE WITH PDF -->
+              <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed' && item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
+                <!-- PDF Viewer -->
+                <object
+                  :data="asyncReportGeneration.pdfUrl.value"
+                  type="application/pdf"
+                  class="report-viewer__pdf-object"
+                >
+                  <div class="report-viewer__pdf-fallback">
+                    <div class="report-viewer__pdf-fallback-content">
+                      <i class="pi pi-file-pdf" />
+                      <h4>PDF Viewer Not Supported</h4>
+                      <p>Your browser doesn't support inline PDF viewing</p>
+                      <Button
+                        label="Download PDF"
+                        icon="pi pi-download"
+                        @click="downloadCurrentReport"
+                      />
                     </div>
                   </div>
+                </object>
+              </div>
 
-                  <!-- Polling Details -->
-                  <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="report-viewer__polling-details">
-                    <div class="flex justify-content-between align-items-center text-xs text-gray-500">
-                      <span>
-                        <i class="pi pi-refresh mr-1" />
-                        Attempt {{ asyncReportGeneration.workflowState.value.attempt }} of {{ asyncReportGeneration.workflowState.value.maxAttempts }}
-                      </span>
-                      <span>
-                        <i class="pi pi-server mr-1" />
-                        Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
-                      </span>
+              <!-- ✅ SUCCESS STATE WITH NON-PDF -->
+              <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__success-section">
+                <div class="report-viewer__success-container">
+                  <div class="report-viewer__success-icon">
+                    <i class="pi pi-check-circle" />
+                  </div>
+                  <h4 class="report-viewer__success-title">
+                    Report Generated Successfully!
+                  </h4>
+                  <p class="report-viewer__success-message">
+                    Your {{ item.reportFormatType?.name }} report has been downloaded automatically
+                  </p>
+
+                  <!-- File Info -->
+                  <div v-if="asyncReportGeneration.workflowState.value.report" class="report-viewer__file-info">
+                    <div class="report-viewer__file-details">
+                      <div class="flex align-items-center gap-2 mb-2">
+                        <i :class="getFormatIcon(item.reportFormatType?.id)" />
+                        <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
+                      </div>
+                      <div class="text-sm text-gray-600">
+                        Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
+                      </div>
                     </div>
                   </div>
 
                   <!-- Action Buttons -->
-                  <div class="report-viewer__progress-actions">
+                  <div class="report-viewer__success-actions">
                     <Button
-                      v-if="asyncReportGeneration.canCancel.value"
-                      label="Cancel Generation"
-                      icon="pi pi-times"
-                      class="p-button-danger p-button-outlined w-full"
-                      @click="cancelGeneration"
+                      label="Generate Another Report"
+                      icon="pi pi-plus"
+                      class="p-button-primary w-full mb-2"
+                      @click="clearForm"
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ✅ ERROR STATE -->
-            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
-              <div class="report-viewer__error-container">
-                <div class="report-viewer__error-icon">
-                  <i class="pi pi-exclamation-triangle" />
-                </div>
-                <h4 class="report-viewer__error-title">
-                  Generation Failed
-                </h4>
-                <p class="report-viewer__error-message">
-                  {{ asyncReportGeneration.workflowState.value.error }}
-                </p>
-
-                <!-- Error Details -->
-                <div v-if="asyncReportGeneration.workflowState.value.serverRequestId" class="report-viewer__error-details">
-                  <small class="text-gray-500">
-                    Server ID: {{ asyncReportGeneration.workflowState.value.serverRequestId.substring(0, 8) }}...
-                  </small>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="report-viewer__error-actions">
-                  <Button
-                    v-if="asyncReportGeneration.canRetry.value"
-                    label="Retry Generation"
-                    icon="pi pi-refresh"
-                    class="p-button-primary w-full mb-2"
-                    @click="retryGeneration"
-                  />
-                  <Button
-                    label="Reset Form"
-                    icon="pi pi-undo"
-                    class="p-button-secondary p-button-outlined w-full"
-                    @click="clearForm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- ✅ CANCELLED STATE -->
-            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'cancelled'" class="report-viewer__cancelled-section">
-              <div class="report-viewer__cancelled-container">
-                <div class="report-viewer__cancelled-icon">
-                  <i class="pi pi-ban" />
-                </div>
-                <h4 class="report-viewer__cancelled-title">
-                  Generation Cancelled
-                </h4>
-                <p class="report-viewer__cancelled-message">
-                  Report generation was cancelled by user
-                </p>
-
-                <!-- Action Buttons -->
-                <div class="report-viewer__cancelled-actions">
-                  <Button
-                    label="Generate Again"
-                    icon="pi pi-play"
-                    class="p-button-primary w-full mb-2"
-                    @click="executeReport"
-                  />
-                  <Button
-                    label="Reset Form"
-                    icon="pi pi-undo"
-                    class="p-button-secondary p-button-outlined w-full"
-                    @click="clearForm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- ✅ SUCCESS STATE WITH PDF -->
-            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed' && item?.reportFormatType?.id === 'PDF' && asyncReportGeneration.pdfUrl.value" class="report-viewer__pdf-container">
-              <!-- PDF Viewer -->
-              <object
-                :data="asyncReportGeneration.pdfUrl.value"
-                type="application/pdf"
-                class="report-viewer__pdf-object"
-              >
-                <div class="report-viewer__pdf-fallback">
-                  <div class="report-viewer__pdf-fallback-content">
-                    <i class="pi pi-file-pdf" />
-                    <h4>PDF Viewer Not Supported</h4>
-                    <p>Your browser doesn't support inline PDF viewing</p>
                     <Button
-                      label="Download PDF"
+                      label="Download Again"
                       icon="pi pi-download"
-                      @click="downloadCurrentReport"
+                      class="p-button-secondary p-button-outlined w-full"
+                      @click="() => {
+                        const report = asyncReportGeneration.workflowState.value.report;
+                        if (report) {
+                          const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
+                          const url = URL.createObjectURL(blob);
+                          asyncReportGeneration.downloadFile(url, report.fileName);
+                        }
+                      }"
                     />
                   </div>
                 </div>
-              </object>
-            </div>
-
-            <!-- ✅ SUCCESS STATE WITH NON-PDF -->
-            <div v-else-if="asyncReportGeneration.workflowState.value.type === 'completed'" class="report-viewer__success-section">
-              <div class="report-viewer__success-container">
-                <div class="report-viewer__success-icon">
-                  <i class="pi pi-check-circle" />
-                </div>
-                <h4 class="report-viewer__success-title">
-                  Report Generated Successfully!
-                </h4>
-                <p class="report-viewer__success-message">
-                  Your {{ item.reportFormatType?.name }} report has been downloaded automatically
-                </p>
-
-                <!-- File Info -->
-                <div v-if="asyncReportGeneration.workflowState.value.report" class="report-viewer__file-info">
-                  <div class="report-viewer__file-details">
-                    <div class="flex align-items-center gap-2 mb-2">
-                      <i :class="getFormatIcon(item.reportFormatType?.id)" />
-                      <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
-                    </div>
-                    <div class="text-sm text-gray-600">
-                      Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="report-viewer__success-actions">
-                  <Button
-                    label="Generate Another Report"
-                    icon="pi pi-plus"
-                    class="p-button-primary w-full mb-2"
-                    @click="clearForm"
-                  />
-                  <Button
-                    label="Download Again"
-                    icon="pi pi-download"
-                    class="p-button-secondary p-button-outlined w-full"
-                    @click="() => {
-                      const report = asyncReportGeneration.workflowState.value.report;
-                      if (report) {
-                        const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
-                        const url = URL.createObjectURL(blob);
-                        asyncReportGeneration.downloadFile(url, report.fileName);
-                      }
-                    }"
-                  />
-                </div>
               </div>
-            </div>
 
-            <!-- ✅ IDLE/EMPTY STATE -->
-            <div v-else class="report-viewer__preview-empty">
-              <div class="report-viewer__preview-empty-content">
-                <div class="report-viewer__preview-empty-icon">
-                  <i :class="getFormatIcon(item?.reportFormatType?.id || 'PDF')" />
-                </div>
-                <h4 class="report-viewer__preview-empty-title">
-                  {{ item?.reportFormatType?.id === 'PDF' ? 'PDF Preview' : `${item?.reportFormatType?.name || 'File'} Download` }}
-                </h4>
-                <p class="report-viewer__preview-empty-text">
-                  {{ item?.reportFormatType?.id === 'PDF'
-                    ? 'PDF reports will be displayed here after generation'
-                    : `${item?.reportFormatType?.name || 'Files'} will be automatically downloaded when generated`
-                  }}
-                </p>
+              <!-- ✅ IDLE/EMPTY STATE -->
+              <div v-else class="report-viewer__preview-empty">
+                <div class="report-viewer__preview-empty-content">
+                  <div class="report-viewer__preview-empty-icon">
+                    <i :class="getFormatIcon(item?.reportFormatType?.id || 'PDF')" />
+                  </div>
+                  <h4 class="report-viewer__preview-empty-title">
+                    {{ item?.reportFormatType?.id === 'PDF' ? 'PDF Preview' : `${item?.reportFormatType?.name || 'File'} Download` }}
+                  </h4>
+                  <p class="report-viewer__preview-empty-text">
+                    {{ item?.reportFormatType?.id === 'PDF'
+                      ? 'PDF reports will be displayed here after generation'
+                      : `${item?.reportFormatType?.name || 'Files'} will be automatically downloaded when generated`
+                    }}
+                  </p>
 
-                <!-- Preview features info for PDF -->
-                <div v-if="item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-features">
-                  <h5 class="report-viewer__preview-features-title">
-                    Preview Features:
-                  </h5>
-                  <ul class="report-viewer__preview-features-list">
-                    <li><i class="pi pi-eye" /> Inline viewing</li>
-                    <li><i class="pi pi-search-plus" /> Zoom controls</li>
-                    <li><i class="pi pi-download" /> Download option</li>
-                    <li><i class="pi pi-external-link" /> Open in new tab</li>
-                  </ul>
-                </div>
+                  <!-- Preview features info for PDF -->
+                  <div v-if="item?.reportFormatType?.id === 'PDF'" class="report-viewer__preview-features">
+                    <h5 class="report-viewer__preview-features-title">
+                      Preview Features:
+                    </h5>
+                    <ul class="report-viewer__preview-features-list">
+                      <li><i class="pi pi-eye" /> Inline viewing</li>
+                      <li><i class="pi pi-search-plus" /> Zoom controls</li>
+                      <li><i class="pi pi-download" /> Download option</li>
+                      <li><i class="pi pi-external-link" /> Open in new tab</li>
+                    </ul>
+                  </div>
 
-                <!-- Status info -->
-                <div v-if="!item.jasperReportCode" class="report-viewer__preview-empty-info">
-                  <i class="pi pi-info-circle" />
-                  <span>Select a report and configure parameters to generate preview</span>
+                  <!-- Status info -->
+                  <div v-if="!item.jasperReportCode" class="report-viewer__preview-empty-info">
+                    <i class="pi pi-info-circle" />
+                    <span>Select a report and configure parameters to generate preview</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Enhanced Toast and Popup components -->
-    <Toast position="top-center" :base-z-index="5000" group="tc" />
-    <ConfirmPopup group="headless" />
+      <!-- Enhanced Toast and Popup components -->
+      <Toast position="top-center" :base-z-index="5000" group="tc" />
+      <Toast position="top-center" :base-z-index="5100" group="error-boundary" />
+      <Toast position="top-center" :base-z-index="5200" group="retry" />
+      <Toast position="top-center" :base-z-index="5300" group="success" />
+      <ConfirmPopup group="headless" />
+    </template>
   </div>
 </template>
 
