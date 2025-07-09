@@ -1,0 +1,2506 @@
+/* ===================================================================
+   REPORT VIEWER - PROFESSIONAL COMPONENT STYLES
+   Compatible with PrimeVue + PrimeFlex + Design System
+   Enhanced with unified component styling and behaviors
+   =================================================================== */
+
+// ===============================
+// IMPORTS & COMPONENT VARIABLES
+// ===============================
+
+@import '../../../node_modules/primeflex/primeflex.scss';
+@import '../variables';
+
+// Component-specific variables
+$report-viewer-grid-gap: $spacing-xl;
+$report-viewer-panel-radius: $border-radius-xl;
+$report-viewer-field-height: 2.75rem;
+$report-viewer-field-height-mobile: 3rem;
+
+// Status colors
+$status-loading: #3b82f6;
+$status-success: $success-color;
+$status-warning: $warning-color;
+$status-error: $error-color;
+
+// Panel colors
+$panel-header-bg: $gray-50;
+$panel-border: $gray-200;
+
+// ===============================
+// COMPONENT-SPECIFIC MIXINS
+// ===============================
+
+@mixin status-card($border-color, $bg-color: transparent) {
+  @include card-base;
+  border-left: 4px solid $border-color;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-lg;
+  
+  @if $bg-color != transparent {
+    background-color: $bg-color;
+  }
+}
+
+@mixin panel-base {
+  @include card-base;
+  display: flex;
+  flex-direction: column;
+  min-height: 75vh;
+  overflow: hidden;
+  
+  &__header {
+    padding: $spacing-lg $spacing-xl;
+    border-bottom: 1px solid $panel-border;
+    background: $panel-header-bg;
+    flex-shrink: 0;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, $panel-border 50%, transparent);
+    }
+  }
+  
+  &__content {
+    flex: 1;
+    padding: $spacing-xl;
+    overflow-y: auto;
+    background: white;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: $gray-100;
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: $gray-300;
+      border-radius: 3px;
+      
+      &:hover {
+        background: $gray-400;
+      }
+    }
+  }
+}
+
+@mixin format-option {
+  padding: $spacing-lg;
+  border: 2px solid $gray-200;
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: $transition;
+  background: white;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover {
+    border-color: $primary-color;
+    background: $gray-50;
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &--selected {
+    border-color: $primary-color;
+    background: linear-gradient(135deg, $primary-light 0%, rgba(255,255,255,0.95) 100%);
+    box-shadow: 0 4px 20px rgba(71, 85, 105, 0.2);
+    transform: translateY(-1px);
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      background: $primary-color;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+}
+
+@mixin progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  
+  .p-progressspinner {
+    width: 24px !important;
+    height: 24px !important;
+    
+    .p-progressspinner-circle {
+      stroke: $primary-color;
+      stroke-width: 3;
+    }
+  }
+}
+
+// ===============================
+// MAIN COMPONENT
+// ===============================
+
+.report-viewer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $gray-50 0%, $gray-100 100%);
+  padding: $spacing-lg;
+  font-family: inherit;
+  
+  // ===============================
+  // CSS VARIABLES FOR ENHANCED FORMS
+  // ===============================
+  
+  --enhanced-form-field-height: #{$report-viewer-field-height};
+  --enhanced-form-field-height-mobile: #{$report-viewer-field-height-mobile};
+  --enhanced-form-field-height-compact: 2.25rem;
+  --enhanced-form-font-size: #{$font-size-base};
+  --enhanced-form-font-size-compact: #{$font-size-small};
+  --enhanced-form-border-radius: #{$border-radius-lg};
+  --enhanced-form-border-radius-small: #{$border-radius};
+  --enhanced-form-border-width: 2px;
+  --enhanced-form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --enhanced-form-transition-fast: all 0.15s ease;
+  --enhanced-form-shadow: #{$shadow-sm};
+  --enhanced-form-shadow-lg: #{$shadow-lg};
+  --enhanced-form-focus-border: #{$primary-color};
+  --enhanced-form-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --enhanced-form-error-border: #{$error-color};
+  --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
+  --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  --enhanced-form-dropdown-z: 1000;
+  
+  // ===============================
+  // HEADER SECTION
+  // ===============================
+  
+  &__header {
+    @include card-base;
+    padding: $spacing-xl;
+    margin-bottom: $spacing-lg;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, $primary-color, $success-color, $primary-color);
+    }
+    
+    &-content {
+      @extend .flex, .align-items-center, .justify-content-between;
+      gap: $spacing-lg;
+      
+      @media (max-width: $breakpoint-md) {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    
+    &-info {
+      @extend .flex, .align-items-center;
+      gap: $spacing-lg;
+    }
+    
+    &-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $primary-color, $primary-hover);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-xl;
+      box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        z-index: -1;
+        opacity: 0.3;
+      }
+    }
+    
+    &-badge {
+      @extend .flex, .align-items-center;
+      gap: $spacing-md;
+      padding: $spacing-md $spacing-lg;
+      background: linear-gradient(135deg, $gray-100, $gray-200);
+      border-radius: $border-radius-lg;
+      border: 1px solid $panel-border;
+      
+      i {
+        color: $primary-color;
+        font-size: $font-size-lg;
+      }
+      
+      &-content {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+      }
+      
+      &-title {
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $gray-800;
+        margin: 0;
+      }
+      
+      &-subtitle {
+        font-size: $font-size-small;
+        color: $gray-500;
+        margin: 0;
+      }
+    }
+  }
+  
+  &__title {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $gray-900;
+    margin: 0;
+    line-height: 1.2;
+    background: linear-gradient(135deg, $gray-900, $gray-600);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  &__subtitle {
+    color: $gray-600;
+    margin: $spacing-xs 0 0 0;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+  }
+  
+  // ===============================
+  // STATUS SECTION
+  // ===============================
+  
+  &__status {
+    margin-bottom: $spacing-lg;
+    
+    &-card {
+      &--loading {
+        @include status-card($status-loading, rgba(59, 130, 246, 0.05));
+      }
+      
+      &--success {
+        @include status-card($status-success, rgba(5, 150, 105, 0.05));
+      }
+      
+      &--warning {
+        @include status-card($status-warning, rgba(217, 119, 6, 0.05));
+      }
+      
+      &--error {
+        @include status-card($status-error, rgba(220, 38, 38, 0.05));
+      }
+    }
+    
+    &-content {
+      @extend .flex, .align-items-center;
+      gap: $spacing-lg;
+    }
+    
+    &-progress {
+      @include progress-indicator;
+      
+      &-details {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+        min-width: 140px;
+      }
+      
+      &-text {
+        font-size: $font-size-tiny;
+        color: $gray-600;
+        text-align: center;
+        font-weight: $font-weight-medium;
+      }
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-xs 0;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $gray-900;
+    }
+    
+    &-message {
+      margin: 0;
+      font-size: $font-size-base;
+      color: $gray-600;
+      line-height: $line-height-base;
+    }
+  }
+  
+  // ===============================
+  // MAIN LAYOUT GRID
+  // ===============================
+  
+  &__main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: $spacing-xl;
+    align-items: start;
+    min-height: 75vh;
+
+    @media (max-width: $breakpoint-lg) {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+  }
+  
+  // ===============================
+  // PARAMETERS PANEL
+  // ===============================
+  
+  &__parameters {
+    @include panel-base;
+    
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    &-header {
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      
+      &-content {
+        @extend .flex, .align-items-center;
+        gap: $spacing-lg;
+        flex: 1;
+      }
+      
+      &-actions {
+        flex-shrink: 0;
+        margin-left: $spacing-md;
+        
+        .p-button {
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          
+          .pi {
+            font-size: $font-size-lg !important;
+          }
+        }
+      }
+    }
+    
+    &-icon {
+      width: 3rem !important;
+      height: 3rem !important;
+      border-radius: $border-radius-lg;
+      background: linear-gradient(135deg, $primary-color, $primary-hover);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-lg !important;
+      box-shadow: 0 3px 12px rgba(71, 85, 105, 0.25);
+      flex-shrink: 0;
+    }
+    
+    &-title {
+      margin: 0;
+      font-size: $font-size-xl !important;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      line-height: 1.3;
+    }
+    
+    &-subtitle {
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
+      color: $gray-600;
+      line-height: 1.4;
+    }
+    
+    &-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: $spacing-xl !important;
+      
+      // ✅ GRID SPACING HOMOLOGADO - UNA SOLA DEFINICIÓN
+      .grid {
+        margin: 0 !important;
+        row-gap: 1.5rem !important;
+        column-gap: 1rem !important;
+      }
+      
+      // ✅ ELIMINAR MARGIN-BOTTOM CONFLICTIVO - Solo usar grid-gap
+      > * {
+        margin-bottom: 0 !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // 📝 LOCAL SELECT FIELD STYLES
+  // ===============================
+  
+  .local-select-field {
+    margin-bottom: 0 !important; // ✅ Quitar margin propio del componente
+    width: 100% !important;
+    animation: fadeInUp 0.3s ease-out !important; // ✅ Consistente con otros campos
+    
+    // ✅ LABEL CONSISTENCY - Mismo estilo que DateField
+    .form-field__label {
+      display: block !important;
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin-bottom: 0.75rem !important; // ✅ CLAVE: Mismo spacing que DateField
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+      
+      &.form-field--required::after {
+        content: ' *' !important;
+        color: $error-color !important;
+        font-weight: bold !important;
+        margin-left: 0.125rem !important;
+      }
+    }
+    
+    // ✅ INPUT WRAPPER - Sin margin extra
+    .form-field__input-wrapper {
+      width: 100% !important;
+      position: relative !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+      margin-bottom: 0 !important; // ✅ Sin margin extra
+    }
+    
+    // ✅ ERROR MESSAGES - Consistente con DateField
+    .form-field__error-messages {
+      margin-top: 0.5rem !important;
+      
+      .form-field__error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.375rem !important;
+        color: $error-color !important;
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+        
+        .pi {
+          font-size: 0.875rem !important;
+          flex-shrink: 0 !important;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // 📅 DATE FIELD STYLES
+  // ===============================
+  
+  .date-field__wrapper {
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+    animation: fadeInUp 0.3s ease-out;
+    
+    &--error {
+      .date-field__calendar {
+        border-color: $error-color !important;
+        box-shadow: 0 0 0 1px $error-color !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+      }
+    }
+    
+    &--loading {
+      opacity: 0.7 !important;
+      pointer-events: none !important;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+    }
+  }
+  
+  .date-field__calendar {
+    width: 100% !important;
+    
+    &--inline {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: $border-radius-lg !important;
+      overflow: hidden;
+    }
+    
+    &--mobile {
+      font-size: 1.1rem !important;
+      
+      .p-calendar-w-btn .p-inputtext {
+        font-size: 1rem !important;
+      }
+    }
+  }
+  
+  .date-field__header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-bottom: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__today-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    background: $primary-color !important;
+    color: white !important;
+    border: none !important;
+    border-radius: $border-radius !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
+    
+    &:hover {
+      background: $primary-hover !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 8px rgba($primary-color, 0.4) !important;
+    }
+    
+    &:focus {
+      outline: 2px solid rgba($primary-color, 0.3) !important;
+      outline-offset: 1px !important;
+    }
+    
+    &:active {
+      transform: translateY(0) !important;
+    }
+  }
+  
+  .date-field__footer {
+    padding: 0.75rem 1rem !important;
+    background: $gray-50 !important;
+    border-top: 1px solid $gray-200 !important;
+  }
+  
+  .date-field__selected-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    color: $success-color !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    
+    .pi {
+      color: inherit !important;
+      animation: pulse 2s infinite !important;
+    }
+  }
+  
+  .date-field__date-cell {
+    &--weekend {
+      color: $error-color !important;
+      font-weight: 600 !important;
+      background: rgba($error-color, 0.1) !important;
+      border-radius: 50% !important;
+    }
+  }
+  
+  // ===============================
+  // 🎯 ENHANCED FORM FIELDS - UNIVERSAL STYLES
+  // ===============================
+  
+  &__parameters-content {
+    
+    // ✅ UNIVERSAL CLEAR BUTTON - HOMOLOGADO PARA TODOS LOS COMPONENTES
+    :deep(.p-calendar .p-calendar-clear-icon),
+    :deep(.p-dropdown .p-dropdown-clear-icon),
+    :deep(.p-multiselect .p-multiselect-clear-icon),
+    :deep(.p-autocomplete .p-autocomplete-clear-icon),
+    :deep(.p-inputtext-clear-icon) {
+      position: absolute !important;
+      top: 50% !important;
+      right: calc(var(--enhanced-form-field-height) + 8px) !important;
+      transform: translateY(-50%) !important;
+      width: 1.25rem !important;
+      height: 1.25rem !important;
+      color: $gray-500 !important;
+      cursor: pointer !important;
+      border-radius: 50% !important;
+      transition: var(--enhanced-form-transition) !important;
+      z-index: 2 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      
+      &:hover {
+        color: $error-color !important;
+        background: rgba($error-color, 0.1) !important;
+        transform: translateY(-50%) scale(1.1) !important;
+        box-shadow: 0 2px 8px rgba($error-color, 0.2) !important;
+      }
+      
+      &:focus {
+        outline: 2px solid rgba($error-color, 0.3) !important;
+        outline-offset: 1px !important;
+      }
+      
+      &:active {
+        transform: translateY(-50%) scale(0.95) !important;
+      }
+      
+      .p-icon,
+      .pi {
+        font-size: 1rem !important;
+        color: inherit !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        font-weight: 400 !important;
+        font-family: 'primeicons' !important;
+        vertical-align: baseline !important;
+        text-rendering: auto !important;
+        -webkit-font-smoothing: antialiased !important;
+      }
+    }
+    
+    // ✅ CONTAINER STYLING
+    :deep(.col-12) {
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+    
+    // ✅ UNIVERSAL FIELD SIZING - ALTURA EXACTAMENTE IGUAL
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect),
+    :deep(.p-calendar),
+    :deep(.p-autocomplete),
+    :deep(.p-inputnumber),
+    :deep(.p-password) {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+    }
+    
+    // ✅ CALENDAR/DATE FIELD STYLING - FOCUS CORREGIDO
+    :deep(.p-calendar) {
+      position: relative !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      background: white !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow: hidden !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      
+      .p-component {
+        height: 100% !important;
+      }
+
+      .p-calendar-w-btn {
+        width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        align-items: center !important;
+      }
+      
+      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
+      .p-inputtext,
+      .p-datepicker-trigger {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-inputtext {
+        width: 100% !important;
+        height: 100% !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        background: transparent !important;
+        color: $gray-700 !important;
+        padding: 0 1rem !important;
+        flex: 1 !important;
+        line-height: normal !important;
+        
+        &::placeholder {
+          color: $gray-400 !important;
+          font-style: italic !important;
+        }
+      }
+      
+      .p-datepicker-trigger {
+        height: 100% !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: $primary-color !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: rgba($primary-color, 0.05) !important;
+          color: $primary-hover !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: rgba($primary-color, 0.1) !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: inherit !important;
+          font-size: 1.1rem !important;
+        }
+      }
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-calendar-disabled):not(.p-calendar-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &:focus-within:not(.p-calendar-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-calendar-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus-within {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ DROPDOWN STYLING - FOCUS CORREGIDO
+    :deep(.p-dropdown) {
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      overflow: hidden !important;
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-disabled):not(.p-dropdown-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &.p-focus:not(.p-dropdown-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-dropdown-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
+      .p-dropdown-label,
+      .p-dropdown-trigger,
+      .p-inputtext {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-dropdown-label {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0 1rem !important;
+        line-height: normal !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        color: $gray-700 !important;
+        background: transparent !important;
+        
+        &.p-placeholder {
+          color: $gray-400 !important;
+          font-style: italic !important;
+        }
+      }
+      
+      .p-dropdown-trigger {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: $gray-50 !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: $gray-100 !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+          transition: transform 0.2s ease !important;
+        }
+      }
+      
+      &.p-dropdown-opened .p-dropdown-trigger .p-icon {
+        transform: rotate(180deg) !important;
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus,
+        &.p-focus {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ MULTISELECT STYLING - FOCUS CORREGIDO
+    :deep(.p-multiselect) {
+      min-height: var(--enhanced-form-field-height) !important;
+      background: white !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      overflow: hidden !important;
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-disabled):not(.p-multiselect-opened):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &.p-focus:not(.p-multiselect-opened) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-multiselect-opened {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ ELIMINAR BORDES INTERNOS
+      .p-multiselect-label-container,
+      .p-multiselect-trigger {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-multiselect-label-container {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        padding: 0.375rem 0.625rem !important;
+        padding-right: calc(var(--enhanced-form-field-height) + 3rem) !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+      }
+      
+      .p-multiselect-trigger {
+        height: calc(var(--enhanced-form-field-height) - 4px) !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: $gray-50 !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: $gray-100 !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: $primary-color !important;
+        }
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus,
+        &.p-focus {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+
+    // ✅ AUTOCOMPLETE FIELD STYLING - HOMOLOGADO CON DROPDOWN
+    :deep(.p-autocomplete) {
+      position: relative !important;
+      border: var(--enhanced-form-border-width) solid $gray-200 !important;
+      border-radius: var(--enhanced-form-border-radius) !important;
+      transition: var(--enhanced-form-transition) !important;
+      background: white !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow: hidden !important;
+      box-shadow: var(--enhanced-form-shadow) !important;
+      
+      .p-component {
+        height: 100% !important;
+      }
+
+      // ✅ ELIMINAR TODOS LOS BORDES Y OUTLINES INTERNOS
+      .p-inputtext,
+      .p-autocomplete-dropdown {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        
+        &:focus,
+        &:focus-visible,
+        &:focus-within {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      }
+      
+      .p-inputtext {
+        width: 100% !important;
+        height: 100% !important;
+        font-size: var(--enhanced-form-font-size) !important;
+        background: transparent !important;
+        color: $gray-700 !important;
+        padding: 0 1rem !important;
+        flex: 1 !important;
+        line-height: normal !important;
+        
+        &::placeholder {
+          color: $gray-400 !important;
+          font-style: italic !important;
+        }
+      }
+      
+      .p-autocomplete-dropdown {
+        height: 100% !important;
+        width: var(--enhanced-form-field-height) !important;
+        background: transparent !important;
+        border-left: 1px solid $gray-200 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: $primary-color !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          background: rgba($primary-color, 0.05) !important;
+          color: $primary-hover !important;
+        }
+        
+        &:focus,
+        &:focus-visible {
+          outline: none !important;
+          background: rgba($primary-color, 0.1) !important;
+          box-shadow: none !important;
+        }
+        
+        .p-icon {
+          color: inherit !important;
+          font-size: 1.1rem !important;
+        }
+      }
+      
+      // ✅ ESTADOS DE FOCUS Y HOVER LIMPIOS
+      &:hover:not(.p-disabled):not(.p-autocomplete-open):not(.p-focus) {
+        border-color: $gray-300 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: var(--enhanced-form-shadow-lg) !important;
+      }
+      
+      &:focus-within:not(.p-autocomplete-open) {
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      // ✅ CUANDO ESTÁ ABIERTO, QUITAR BORDE INFERIOR
+      &.p-autocomplete-open {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-color: transparent !important;
+        border-color: var(--enhanced-form-focus-border) !important;
+        box-shadow: var(--enhanced-form-focus-shadow) !important;
+        z-index: calc(var(--enhanced-form-dropdown-z) + 1) !important;
+        transform: translateY(-1px) !important;
+      }
+      
+      &.p-invalid {
+        border-color: var(--enhanced-form-error-border) !important;
+        box-shadow: var(--enhanced-form-error-shadow) !important;
+        animation: fieldErrorShake 0.5s ease-in-out !important;
+        
+        &:focus-within {
+          border-color: var(--enhanced-form-error-border) !important;
+          box-shadow: var(--enhanced-form-error-shadow-hover) !important;
+        }
+      }
+    }
+    
+    // ✅ PANELS STYLING - SIN DOBLE BORDE
+    :deep(.p-dropdown-panel),
+    :deep(.p-multiselect-panel),
+    :deep(.p-autocomplete-panel) {
+      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
+      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
+      box-shadow: var(--enhanced-form-shadow-lg) !important;
+      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      background: white !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+      animation: slideDown 0.2s ease-out !important;
+      overflow: hidden !important;
+      
+      // ✅ CONECTAR VISUALMENTE CON EL DROPDOWN
+      &::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--enhanced-form-focus-border);
+        z-index: 1;
+      }
+    }
+    
+    :deep(.p-dropdown-items),
+    :deep(.p-multiselect-items),
+    :deep(.p-autocomplete-items) {
+      padding: 0.5rem 0 !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+      
+      &::-webkit-scrollbar {
+        width: 4px !important;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: $gray-100 !important;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: $gray-300 !important;
+        border-radius: 2px !important;
+      }
+    }
+    
+    :deep(.p-dropdown-item),
+    :deep(.p-multiselect-item),
+    :deep(.p-autocomplete-item) {
+      padding: 0.625rem 1rem !important;
+      transition: var(--enhanced-form-transition-fast) !important;
+      color: $gray-700 !important;
+      font-size: var(--enhanced-form-font-size) !important;
+      margin: 0.125rem 0.5rem !important;
+      border-radius: $border-radius !important;
+      border: none !important; // ✅ SIN BORDES EN ITEMS
+      
+      &:hover {
+        background: $gray-100 !important;
+        color: $gray-900 !important;
+        transform: translateX(2px) !important;
+      }
+      
+      &.p-highlight {
+        background: $primary-color !important;
+        color: white !important;
+        font-weight: 500 !important;
+        box-shadow: 0 2px 4px rgba($primary-color, 0.3) !important;
+      }
+      
+      &:focus {
+        outline: 2px solid rgba($primary-color, 0.3) !important;
+        outline-offset: -2px !important;
+        background: $primary-light !important;
+      }
+    }
+
+    // ===============================
+    // 🎯 AUTOCOMPLETE MULTIPLE CHIPS (si se usa)
+    // ===============================
+    :deep(.p-autocomplete-multiple-container) {
+      min-height: calc(var(--enhanced-form-field-height) - 4px) !important;
+      padding: 0.375rem 0.625rem !important;
+      display: flex !important;
+      align-items: center !important;
+      flex-wrap: wrap !important;
+      gap: 0.25rem !important;
+    }
+
+    :deep(.p-autocomplete-token) {
+      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
+      border: 1px solid rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+      border-radius: 1rem !important;
+      padding: 0.25rem 0.75rem !important;
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      height: auto !important;
+      min-height: 1.5rem !important;
+      animation: chip-appear 0.2s ease-out !important;
+      transition: var(--enhanced-form-transition) !important;
+      
+      &:hover {
+        background: linear-gradient(135deg, $primary-color, $primary-hover) !important;
+        color: white !important;
+        transform: scale(1.05) !important;
+      }
+      
+      .p-autocomplete-token-icon {
+        margin-left: 0.5rem !important;
+        color: $primary-color !important;
+        border-radius: 50% !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          color: white !important;
+          background: $error-color !important;
+          transform: scale(1.1) !important;
+        }
+      }
+    }
+    
+    // ✅ DATE PICKER PANEL - SIN DOBLE BORDE
+    :deep(.p-datepicker) {
+      border-radius: 0 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) !important;
+      border: var(--enhanced-form-border-width) solid var(--enhanced-form-focus-border) !important;
+      border-top: none !important; // ✅ QUITAR BORDE SUPERIOR
+      margin-top: 0 !important; // ✅ SIN SEPARACIÓN
+      background: white !important;
+      overflow: hidden !important;
+      z-index: var(--enhanced-form-dropdown-z) !important;
+      animation: slideDown 0.2s ease-out !important;
+      
+      // ✅ CONECTAR VISUALMENTE CON EL CALENDAR
+      &::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--enhanced-form-focus-border);
+        z-index: 1;
+      }
+      
+      .p-datepicker-header {
+        background: $gray-50 !important;
+        border-bottom: 1px solid $gray-200 !important;
+        padding: 1rem !important;
+        
+        .p-datepicker-title {
+          color: $gray-800 !important;
+          font-weight: 600 !important;
+          font-size: 1.1rem !important;
+        }
+        
+        .p-datepicker-prev,
+        .p-datepicker-next {
+          color: $gray-600 !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: var(--enhanced-form-border-radius-small) !important;
+          transition: var(--enhanced-form-transition) !important;
+          
+          &:hover {
+            background: $gray-100 !important;
+            color: $gray-800 !important;
+            transform: scale(1.1) !important;
+          }
+          
+          &:focus {
+            outline: 2px solid rgba($primary-color, 0.3) !important;
+            outline-offset: 1px !important;
+          }
+        }
+      }
+      
+      .p-datepicker-calendar {
+        .p-datepicker-weekheader {
+          background: $gray-50 !important;
+          
+          th {
+            color: $gray-600 !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 0.5rem !important;
+            font-size: 0.9rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+          }
+        }
+        
+        td {
+          padding: 2px !important;
+          
+          .p-datepicker-day {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: var(--enhanced-form-border-radius-small) !important;
+            color: $gray-700 !important;
+            font-weight: 500 !important;
+            transition: var(--enhanced-form-transition) !important;
+            
+            &:hover {
+              background: $primary-light !important;
+              color: $primary-color !important;
+              transform: scale(1.05) !important;
+              box-shadow: 0 2px 4px rgba($primary-color, 0.2) !important;
+            }
+            
+            &:focus {
+              outline: 2px solid rgba($primary-color, 0.3) !important;
+              outline-offset: 1px !important;
+            }
+            
+            &.p-datepicker-day-selected {
+              background: $primary-color !important;
+              color: white !important;
+              font-weight: 700 !important;
+              box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
+              transform: scale(1.05) !important;
+            }
+            
+            &.p-datepicker-day-today {
+              background: $warning-light !important;
+              color: $warning-color !important;
+              font-weight: 700 !important;
+              border: 2px solid $warning-color !important;
+            }
+            
+            &.p-datepicker-day-other-month {
+              opacity: 0.5 !important;
+            }
+          }
+        }
+      }
+    }
+    
+    // ✅ MULTISELECT TOKENS
+    :deep(.p-multiselect-token) {
+      background: linear-gradient(135deg, $primary-light, rgba(59, 130, 246, 0.1)) !important;
+      border: 1px solid rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+      border-radius: 1rem !important;
+      padding: 0.25rem 0.75rem !important;
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      height: auto !important;
+      min-height: 1.5rem !important;
+      animation: chip-appear 0.2s ease-out !important;
+      transition: var(--enhanced-form-transition) !important;
+      
+      &:hover {
+        background: linear-gradient(135deg, $primary-color, $primary-hover) !important;
+        color: white !important;
+        transform: scale(1.05) !important;
+      }
+      
+      .p-multiselect-token-icon {
+        margin-left: 0.5rem !important;
+        color: $primary-color !important;
+        border-radius: 50% !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          color: white !important;
+          background: $error-color !important;
+          transform: scale(1.1) !important;
+        }
+      }
+    }
+    
+    // ✅ UNIVERSAL FORM LABELS
+    :deep(.form-field__label) {
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin-bottom: 0.75rem !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+    }
+    
+    :deep(.form-field--required .form-field__label::after) {
+      content: ' *' !important;
+      color: $error-color !important;
+      font-weight: bold !important;
+      margin-left: 0.125rem !important;
+    }
+    
+    // ✅ WRAPPER CONTAINERS
+    :deep(.date-field__wrapper) {
+      width: 100% !important;
+      position: relative !important;
+      display: block !important;
+      box-sizing: border-box !important;
+    }
+    
+    :deep(.form-field__input-container),
+    :deep(.form-field__input-wrapper) {
+      width: 100% !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+    }
+    
+    // ✅ FOCUS STATES
+    :deep(.form-field:focus-within) {
+      animation: field-focus 0.3s ease-out !important;
+    }
+  }
+  
+  // ===============================
+  // LOADING STATE
+  // ===============================
+  
+  &__loading {
+    @extend .flex, .justify-content-center, .align-items-center;
+    padding: $spacing-3xl;
+    min-height: 300px;
+    
+    &-content {
+      @extend .flex, .flex-column, .align-items-center;
+      gap: $spacing-lg;
+      text-align: center;
+      
+      p {
+        margin: 0;
+        color: $gray-600;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+  
+  // ===============================
+  // ACTIONS SECTION
+  // ===============================
+  
+  &__actions {
+    margin-top: $spacing-xl;
+    padding-top: $spacing-xl;
+    border-top: 1px solid $gray-200;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, $primary-color, transparent);
+    }
+  }
+  
+  &__format {
+    &-section {
+      margin-bottom: $spacing-xl;
+    }
+    
+    &-label {
+      @extend .flex, .align-items-center;
+      font-size: $font-size-base;
+      font-weight: $font-weight-bold;
+      color: $gray-800;
+      margin-bottom: $spacing-lg;
+      
+      .pi {
+        margin-right: $spacing-sm;
+        color: $primary-color;
+      }
+    }
+    
+    &-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+      margin-top: $spacing-md;
+    }
+    
+    &-option {
+      @include format-option;
+      
+      &-header {
+        @extend .flex, .align-items-center;
+        gap: $spacing-sm;
+        margin-bottom: $spacing-sm;
+        
+        i {
+          font-size: $font-size-lg;
+        }
+      }
+      
+      &-name {
+        font-weight: $font-weight-bold;
+        color: $gray-900;
+        font-size: $font-size-base;
+      }
+      
+      &-description {
+        margin: 0;
+        font-size: $font-size-small;
+        color: $gray-600;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  &__generation {
+    &-controls {
+      margin-bottom: $spacing-lg;
+    }
+    
+    &-info {
+      text-align: center;
+      margin-top: $spacing-md;
+      
+      .flex {
+        @extend .justify-content-center;
+        font-size: $font-size-small;
+        color: $gray-600;
+        background: $gray-50;
+        padding: $spacing-sm $spacing-md;
+        border-radius: $border-radius;
+        border: 1px solid $gray-200;
+      }
+    }
+  }
+  
+  &__generate-btn {
+    @include button-base;
+    width: 100%;
+    height: $report-viewer-field-height !important;
+    min-height: $report-viewer-field-height !important;
+    background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: $font-weight-bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: $spacing-md;
+    border-radius: $border-radius-lg !important;
+    box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3) !important;
+    transition: $transition-slow !important;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, $primary-hover 0%, $gray-800 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: $shadow-xl !important;
+      
+      &::before {
+        left: 100%;
+      }
+    }
+    
+    &:active {
+      transform: translateY(1px) !important;
+    }
+    
+    &:disabled {
+      background: linear-gradient(135deg, $gray-400, $gray-500) !important;
+      transform: none !important;
+      box-shadow: $shadow-sm !important;
+      cursor: not-allowed !important;
+      opacity: 0.7;
+    }
+  }
+  
+  &__quick-actions {
+    padding-top: $spacing-lg;
+    border-top: 1px solid $gray-200;
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-800;
+    }
+    
+    &-buttons {
+      @extend .flex;
+      gap: $spacing-sm;
+      
+      @media (max-width: $breakpoint-md) {
+        flex-direction: column;
+      }
+      
+      .p-button {
+        flex: 1;
+        justify-content: center;
+        transition: var(--enhanced-form-transition) !important;
+        
+        &:hover {
+          transform: translateY(-1px) !important;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // EMPTY STATES
+  // ===============================
+  
+  &__no-parameters {
+    padding: $spacing-3xl $spacing-xl;
+    text-align: center;
+    
+    &-content {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    
+    &-icon {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $success-color, $success-light);
+      color: white;
+      @extend .flex, .align-items-center, .justify-content-center;
+      margin: 0 auto $spacing-xl;
+      font-size: $font-size-2xl;
+      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+    }
+    
+    &-text {
+      margin: 0 0 $spacing-xl 0;
+      color: $gray-600;
+      line-height: $line-height-base;
+    }
+  }
+  
+  &__empty {
+    padding: $spacing-3xl $spacing-xl;
+    text-align: center;
+    
+    &-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    &-icon {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $gray-100, $gray-200);
+      color: $gray-400;
+      @extend .flex, .align-items-center, .justify-content-center;
+      margin: 0 auto $spacing-xl;
+      font-size: $font-size-4xl;
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+    }
+    
+    &-text {
+      margin: 0 0 $spacing-xl 0;
+      color: $gray-600;
+      line-height: $line-height-base;
+    }
+    
+    &-help {
+      background: linear-gradient(135deg, $gray-50, $gray-100);
+      border-radius: $border-radius-lg;
+      padding: $spacing-lg;
+      border: 1px solid $panel-border;
+    }
+  }
+  
+  &__help {
+    &-content {
+      @extend .flex;
+      gap: $spacing-md;
+      text-align: left;
+      
+      i {
+        color: $primary-color;
+        font-size: $font-size-lg;
+        margin-top: 2px;
+      }
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-xs 0;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-800;
+    }
+    
+    &-text {
+      margin: 0;
+      font-size: $font-size-base;
+      color: $gray-600;
+      line-height: 1.5;
+      
+      code {
+        background: $gray-200;
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: $font-size-small;
+        color: $gray-700;
+        border: 1px solid $gray-300;
+      }
+    }
+  }
+  
+  // ===============================
+  // PREVIEW PANEL
+  // ===============================
+  
+  &__preview {
+    @include panel-base;
+    
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    &-header {
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
+      
+      &-content {
+        @extend .flex, .align-items-center;
+        gap: $spacing-lg;
+        width: 100%;
+      }
+      
+      &-actions {
+        @extend .flex, .align-items-center;
+        gap: $spacing-sm;
+        margin-left: auto;
+        
+        .p-button {
+          height: 36px !important;
+          min-height: 36px !important;
+          transition: var(--enhanced-form-transition) !important;
+          
+          &.p-button-sm {
+            padding: 0 $spacing-md !important;
+          }
+          
+          &:hover {
+            transform: translateY(-1px) !important;
+          }
+        }
+      }
+    }
+    
+    &-icon {
+      width: 3rem !important;
+      height: 3rem !important;
+      border-radius: $border-radius-lg;
+      background: linear-gradient(135deg, $gray-600, $gray-700);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-lg !important;
+      box-shadow: 0 3px 12px rgba(100, 116, 139, 0.25);
+      flex-shrink: 0;
+    }
+    
+    &-title {
+      margin: 0;
+      font-size: $font-size-xl !important;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      line-height: 1.3;
+    }
+    
+    &-subtitle {
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
+      color: $gray-600;
+      line-height: 1.4;
+    }
+    
+    &-content {
+      flex: 1;
+      padding: 0;
+      background: $gray-50;
+    }
+    
+    &-empty {
+      @extend .flex, .align-items-center, .justify-content-center;
+      height: 100%;
+      min-height: 500px;
+      padding: $spacing-xl;
+      background: linear-gradient(135deg, $gray-50 0%, $gray-100 100%);
+      
+      &-content {
+        text-align: center;
+        max-width: 450px;
+      }
+      
+      &-icon {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $gray-100, $gray-200);
+        color: $gray-400;
+        @extend .flex, .align-items-center, .justify-content-center;
+        margin: 0 auto $spacing-xl;
+        font-size: $font-size-4xl;
+        box-shadow: $shadow-md;
+      }
+      
+      &-title {
+        margin: 0 0 $spacing-md 0;
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $gray-900;
+      }
+      
+      &-text {
+        margin: 0 0 $spacing-xl 0;
+        color: $gray-600;
+        line-height: $line-height-base;
+        font-size: $font-size-base;
+      }
+      
+      &-info {
+        @extend .flex, .align-items-center, .justify-content-center;
+        gap: $spacing-sm;
+        padding: $spacing-md $spacing-lg;
+        background: linear-gradient(135deg, $primary-light, $gray-50);
+        border-radius: $border-radius-lg;
+        color: $primary-color;
+        font-size: $font-size-base;
+        border: 1px solid $primary-color;
+        font-weight: $font-weight-medium;
+      }
+    }
+    
+    &-features {
+      background: white;
+      border-radius: $border-radius-lg;
+      padding: $spacing-lg;
+      margin-bottom: $spacing-xl;
+      border: 1px solid $panel-border;
+      box-shadow: $shadow-sm;
+      
+      &-title {
+        margin: 0 0 $spacing-md 0;
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $gray-800;
+      }
+      
+      &-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        
+        li {
+          @extend .flex, .align-items-center;
+          gap: $spacing-sm;
+          padding: $spacing-xs 0;
+          font-size: $font-size-base;
+          color: $gray-600;
+          
+          i {
+            color: $primary-color;
+            width: 16px;
+          }
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // PDF VIEWER
+  // ===============================
+  
+  &__pdf {
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+    
+    &-toolbar {
+      padding: $spacing-lg $spacing-xl;
+      border-bottom: 1px solid $panel-border;
+      background: $panel-header-bg;
+      flex-shrink: 0;
+    }
+    
+    &-info {
+      @extend .flex, .align-items-center;
+      gap: $spacing-lg;
+    }
+    
+    &-object {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: white;
+      min-height: 600px;
+    }
+    
+    &-fallback {
+      @extend .flex, .align-items-center, .justify-content-center;
+      height: 100%;
+      min-height: 500px;
+      background: linear-gradient(135deg, $gray-50, $gray-100);
+      
+      &-content {
+        text-align: center;
+        padding: $spacing-xl;
+        
+        .pi {
+          font-size: 4rem;
+          color: $error-color;
+          margin-bottom: $spacing-lg;
+        }
+        
+        h4 {
+          margin: 0 0 $spacing-sm 0;
+          font-size: $font-size-xl;
+          font-weight: $font-weight-semibold;
+          color: $gray-900;
+        }
+        
+        p {
+          margin: 0 0 $spacing-xl 0;
+          color: $gray-600;
+          font-size: $font-size-base;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // RESPONSIVE DESIGN
+  // ===============================
+  
+  @media (max-width: $breakpoint-lg) {
+    &__main {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+    
+    &__header {
+      padding: $spacing-lg;
+      
+      &-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $spacing-md;
+      }
+    }
+    
+    &__format-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    &__quick-actions-buttons {
+      flex-direction: column;
+    }
+    
+    --enhanced-form-field-height: 3rem;
+    
+    &__generate-btn {
+      height: 3rem !important;
+      min-height: 3rem !important;
+    }
+    
+    &__parameters-content {
+      :deep(.grid) {
+        row-gap: 1.75rem !important;
+      }
+      
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect),
+      :deep(.p-autocomplete) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+      }
+    }
+  }
+  
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-sm;
+    
+    &__empty,
+    &__no-parameters {
+      padding: $spacing-xl $spacing-lg;
+    }
+    
+    &__title {
+      font-size: $font-size-2xl;
+    }
+    
+    &__header {
+      &-icon {
+        width: 3rem;
+        height: 3rem;
+      }
+    }
+    
+    --enhanced-form-field-height: 3.25rem;
+    
+    &__generate-btn {
+      height: 3.25rem !important;
+      min-height: 3.25rem !important;
+      font-size: 1.1rem !important;
+    }
+    
+    // Mobile-specific component adjustments
+    .local-select-field {
+      .form-field__label {
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      .form-field__error-message {
+        font-size: 0.9rem !important;
+        gap: 0.5rem !important;
+      }
+    }
+    
+    .date-field__today-btn {
+      padding: 0.625rem 1rem !important;
+      font-size: 0.9rem !important;
+      
+      .pi {
+        font-size: 1rem !important;
+      }
+    }
+    
+    .date-field__selected-info {
+      font-size: 0.9rem !important;
+    }
+    
+    &__parameters-content {
+      :deep(.grid) {
+        row-gap: 1.75rem !important;
+      }
+      
+      :deep(.form-field__label) {
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      :deep(.p-multiselect-token) {
+        padding: 0.375rem 1rem !important;
+        font-size: 0.9rem !important;
+        min-height: 2rem !important;
+        
+        .p-multiselect-token-icon {
+          width: 1.25rem !important;
+          height: 1.25rem !important;
+          margin-left: 0.75rem !important;
+        }
+      }
+      
+      :deep(.p-dropdown-clear-icon),
+      :deep(.p-calendar-clear-icon),
+      :deep(.p-autocomplete-clear-icon) {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        right: calc(var(--enhanced-form-field-height) + 10px) !important;
+        
+        .p-icon,
+        .pi {
+          font-size: 0.9rem !important;
+        }
+      }
+      
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect),
+      :deep(.p-autocomplete) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+      }
+      
+      // ✅ MOBILE: Ajustes para dropdown panels
+      :deep(.p-dropdown-panel),
+      :deep(.p-multiselect-panel),
+      :deep(.p-autocomplete-panel) {
+        max-height: 40vh !important;
+        
+        .p-dropdown-items,
+        .p-multiselect-items,
+        .p-autocomplete-items {
+          max-height: none !important;
+        }
+      }
+      
+      :deep(.p-dropdown-item),
+      :deep(.p-multiselect-item),
+      :deep(.p-autocomplete-item) {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        
+        &:hover {
+          transform: none !important; // Disable transform on mobile
+        }
+      }
+    }
+    
+    &__format-grid {
+      grid-template-columns: 1fr !important;
+      gap: 1rem !important;
+    }
+  }
+  
+  // Extra small devices adjustments
+  @media (max-width: 480px) {
+    --enhanced-form-field-height: 3.5rem;
+    
+    &__parameters-content {
+      :deep(.p-calendar),
+      :deep(.p-dropdown),
+      :deep(.p-multiselect),
+      :deep(.p-autocomplete) {
+        height: var(--enhanced-form-field-height) !important;
+        min-height: var(--enhanced-form-field-height) !important;
+      }
+      
+      :deep(.p-dropdown-clear-icon),
+      :deep(.p-calendar-clear-icon),
+      :deep(.p-autocomplete-clear-icon) {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        right: calc(var(--enhanced-form-field-height) + 12px) !important;
+      }
+    }
+  }
+}
+
+// ===============================
+// UTILITY CLASSES & ICONS
+// ===============================
+
+.pi-file-pdf { 
+  color: $error-color; 
+}
+
+.pi-file-excel { 
+  color: $success-color; 
+}
+
+.pi-table { 
+  color: #0369a1; 
+}
+
+.pi-spin { 
+  animation: spin 1s linear infinite; 
+}
+
+// ===============================
+// KEYFRAME ANIMATIONS
+// ===============================
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) scaleY(0.95);
+    transform-origin: top;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes chip-appear {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes field-focus {
+  0% { 
+    transform: translateY(0) scale(1); 
+  }
+  50% { 
+    transform: translateY(-1px) scale(1.001); 
+  }
+  100% { 
+    transform: translateY(-1px) scale(1); 
+  }
+}
+
+@keyframes fieldErrorShake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-2px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(2px); 
+  }
+}
+
+// ===============================
+// ANIMATION APPLICATIONS
+// ===============================
+
+.report-viewer__parameters,
+.report-viewer__preview {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.report-viewer__generate-btn {
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: left 0.5s ease !important;
+  }
+  
+  &:hover:not(:disabled)::before {
+    left: 100% !important;
+  }
+  
+  &:active {
+    transform: translateY(1px) !important;
+  }
+}
+
+// ===============================
+// ACCESSIBILITY ENHANCEMENTS
+// ===============================
+
+.report-viewer {
+  // Focus indicators
+  :deep(*:focus) {
+    outline: 2px solid rgba($primary-color, 0.5) !important;
+    outline-offset: 2px !important;
+  }
+  
+  // High contrast mode support
+  @media (prefers-contrast: high) {
+    --enhanced-form-border-width: 3px;
+    
+    :deep(.p-dropdown),
+    :deep(.p-calendar),
+    :deep(.p-multiselect),
+    :deep(.p-autocomplete) {
+      border-width: 3px !important;
+    }
+  }
+  
+  // Reduced motion support
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  // Print styles
+  @media print {
+    background: white !important;
+    color: black !important;
+    
+    &__parameters,
+    &__preview {
+      box-shadow: none !important;
+      border: 1px solid #000 !important;
+    }
+    
+    &__generate-btn,
+    &__quick-actions {
+      display: none !important;
+    }
+  }
+}
+
+// ===============================
+// DARK MODE SUPPORT (OPTIONAL)
+// ===============================
+
+@media (prefers-color-scheme: dark) {
+  .report-viewer {
+    // This section can be expanded for dark mode support
+    // Currently maintaining light theme for professional appearance
+    
+    // Future dark mode variables would go here:
+    // --surface-ground: #1f2937;
+    // --surface-section: #374151;
+    // --text-color: #f9fafb;
+    // etc.
+  }
+}
+
+// ===============================
+// PERFORMANCE OPTIMIZATIONS
+// ===============================
+
+.report-viewer {
+  // Hardware acceleration for smooth animations
+  &__parameters,
+  &__preview,
+  &__generate-btn {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  // Optimize scrolling performance
+  &__parameters-content,
+  &__preview-content {
+    contain: layout style;
+  }
+  
+  // Optimize dropdown rendering
+  :deep(.p-dropdown-panel),
+  :deep(.p-multiselect-panel),
+  :deep(.p-autocomplete-panel),
+  :deep(.p-datepicker) {
+    contain: layout style paint;
+  }
+}
+
+/* ===================================================================
+   END OF REPORT VIEWER STYLES
+   =================================================================== */

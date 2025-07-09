@@ -1,0 +1,1174 @@
+/* ===================================================================
+   REPORT VIEWER - ENHANCED LAYOUT & STRUCTURE STYLES
+   Layout, grid systems, panels, progress states, and component structure
+   Compatible with PrimeVue + PrimeFlex + Design System
+   =================================================================== */
+
+// ===============================
+// IMPORTS & LAYOUT VARIABLES
+// ===============================
+
+@import '../../../node_modules/primeflex/primeflex.scss';
+@import '../variables';
+
+// Layout-specific variables
+$report-viewer-grid-gap: $spacing-xl;
+$report-viewer-panel-radius: $border-radius-xl;
+
+// Enhanced status colors
+$status-loading: #3b82f6;
+$status-success: $success-color;
+$status-warning: #f59e0b;
+$status-error: $error-color;
+$status-cancelled: #6b7280;
+
+// Panel colors
+$panel-header-bg: #f8fafc;
+$panel-border: #e2e8f0;
+$panel-bg: #ffffff;
+
+// Progress colors
+$progress-primary: #3b82f6;
+$progress-bg: #e5e7eb;
+$progress-success: #10b981;
+
+// ===============================
+// ENHANCED LAYOUT MIXINS
+// ===============================
+
+@mixin panel-base-enhanced {
+  @include card-base;
+  display: flex;
+  flex-direction: column;
+  min-height: 75vh;
+  overflow: hidden;
+  background: $panel-bg;
+  border: 1px solid $panel-border;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+  
+  &__header {
+    padding: $spacing-lg $spacing-xl;
+    border-bottom: 1px solid $panel-border;
+    background: linear-gradient(135deg, $panel-header-bg 0%, #ffffff 100%);
+    flex-shrink: 0;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, $panel-border 50%, transparent);
+    }
+  }
+  
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    background: $panel-bg;
+    position: relative;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+      border-radius: 4px;
+      
+      &:hover {
+        background: linear-gradient(180deg, #94a3b8, #64748b);
+      }
+    }
+  }
+}
+
+@mixin status-card-enhanced($border-color, $bg-color, $accent-color) {
+  @include card-base;
+  border-left: 4px solid $border-color;
+  padding: $spacing-xl;
+  margin: $spacing-lg;
+  border-radius: $border-radius-xl;
+  background: $bg-color;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, $accent-color 0%, transparent 70%);
+    opacity: 0.1;
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+  }
+}
+
+@mixin progress-section-base($accent-color, $bg-color) {
+  padding: 2rem;
+  background: $bg-color;
+  border-radius: $border-radius-xl;
+  margin: $spacing-lg;
+  border: 1px solid rgba($accent-color, 0.15);
+  box-shadow: 0 8px 32px rgba($accent-color, 0.12);
+  animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, $accent-color, lighten($accent-color, 15%));
+  }
+}
+
+// ===============================
+// MAIN COMPONENT LAYOUT - ENHANCED
+// ===============================
+
+.report-viewer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: $spacing-lg;
+  font-family: inherit;
+  
+  // ===============================
+  // ENHANCED HEADER SECTION
+  // ===============================
+  
+  &__header {
+    @include card-base;
+    padding: $spacing-xl;
+    margin-bottom: $spacing-lg;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid $panel-border;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, $primary-color, $success-color, $primary-color);
+    }
+    
+    &-content {
+      @extend .flex, .align-items-center, .justify-content-between;
+      gap: $spacing-lg;
+      
+      @media (max-width: $breakpoint-md) {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    
+    &-info {
+      @extend .flex, .align-items-center;
+      gap: $spacing-lg;
+    }
+    
+    &-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $primary-color, $primary-hover);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-xl;
+      box-shadow: 0 6px 20px rgba(71, 85, 105, 0.3);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        z-index: -1;
+        opacity: 0.3;
+        animation: pulse 2s infinite;
+      }
+    }
+    
+    &-badge {
+      @extend .flex, .align-items-center;
+      gap: $spacing-md;
+      padding: $spacing-md $spacing-lg;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      border-radius: $border-radius-lg;
+      border: 1px solid $panel-border;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+      
+      i {
+        color: $primary-color;
+        font-size: $font-size-lg;
+      }
+      
+      &-content {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+      }
+      
+      &-title {
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $gray-800;
+        margin: 0;
+      }
+      
+      &-subtitle {
+        font-size: $font-size-small;
+        color: $gray-500;
+        margin: 0;
+      }
+    }
+  }
+  
+  // ===============================
+  // MAIN LAYOUT GRID - ENHANCED
+  // ===============================
+  
+  &__main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: $spacing-xl;
+    align-items: start;
+    min-height: 75vh;
+
+    @media (max-width: $breakpoint-lg) {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+  }
+  
+  // ===============================
+  // PARAMETERS PANEL - ENHANCED
+  // ===============================
+  
+  &__parameters {
+    @include panel-base-enhanced;
+    
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    &-header {
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      
+      &-content {
+        @extend .flex, .align-items-center;
+        gap: $spacing-lg;
+        flex: 1;
+      }
+    }
+    
+    &-icon {
+      width: 3rem !important;
+      height: 3rem !important;
+      border-radius: $border-radius-lg;
+      background: linear-gradient(135deg, $primary-color, $primary-hover);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-lg !important;
+      box-shadow: 0 4px 16px rgba(71, 85, 105, 0.25);
+      flex-shrink: 0;
+    }
+    
+    &-title {
+      margin: 0;
+      font-size: $font-size-xl !important;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      line-height: 1.3;
+    }
+    
+    &-subtitle {
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
+      color: $gray-600;
+      line-height: 1.4;
+    }
+    
+    &-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: $spacing-xl !important;
+    }
+  }
+  
+  // ===============================
+  // PREVIEW PANEL - ENHANCED
+  // ===============================
+  
+  &__preview {
+    @include panel-base-enhanced;
+    
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    &-header {
+      padding: $spacing-xl $spacing-xl !important;
+      min-height: 80px !important;
+      
+      &-content {
+        @extend .flex, .align-items-center;
+        gap: $spacing-lg;
+        width: 100%;
+      }
+    }
+    
+    &-icon {
+      width: 3rem !important;
+      height: 3rem !important;
+      border-radius: $border-radius-lg;
+      background: linear-gradient(135deg, $gray-600, $gray-700);
+      @extend .flex, .align-items-center, .justify-content-center;
+      color: white;
+      font-size: $font-size-lg !important;
+      box-shadow: 0 4px 16px rgba(100, 116, 139, 0.25);
+      flex-shrink: 0;
+    }
+    
+    &-title {
+      margin: 0;
+      font-size: $font-size-xl !important;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      line-height: 1.3;
+    }
+    
+    &-subtitle {
+      margin: $spacing-xs 0 0 0;
+      font-size: $font-size-base !important;
+      color: $gray-600;
+      line-height: 1.4;
+    }
+    
+    &-content {
+      flex: 1;
+      padding: 0;
+      background: #f8fafc;
+      position: relative;
+    }
+  }
+  
+  // ===============================
+  // 🚀 ENHANCED PROGRESS SECTION
+  // ===============================
+  
+  &__progress-section {
+    @include progress-section-base($status-loading, linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%));
+  }
+  
+  &__progress-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  &__steps-container {
+    margin-bottom: 2rem;
+    
+    :deep(.p-steps) {
+      .p-steps-item {
+        .p-steps-number {
+          background: $gray-200;
+          color: $gray-600;
+          border: 2px solid $gray-300;
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 50%;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          
+          &.p-highlight {
+            background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
+            border-color: $primary-color;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: scale(1.1);
+          }
+        }
+        
+        .p-steps-title {
+          color: $gray-600;
+          font-weight: $font-weight-semibold;
+          font-size: 0.9rem;
+          
+          &.p-highlight {
+            color: $primary-color;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+  
+  &__progress-status {
+    background: white;
+    padding: 2rem;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, $primary-color, lighten($primary-color, 20%));
+      border-radius: $border-radius-lg $border-radius-lg 0 0;
+    }
+  }
+  
+  &__progress-title {
+    margin: 0 0 1.5rem 0;
+    color: $gray-900;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+    
+    .pi-spin {
+      color: $primary-color;
+      animation: spin 1s linear infinite;
+    }
+    
+    .pi-send {
+      color: $primary-color;
+    }
+  }
+  
+  &__progress-percentage {
+    font-size: 2rem;
+    font-weight: $font-weight-bold;
+    color: $primary-color;
+    text-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  }
+  
+  &__progress-bar-container {
+    margin: 1.5rem 0;
+    
+    :deep(.p-progressbar) {
+      height: 14px !important;
+      border-radius: 7px;
+      background: $progress-bg;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      
+      .p-progressbar-value {
+        border-radius: 7px;
+        background: linear-gradient(90deg, $progress-primary 0%, lighten($progress-primary, 15%) 100%);
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 50%;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
+          border-radius: 7px 7px 0 0;
+        }
+      }
+    }
+  }
+  
+  &__progress-message {
+    font-size: $font-size-base;
+    color: $gray-700;
+    margin: 1rem 0;
+    font-weight: $font-weight-medium;
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    border-radius: $border-radius;
+    border-left: 3px solid $primary-color;
+  }
+  
+  &__time-info {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-radius: $border-radius;
+    border: 1px solid #cbd5e1;
+    
+    .flex {
+      font-size: 0.9rem;
+      color: $gray-600;
+      font-weight: 500;
+    }
+  }
+  
+  &__polling-details {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: $border-radius;
+    border-left: 3px solid $status-warning;
+    
+    .flex {
+      font-size: 0.85rem;
+      color: darken($status-warning, 20%);
+      font-weight: 500;
+    }
+  }
+  
+  &__progress-actions {
+    margin-top: 2rem;
+    
+    .p-button {
+      width: 100%;
+      height: 3rem;
+      font-weight: 600;
+      border-radius: $border-radius-lg;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+      }
+    }
+  }
+  
+  // ===============================
+  // 🚨 ENHANCED ERROR STATE
+  // ===============================
+  
+  &__error-section {
+    @include progress-section-base($status-error, linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%));
+  }
+  
+  &__error-container {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  &__error-icon {
+    font-size: 4rem;
+    color: $status-error;
+    margin-bottom: 1.5rem;
+    animation: shake 0.6s ease-in-out;
+    
+    &::before {
+      content: '⚠️';
+      position: absolute;
+      font-size: 1.5rem;
+      margin-left: -0.5rem;
+      margin-top: -0.5rem;
+      animation: bounce 1s infinite;
+    }
+  }
+  
+  &__error-title {
+    color: darken($status-error, 10%);
+    margin: 1rem 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+  }
+  
+  &__error-message {
+    color: $gray-700;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: white;
+    border-radius: $border-radius-lg;
+    border-left: 4px solid $status-error;
+    text-align: left;
+    font-size: $font-size-base;
+    line-height: 1.6;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  &__error-details {
+    margin: 1rem 0;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: $font-size-small;
+    color: $gray-600;
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    border-radius: $border-radius;
+    border: 1px solid #e2e8f0;
+  }
+  
+  &__error-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    
+    .p-button {
+      height: 3rem;
+      font-weight: 600;
+      border-radius: $border-radius-lg;
+      transition: all 0.3s ease;
+      
+      &.p-button-primary {
+        background: linear-gradient(135deg, $status-error, darken($status-error, 10%));
+        border: none;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+      }
+      
+      &.p-button-outlined {
+        border: 2px solid $gray-300;
+        
+        &:hover {
+          background: $gray-50;
+          border-color: $gray-400;
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // 🟡 ENHANCED CANCELLED STATE
+  // ===============================
+  
+  &__cancelled-section {
+    @include progress-section-base($status-cancelled, linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%));
+  }
+  
+  &__cancelled-container {
+    max-width: 450px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  &__cancelled-icon {
+    font-size: 4rem;
+    color: $status-cancelled;
+    margin-bottom: 1.5rem;
+    position: relative;
+    
+    &::after {
+      content: '✋';
+      position: absolute;
+      font-size: 1.5rem;
+      margin-left: -0.3rem;
+      margin-top: -0.3rem;
+      animation: wave 1s ease-in-out infinite;
+    }
+  }
+  
+  &__cancelled-title {
+    color: darken($status-cancelled, 15%);
+    margin: 1rem 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+  }
+  
+  &__cancelled-message {
+    color: $gray-700;
+    margin: 1rem 0;
+    font-size: $font-size-base;
+    background: white;
+    padding: 1rem;
+    border-radius: $border-radius;
+    border-left: 3px solid $status-cancelled;
+  }
+  
+  &__cancelled-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    
+    .p-button {
+      height: 3rem;
+      font-weight: 600;
+      border-radius: $border-radius-lg;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+    }
+  }
+  
+  // ===============================
+  // ✅ ENHANCED SUCCESS STATE
+  // ===============================
+  
+  &__success-section {
+    @include progress-section-base($status-success, linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%));
+  }
+  
+  &__success-container {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  &__success-icon {
+    font-size: 4rem;
+    color: $status-success;
+    margin-bottom: 1.5rem;
+    animation: success-bounce 0.8s ease-out;
+    position: relative;
+    
+    &::after {
+      content: '🎉';
+      position: absolute;
+      font-size: 1.5rem;
+      margin-left: 2rem;
+      margin-top: -2rem;
+      animation: confetti 1.5s ease-out;
+    }
+  }
+  
+  &__success-title {
+    color: darken($status-success, 10%);
+    margin: 1rem 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+  }
+  
+  &__success-message {
+    color: $gray-700;
+    margin: 1rem 0;
+    font-size: $font-size-base;
+  }
+  
+  &__file-info {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: white;
+    border-radius: $border-radius-lg;
+    border: 1px solid #d1fae5;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.1);
+  }
+  
+  &__file-details {
+    text-align: left;
+    
+    .flex {
+      align-items: center;
+      margin-bottom: 0.5rem;
+      
+      i {
+        color: $status-success;
+        margin-right: 0.5rem;
+      }
+      
+      .font-semibold {
+        color: $gray-800;
+      }
+    }
+    
+    .text-sm {
+      color: $gray-600;
+      font-weight: 500;
+    }
+  }
+  
+  &__success-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    
+    .p-button {
+      height: 3rem;
+      font-weight: 600;
+      border-radius: $border-radius-lg;
+      transition: all 0.3s ease;
+      
+      &.p-button-primary {
+        background: linear-gradient(135deg, $status-success, darken($status-success, 10%));
+        border: none;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+      }
+      
+      &.p-button-outlined {
+        border: 2px solid lighten($status-success, 20%);
+        color: $status-success;
+        
+        &:hover {
+          background: lighten($status-success, 45%);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // 📄 SUCCESS BANNER FOR PDF
+  // ===============================
+  
+  &__success-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.75rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: $border-radius-lg;
+    margin: $spacing-lg $spacing-lg 0;
+    animation: slideInDown 0.5s ease-out;
+    
+    @media (max-width: $breakpoint-md) {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .flex {
+      align-items: center;
+      gap: 0.75rem;
+      
+      .pi-check-circle {
+        font-size: 1.25rem;
+        color: $status-success;
+      }
+      
+      .font-semibold {
+        color: darken($status-success, 15%);
+        font-size: 1.1rem;
+      }
+    }
+    
+    .p-button {
+      height: 2.5rem;
+      font-weight: 600;
+      border-radius: $border-radius;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+    }
+  }
+  
+  // ===============================
+  // 📄 PDF VIEWER ENHANCED
+  // ===============================
+  
+  &__pdf {
+    &-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+    
+    &-object {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: white;
+      min-height: 600px;
+      border: 1px solid #e5e7eb;
+      border-radius: $border-radius;
+      margin: $spacing-lg;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      
+      @media (max-width: $breakpoint-md) {
+        min-height: 400px;
+        margin: $spacing-md;
+      }
+    }
+    
+    &-fallback {
+      @extend .flex, .align-items-center, .justify-content-center;
+      height: 100%;
+      min-height: 500px;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      
+      &-content {
+        text-align: center;
+        padding: $spacing-xl;
+        
+        .pi {
+          font-size: 4rem;
+          color: $status-error;
+          margin-bottom: $spacing-lg;
+        }
+        
+        h4 {
+          margin: 0 0 $spacing-sm 0;
+          font-size: $font-size-xl;
+          font-weight: $font-weight-semibold;
+          color: $gray-900;
+        }
+        
+        p {
+          margin: 0 0 $spacing-xl 0;
+          color: $gray-600;
+          font-size: $font-size-base;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // EMPTY STATES - ENHANCED
+  // ===============================
+  
+  &__preview-empty {
+    @extend .flex, .align-items-center, .justify-content-center;
+    height: 100%;
+    min-height: 500px;
+    padding: $spacing-xl;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    
+    &-content {
+      text-align: center;
+      max-width: 450px;
+    }
+    
+    &-icon {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+      color: #64748b;
+      @extend .flex, .align-items-center, .justify-content-center;
+      margin: 0 auto $spacing-xl;
+      font-size: $font-size-4xl;
+      box-shadow: $shadow-md;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    &-title {
+      margin: 0 0 $spacing-md 0;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+    }
+    
+    &-text {
+      margin: 0 0 $spacing-xl 0;
+      color: $gray-600;
+      line-height: $line-height-base;
+      font-size: $font-size-base;
+    }
+    
+    &-info {
+      @extend .flex, .align-items-center, .justify-content-center;
+      gap: $spacing-sm;
+      padding: $spacing-md $spacing-lg;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(255, 255, 255, 0.8));
+      border-radius: $border-radius-lg;
+      color: $primary-color;
+      font-size: $font-size-base;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-weight: $font-weight-medium;
+    }
+  }
+  
+  // ===============================
+  // RESPONSIVE ENHANCEMENTS
+  // ===============================
+  
+  @media (max-width: $breakpoint-lg) {
+    &__main {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+    
+    &__progress-section,
+    &__error-section,
+    &__cancelled-section,
+    &__success-section {
+      padding: 1.5rem;
+      margin: $spacing-md;
+    }
+  }
+  
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-sm;
+    
+    &__progress-title,
+    &__error-title,
+    &__cancelled-title,
+    &__success-title {
+      font-size: $font-size-lg;
+    }
+    
+    &__progress-percentage {
+      font-size: 1.5rem;
+    }
+    
+    &__progress-actions,
+    &__error-actions,
+    &__cancelled-actions,
+    &__success-actions {
+      .p-button {
+        height: 3.25rem;
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎬 ENHANCED KEYFRAME ANIMATIONS
+// ===============================
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes shake {
+  0%, 100% { 
+    transform: translateX(0); 
+  }
+  10%, 30%, 50%, 70%, 90% { 
+    transform: translateX(-3px); 
+  }
+  20%, 40%, 60%, 80% { 
+    transform: translateX(3px); 
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { 
+    transform: translateY(0); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+@keyframes wave {
+  0%, 100% { 
+    transform: rotate(0deg); 
+  }
+  25% { 
+    transform: rotate(-10deg); 
+  }
+  75% { 
+    transform: rotate(10deg); 
+  }
+}
+
+@keyframes success-bounce {
+  0% { 
+    transform: scale(0.3); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: scale(1.1); 
+    opacity: 0.8; 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+@keyframes confetti {
+  0% { 
+    transform: translateY(0) rotate(0deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(-50px) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+// ===============================
+// ACCESSIBILITY & PERFORMANCE
+// ===============================
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===================================================================
+   END OF ENHANCED LAYOUT STYLES
+   =================================================================== */

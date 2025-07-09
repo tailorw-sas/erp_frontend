@@ -1,0 +1,376 @@
+/* ===================================================================
+   PRIMEVUE GLOBAL OVERRIDES - REPORT VIEWER
+   Este archivo debe importarse en main.js o como CSS global
+   =================================================================== */
+
+/* ===============================
+   CALENDAR STYLING (DATE PICKER)
+   =============================== */
+
+   .p-calendar {
+    width: 100% !important;
+  }
+  
+  .p-calendar .p-inputtext {
+    height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    padding: 0 1rem !important;
+    font-size: 1rem !important;
+    color: #374151 !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-calendar .p-inputtext:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+  }
+  
+  .p-calendar .p-datepicker-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: 2px solid #e5e7eb !important;
+    border-left: none !important;
+    border-radius: 0 12px 12px 0 !important;
+    color: #6b7280 !important;
+    height: 2.75rem !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-calendar .p-datepicker-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+    transform: scale(1.02) !important;
+  }
+  
+  /* DatePicker Panel */
+  .p-datepicker {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 8px !important;
+  }
+  
+  .p-datepicker .p-datepicker-header {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 1rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-title {
+    color: #1f2937 !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-prev,
+  .p-datepicker .p-datepicker-next {
+    color: #6b7280 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-datepicker .p-datepicker-prev:hover,
+  .p-datepicker .p-datepicker-next:hover {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-weekheader {
+    background: #f9fafb !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-weekheader th {
+    color: #6b7280 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar td {
+    padding: 2px !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day:hover {
+    background: #dbeafe !important;
+    color: #3b82f6 !important;
+    transform: scale(1.05) !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-selected {
+    background: #3b82f6 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3) !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-today {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    font-weight: 700 !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-today:hover {
+    background: #fed7aa !important;
+    color: #ea580c !important;
+  }
+  
+  .p-datepicker .p-datepicker-calendar .p-datepicker-day.p-datepicker-day-other-month {
+    color: #d1d5db !important;
+  }
+  
+  /* ===============================
+     DROPDOWN STYLING
+     =============================== */
+  
+  .p-dropdown {
+    height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown:not(.p-disabled):hover {
+    border-color: #d1d5db !important;
+  }
+  
+  .p-dropdown:not(.p-disabled).p-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .p-dropdown .p-dropdown-label {
+    padding: 0 1rem !important;
+    color: #374151 !important;
+    font-size: 1rem !important;
+    height: calc(2.75rem - 4px) !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .p-dropdown .p-dropdown-label.p-placeholder {
+    color: #9ca3af !important;
+  }
+  
+  .p-dropdown .p-dropdown-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: none !important;
+    border-radius: 0 10px 10px 0 !important;
+    color: #6b7280 !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown .p-dropdown-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+  }
+  
+  .p-dropdown .p-dropdown-clear-icon {
+    right: 3rem !important;
+    color: #6b7280 !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-dropdown .p-dropdown-clear-icon:hover {
+    color: #374151 !important;
+    background: #f3f4f6 !important;
+    border-radius: 50% !important;
+  }
+  
+  /* Dropdown Panel */
+  .p-dropdown-panel {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 4px !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-items {
+    padding: 0.5rem 0 !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item {
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+    font-size: 1rem !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item:hover {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-item.p-highlight {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  .p-dropdown-panel .p-dropdown-empty-message {
+    padding: 1.5rem !important;
+    text-align: center !important;
+    color: #9ca3af !important;
+    font-style: italic !important;
+  }
+  
+  /* ===============================
+     MULTISELECT STYLING
+     =============================== */
+  
+  .p-multiselect {
+    min-height: 2.75rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: white !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-multiselect:not(.p-disabled):hover {
+    border-color: #d1d5db !important;
+  }
+  
+  .p-multiselect:not(.p-disabled).p-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .p-multiselect .p-multiselect-label-container {
+    padding: 0.5rem 1rem !important;
+    min-height: calc(2.75rem - 4px) !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .p-multiselect .p-multiselect-trigger {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+    border: none !important;
+    border-radius: 0 10px 10px 0 !important;
+    color: #6b7280 !important;
+    width: 2.75rem !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .p-multiselect .p-multiselect-trigger:hover {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db) !important;
+    color: #374151 !important;
+  }
+  
+  /* MultiSelect Panel */
+  .p-multiselect-panel {
+    border-radius: 12px !important;
+    border: 2px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: white !important;
+    margin-top: 4px !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-items {
+    padding: 0.5rem 0 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item {
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item:hover {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+  }
+  
+  .p-multiselect-panel .p-multiselect-item.p-highlight {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  /* ===============================
+     ENHANCED VISUAL EFFECTS
+     =============================== */
+  
+  /* Pulse animation for loading states */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  
+  .p-component.p-disabled {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+  }
+  
+  /* Smooth focus ring animation */
+  @keyframes focusRing {
+    0% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+  }
+  
+  .p-dropdown:not(.p-disabled).p-focus,
+  .p-multiselect:not(.p-disabled).p-focus,
+  .p-calendar .p-inputtext:focus {
+    animation: focusRing 0.3s ease-out;
+  }
+  
+  /* Better hover effects */
+  .p-dropdown:hover,
+  .p-multiselect:hover,
+  .p-calendar:hover {
+    transform: translateY(-1px) !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  /* Enhanced shadows on focus */
+  .p-datepicker,
+  .p-dropdown-panel,
+  .p-multiselect-panel {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05)) !important;
+  }
+  
+  /* Mobile responsive improvements */
+  @media (max-width: 768px) {
+    .p-calendar .p-inputtext,
+    .p-dropdown,
+    .p-multiselect {
+      height: 3rem !important;
+      font-size: 16px !important; /* Prevent zoom on iOS */
+    }
+    
+    .p-calendar .p-datepicker-trigger,
+    .p-dropdown .p-dropdown-trigger,
+    .p-multiselect .p-multiselect-trigger {
+      width: 3rem !important;
+    }
+    
+    .p-datepicker .p-datepicker-calendar .p-datepicker-day {
+      width: 40px !important;
+      height: 40px !important;
+    }
+  }

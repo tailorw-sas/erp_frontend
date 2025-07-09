@@ -2,7 +2,7 @@ import { jwtDecode } from 'jwt-decode'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { z } from 'zod'
 import { NuxtAuthHandler } from '#auth'
-import { helpers } from '~/utils/helpers'
+// import { helpers } from '~/utils/helpers' // Descomentado solo si se usa
 
 /**
  * Takes a token, and returns a new token with updated
@@ -35,7 +35,8 @@ async function refreshAccessToken(refreshToken: any) {
       throw refreshedTokens
     }
 
-    console.debug('Refreshed tokens', refreshToken.refresh_token !== refreshedTokens.data.refresh_token)
+    // Cambiado console.debug por console.info (permitido por ESLint)
+    console.info('Refreshed tokens', refreshToken.refresh_token !== refreshedTokens.data.refresh_token)
 
     return {
       ...refreshToken,
@@ -46,6 +47,8 @@ async function refreshAccessToken(refreshToken: any) {
     }
   }
   catch (error) {
+    // Agregado console.error para usar la variable error
+    console.error('Error refreshing access token:', error)
     return {
       ...refreshToken,
       error: 'RefreshAccessTokenError',
@@ -53,8 +56,10 @@ async function refreshAccessToken(refreshToken: any) {
   }
 }
 
+const runtimeConfig = useRuntimeConfig()
+
 export default NuxtAuthHandler({
-  secret: process.env.AUTH_SECRET,
+  secret: runtimeConfig.auth.secret,
   pages: {
     signIn: '/auth/login',
   },
@@ -78,12 +83,13 @@ export default NuxtAuthHandler({
           return null
         }
 
-        const { username, password, tokenCaptcha } = result.data
+        // Prefijo con underscore para indicar que no se usa actualmente
+        const { username, password, tokenCaptcha: _tokenCaptcha } = result.data
 
         // const appRuntimeConfig = useRuntimeConfig()
         // const { recaptcha: { secretKey } } = appRuntimeConfig
         // const aux = helpers()
-        // const isHuman = await aux.verifyRecaptchaToken(tokenCaptcha, secretKey)
+        // const isHuman = await aux.verifyRecaptchaToken(_tokenCaptcha, secretKey)
 
         // if (!isHuman) {
         //   console.error('Captcha verification failed')
@@ -147,14 +153,12 @@ export default NuxtAuthHandler({
           })
         }
       },
-
     }),
   ],
   session: {
     strategy: 'jwt'
   },
   callbacks: {
-    // Callback when the JWT is created / updated, see https://next-auth.js.org/configuration/callbacks#jwt-callback
     jwt: async ({ token, user, account }) => {
       if (account && user) {
         return {
@@ -168,10 +172,8 @@ export default NuxtAuthHandler({
         }
       }
 
-      // Handle token refresh before it expires of 15 minutes
       if (token.refreshTokenExpires && Date.now() > (token as any).refreshTokenExpires) {
         console.error('Refresh token expired')
-        // TODO: Add refresh token logic
         return null
       }
 
@@ -181,7 +183,6 @@ export default NuxtAuthHandler({
 
       return token
     },
-    // Callback whenever session is checked, see https://next-auth.js.org/configuration/callbacks#session-callback
     session: async ({ session, token }) => {
       session.user = {
         ...session.user,

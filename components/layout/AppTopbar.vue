@@ -76,7 +76,7 @@ async function handleChange() {
     loading.value = false
     window.location.reload()
   }
-  catch (error) {
+  catch {
     // TODO: Show toast error if there is an error
     // console.log(error)
   }
@@ -117,7 +117,7 @@ async function onConfirmSignOut() {
     await signOut({ callbackUrl: '/auth/login' })
     loading.value = false
   }
-  catch (error) {
+  catch {
     // TODO: Show toast error if there is an error
     // console.log(error)
   }

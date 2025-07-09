@@ -1,0 +1,414 @@
+/* Enhanced Form Component - FIX específico para AutoComplete */
+.enhanced-form {
+  
+  /* Variables CSS locales con !important para forzar aplicación */
+  --form-field-height: 2.75rem;
+  --form-field-height-compact: 2.25rem;
+  --form-font-size: 0.875rem;
+  --form-font-size-small: 0.75rem;
+  --form-font-size-tiny: 0.6875rem;
+  --form-border-radius: 8px;
+  --form-transition: all 0.2s ease;
+
+  /* Headers de campo CORREGIDOS */
+  &__field-header {
+    display: block !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 0.5rem !important;
+    position: relative !important;
+    padding-left: 0.75rem !important;
+  }
+
+  &__field-header::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 3px !important;
+    height: 1rem !important;
+    background: #10b981 !important;
+    border-radius: 2px !important;
+  }
+
+  /* Containers de campo */
+  &__field-container {
+    margin-bottom: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  /* Help text */
+  &__help-text {
+    color: #6b7280 !important;
+    font-size: var(--form-font-size-tiny) !important;
+    margin-top: 0.25rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* TODOS los componentes PrimeVue - SUPER AGRESIVO */
+  :deep(.p-inputtext) {
+    min-height: var(--form-field-height) !important;
+    height: var(--form-field-height) !important;
+    font-size: var(--form-font-size) !important;
+    border-radius: var(--form-border-radius) !important;
+    padding: 0 0.75rem !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+    transition: var(--form-transition) !important;
+    
+    &:focus {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+      outline: none !important;
+    }
+  }
+
+  :deep(.p-dropdown) {
+    min-height: var(--form-field-height) !important;
+    height: var(--form-field-height) !important;
+    font-size: var(--form-font-size) !important;
+    border-radius: var(--form-border-radius) !important;
+    transition: var(--form-transition) !important;
+
+    .p-dropdown-label {
+      height: calc(var(--form-field-height) - 2px) !important;
+      padding: 0 0.75rem !important;
+      line-height: 1.5 !important;
+      display: flex !important;
+      align-items: center !important;
+      font-size: var(--form-font-size) !important;
+    }
+
+    .p-dropdown-trigger {
+      width: var(--form-field-height) !important;
+      height: var(--form-field-height) !important;
+      border-radius: 0 var(--form-border-radius) var(--form-border-radius) 0 !important;
+    }
+
+    &:focus-within {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+    }
+  }
+
+  :deep(.p-multiselect) {
+    min-height: var(--form-field-height) !important;
+    height: var(--form-field-height) !important;
+    font-size: var(--form-font-size) !important;
+    border-radius: var(--form-border-radius) !important;
+    transition: var(--form-transition) !important;
+
+    .p-multiselect-label-container {
+      height: calc(var(--form-field-height) - 2px) !important;
+      padding: 0.375rem 0.625rem !important;
+      display: flex !important;
+      align-items: center !important;
+      flex-wrap: wrap !important;
+      gap: 0.25rem !important;
+    }
+
+    .p-multiselect-trigger {
+      width: var(--form-field-height) !important;
+      height: calc(var(--form-field-height) - 2px) !important;
+      border-radius: 0 var(--form-border-radius) var(--form-border-radius) 0 !important;
+    }
+
+    &:focus-within {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+    }
+  }
+
+  :deep(.p-calendar) {
+    min-height: var(--form-field-height) !important;
+    height: var(--form-field-height) !important;
+    font-size: var(--form-font-size) !important;
+    border-radius: var(--form-border-radius) !important;
+    transition: var(--form-transition) !important;
+
+    .p-inputtext {
+      height: var(--form-field-height) !important;
+      padding: 0 0.75rem !important;
+      font-size: var(--form-font-size) !important;
+      line-height: var(--form-field-height) !important;
+      box-sizing: border-box !important;
+    }
+
+    .p-button {
+      height: var(--form-field-height) !important;
+      width: var(--form-field-height) !important;
+      border-radius: 0 var(--form-border-radius) var(--form-border-radius) 0 !important;
+    }
+
+    &:focus-within {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+    }
+  }
+
+  /* FIX ESPECÍFICO PARA AUTOCOMPLETE - Sin separación entre input y botón */
+  :deep(.p-autocomplete) {
+    min-height: var(--form-field-height) !important;
+    height: var(--form-field-height) !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: stretch !important;
+    position: relative !important;
+    border-radius: var(--form-border-radius) !important;
+    overflow: hidden !important;
+    
+    /* Container principal sin bordes separados */
+    &.p-component {
+      border: 1px solid #d1d5db !important;
+      border-radius: var(--form-border-radius) !important;
+      background: white !important;
+    }
+
+    /* Input del autocomplete */
+    .p-inputtext {
+      height: var(--form-field-height) !important;
+      padding: 0 0.75rem !important;
+      font-size: var(--form-font-size) !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      flex: 1 !important;
+      background: transparent !important;
+      outline: none !important;
+      
+      &:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
+    }
+
+    /* Botón dropdown */
+    .p-button {
+      height: var(--form-field-height) !important;
+      width: var(--form-field-height) !important;
+      border: none !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #f9fafb !important;
+      border-left: 1px solid #e5e7eb !important;
+      flex-shrink: 0 !important;
+      
+      &:hover {
+        background: #f3f4f6 !important;
+      }
+      
+      &:focus {
+        box-shadow: none !important;
+        outline: none !important;
+      }
+    }
+
+    /* Estados de focus para el container completo */
+    &:focus-within {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1) !important;
+    }
+
+    /* Para autocompletes múltiples */
+    &.p-autocomplete-multiple {
+      .p-autocomplete-multiple-container {
+        border: none !important;
+        padding: 0.375rem 0.625rem !important;
+        min-height: calc(var(--form-field-height) - 2px) !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+        flex: 1 !important;
+      }
+      
+      .p-autocomplete-input-token {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        outline: none !important;
+        flex: 1 !important;
+        min-width: 100px !important;
+        
+        input {
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          font-size: var(--form-font-size) !important;
+        }
+      }
+    }
+  }
+
+  /* Estados de error */
+  &__field-container.p-invalid,
+  .p-invalid {
+    :deep(.p-inputtext),
+    :deep(.p-dropdown),
+    :deep(.p-multiselect),
+    :deep(.p-calendar),
+    :deep(.p-autocomplete) {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1) !important;
+    }
+  }
+
+  /* Error messages */
+  &__error-message {
+    display: block !important;
+    font-size: var(--form-font-size-tiny) !important;
+    color: #ef4444 !important;
+    line-height: 1.3 !important;
+    margin-top: 0.25rem !important;
+  }
+
+  /* Required indicator */
+  &__required-indicator {
+    color: #ef4444 !important;
+    margin-left: 0.25rem !important;
+    font-weight: bold !important;
+  }
+
+  /* Modo compact */
+  &--compact {
+    --form-field-height: var(--form-field-height-compact);
+    --form-font-size: 0.8125rem;
+
+    .enhanced-form__field-container {
+      margin-bottom: 0.5rem !important;
+    }
+
+    .enhanced-form__field-header {
+      font-size: var(--form-font-size-tiny) !important;
+      margin-bottom: 0.25rem !important;
+    }
+  }
+
+  /* Botón primario reutilizable */
+  &__button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: var(--form-field-height) !important;
+    font-size: var(--form-font-size) !important;
+    font-weight: 600 !important;
+    background: linear-gradient(to right, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: var(--form-transition) !important;
+
+    &:hover {
+      background: linear-gradient(to right, #2563eb, #1d4ed8) !important;
+    }
+
+    &:focus {
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
+    }
+
+    &:disabled {
+      opacity: 0.6 !important;
+      cursor: not-allowed !important;
+    }
+  }
+
+  /* Skeleton loading */
+  &__skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-loading 1.5s infinite !important;
+    border-radius: var(--form-border-radius) !important;
+    height: var(--form-field-height) !important;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    --form-field-height: 3rem;
+  }
+}
+
+/* Animación skeleton */
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ESTILOS ADICIONALES PARA EL COMPONENTE DYNAMIC AUTOCOMPLETE */
+.dynamic-autocomplete {
+  position: relative !important;
+  width: 100% !important;
+
+  /* Botón de limpiar posicionado */
+  &__clear-button {
+    position: absolute !important;
+    right: 2.75rem !important; /* Espacio para el botón dropdown */
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.25rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    border-radius: 50% !important;
+    color: #6b7280 !important;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.05) !important;
+      color: #374151 !important;
+    }
+  }
+
+  /* Opciones del dropdown */
+  &__option {
+    padding: 0.5rem 0.75rem !important;
+    font-size: var(--form-font-size) !important;
+    
+    &--inactive {
+      opacity: 0.6 !important;
+      font-style: italic !important;
+    }
+  }
+
+  /* Chips para modo múltiple */
+  &__chip--inactive {
+    opacity: 0.6 !important;
+  }
+
+  /* Estados vacíos y de carga */
+  &__empty {
+    padding: 1rem !important;
+    text-align: center !important;
+    color: #6b7280 !important;
+    font-size: var(--form-font-size-small) !important;
+  }
+
+  &__error {
+    color: #ef4444 !important;
+  }
+
+  &__loading {
+    color: #3b82f6 !important;
+  }
+
+  &__no-results {
+    color: #6b7280 !important;
+  }
+
+  &__loader {
+    padding: 0.5rem !important;
+    text-align: center !important;
+    color: #3b82f6 !important;
+  }
+}
