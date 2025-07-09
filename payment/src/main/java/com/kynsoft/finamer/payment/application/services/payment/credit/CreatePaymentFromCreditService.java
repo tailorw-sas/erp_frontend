@@ -214,8 +214,6 @@ public class CreatePaymentFromCreditService {
                                                      List<ManageBookingDto> bookingList,
                                                List<PaymentDto> paymentsToCreate) {
         ManagePaymentTransactionTypeDto cashPaymentTransactionType = this.getCashPaymentTransactionType();
-        String remark = this.getRemark(creditInvoice);
-        String reference = creditInvoice.getInvoiceNumber();
 
         Double paymentAmount = creditInvoice.getInvoiceAmount();
         PaymentDto paymentDto = this.createPayment(paymentSource,
@@ -227,8 +225,7 @@ public class CreatePaymentFromCreditService {
                 bankAccount,
                 paymentAmount,
                 attachmentStatus,
-                remark,
-                reference,
+                creditInvoice,
                 employee,
                 closeOperation,
                 createAttachmentRequests,
@@ -288,16 +285,6 @@ public class CreatePaymentFromCreditService {
         Double paymentAmount = Math.abs(invoiceDtoTypeCredit.getInvoiceAmount());//  * -1;
         ManagePaymentTransactionTypeDto depositPaymentTransactionType = this.getDepositPaymentTransactionType();
         ManagePaymentTransactionTypeDto applyDepositPaymentTransactionType = this.getApplyDepositPaymentTransactionType();
-        String remark = "";
-        String reference = "";
-
-        if(Objects.nonNull(invoiceDtoTypeInvoice)){
-            remark = this.getRemark(invoiceDtoTypeInvoice);
-            reference = invoiceDtoTypeInvoice.getInvoiceNumber();
-        }else{
-            remark = this.getRemark(invoiceDtoTypeCredit);
-            reference = invoiceDtoTypeCredit.getInvoiceNumber();
-        }
 
         PaymentDto paymentDto = this.createPayment(paymentSource,
                 confirmedPaymentStatus,
@@ -308,8 +295,7 @@ public class CreatePaymentFromCreditService {
                 bankAccount,
                 paymentAmount,
                 attachmentStatus,
-                remark,
-                reference,
+                invoiceDtoTypeCredit.getInvoiceType() == EInvoiceType.OLD_CREDIT ? invoiceDtoTypeCredit : invoiceDtoTypeInvoice,
                 employee,
                 closeOperation,
                 createAttachmentRequests,
@@ -330,7 +316,7 @@ public class CreatePaymentFromCreditService {
         );
         paymentDetailList.add(depositPaymentDetail);
 
-        if (!hotelDto.getNoAutoApplyCredit() && !invoiceDtoTypeCredit.getInvoiceType().equals(EInvoiceType.OLD_CREDIT)) {
+        if (!hotelDto.getNoAutoApplyCredit() && invoiceDtoTypeCredit.getInvoiceType() != EInvoiceType.OLD_CREDIT) {
             for (ManageBookingDto creditBooking : invoiceDtoTypeCredit.getBookings()) {
                 if(creditBooking.getParent().getAmountBalance() > 0){
                     //Crear un AANT por cada booking para el deposito
@@ -369,14 +355,15 @@ public class CreatePaymentFromCreditService {
                                      ManageBankAccountDto bankAccount,
                                      Double paymentAmount,
                                      ManagePaymentAttachmentStatusDto attachmentStatus,
-                                     String remark,
-                                     String reference,
+                                     ManageInvoiceDto invoice,
                                      ManageEmployeeDto employee,
                                      PaymentCloseOperationDto closeOperation,
                                      List<CreateAttachmentRequest> createAttachmentRequests,
                                      List<MasterPaymentAttachmentDto> masterPaymentAttachmentList,
                                      List<AttachmentStatusHistoryDto> attachmentStatusHistoryList,
                                      List<PaymentStatusHistoryDto> paymentStatusHistoryList){
+        String remark = this.getRemark(invoice);
+        String reference = invoice.getInvoiceNumber();
         List<CreateAttachment> createAttachmentList = this.getCreateAttachments(createAttachmentRequests);
         ManagePaymentAttachmentStatusDto attachmentStatusSupport = this.managePaymentAttachmentStatusService.findBySupported();
         ManagePaymentAttachmentStatusDto attachmentOtherSupport = this.managePaymentAttachmentStatusService.findByOtherSupported();
@@ -523,9 +510,11 @@ public class CreatePaymentFromCreditService {
 
     private OffsetDateTime getTransactionDate(PaymentCloseOperationDto closeOperation) {
         if (DateUtil.getDateForCloseOperation(closeOperation.getBeginDate(), closeOperation.getEndDate())) {
-            return OffsetDateTime.now(ZoneId.of("UTC"));
+            return OffsetDateTime.now();
         }
-        return OffsetDateTime.of(closeOperation.getEndDate(), LocalTime.now(ZoneId.of("UTC")), ZoneOffset.UTC);
+        ZoneId localZone = ZoneId.systemDefault();
+        return closeOperation.getEndDate().atTime(LocalTime.now()).atZone(localZone).toOffsetDateTime();
+
     }
 
     private String deleteHotelInfo(String input) {

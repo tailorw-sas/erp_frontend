@@ -11,6 +11,7 @@ import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionFailed;
 import com.kynsoft.finamer.invoicing.infrastructure.services.kafka.producer.income.ProducerCreateIncomeTransactionSuccess;
+import com.kynsoft.finamer.invoicing.infrastructure.utils.InvoiceUploadAttachmentUtil;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,7 @@ public class ConsumerCreateIncomeTransactionService {
 
     private final IPaymentService paymentService;
     private final IPaymentDetailService detailService;
+    private final InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil;
     private final IManageAttachmentTypeService attachmentTypeService;
     private final IManageResourceTypeService resourceTypeService;
 
@@ -38,9 +40,7 @@ public class ConsumerCreateIncomeTransactionService {
                                                   ProducerCreateIncomeTransactionFailed producerCreateIncomeTransactionFailed,
                                                   IPaymentService paymentService,
                                                   IPaymentDetailService detailService,
-                                                  IManageBookingService manageBookingService,
-                                                  IManageAttachmentTypeService attachmentTypeService,
-                                                  IManageResourceTypeService resourceTypeService) {
+                                                  IManageBookingService manageBookingService, InvoiceUploadAttachmentUtil invoiceUploadAttachmentUtil, IManageAttachmentTypeService attachmentTypeService, IManageResourceTypeService resourceTypeService) {
 
         this.mediator = mediator;
         this.manageInvoiceService = manageInvoiceService;
@@ -49,6 +49,7 @@ public class ConsumerCreateIncomeTransactionService {
         this.paymentService = paymentService;
         this.detailService = detailService;
         this.manageBookingService = manageBookingService;
+        this.invoiceUploadAttachmentUtil = invoiceUploadAttachmentUtil;
         this.attachmentTypeService = attachmentTypeService;
         this.resourceTypeService = resourceTypeService;
     }
@@ -58,6 +59,15 @@ public class ConsumerCreateIncomeTransactionService {
         try {
             mediator.send(createIncomeCommand(objKafka));
             mediator.send(createIncomeAdjustmentCommand(objKafka));
+
+//            ManageInvoiceDto invoiceDto = this.manageInvoiceService.findById(objKafka.getId());
+//            ManageBookingDto bookingDto = invoiceDto.getBookings().get(0);
+//
+//            this.applyPayment(invoiceDto, bookingDto);
+
+//            this.createPaymentAndDetail(objKafka.getPaymentKafka(), bookingDto);
+            //todo: el proceso en ocasiones no envia bien la info recien creada,
+            // valorar retrasar este proceso para dar tiempo a sincronizar la bd
             producerCreateIncomeTransactionSuccess.create(this.createIncomeTransactionSuccessKafka(objKafka.getId(), objKafka.getEmployeeId(), objKafka.getRelatedPaymentDetail()));
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,8 +105,7 @@ public class ConsumerCreateIncomeTransactionService {
                 objKafka.getReSend(),
                 objKafka.getReSendDate(),
                 objKafka.getInvoiceStatus(),
-                objKafka.getEmployeeId().toString(),
-                objKafka.getAttachment() != null ? attachments(objKafka.getAttachment()) : null);
+                objKafka.getEmployeeId().toString(), objKafka.getAttachment() != null ? attachments(objKafka.getAttachment()) : null);
     }
 
     private CreateIncomeAdjustmentCommand createIncomeAdjustmentCommand(CreateIncomeTransactionKafka objKafka) {

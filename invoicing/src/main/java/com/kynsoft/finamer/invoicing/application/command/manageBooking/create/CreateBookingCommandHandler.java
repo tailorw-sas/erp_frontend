@@ -127,7 +127,7 @@ public class CreateBookingCommandHandler implements ICommandHandler<CreateBookin
                 false,
                 null
         );
-        newBooking = bookingService.create(newBooking);
+        bookingService.create(newBooking);
 
         try {
             // TODO: aqui se envia el booking para payment

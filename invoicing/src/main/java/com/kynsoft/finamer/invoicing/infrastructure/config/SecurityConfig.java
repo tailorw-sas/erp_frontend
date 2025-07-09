@@ -42,7 +42,6 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/health").permitAll()
                         .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/*", "/v3/api-docs.yaml", "/v3/api-docs/", "/swagger-resources/", "webjars/*").permitAll()
-                        //.pathMatchers(HttpMethod.POST, "/api/income").permitAll()
                         .pathMatchers(AUTH_WHITELIST).permitAll()
                         .anyExchange().authenticated()
                 )

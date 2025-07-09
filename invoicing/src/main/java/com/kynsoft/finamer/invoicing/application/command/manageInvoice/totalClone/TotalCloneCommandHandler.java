@@ -15,7 +15,6 @@ import com.kynsoft.finamer.invoicing.application.command.manageBooking.calculate
 import com.kynsoft.finamer.invoicing.application.command.manageInvoice.update.calculateInvoiceAmount.UpdateInvoiceCalculateInvoiceAmountCommand;
 import com.kynsoft.finamer.invoicing.domain.dto.*;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
-import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.InvoiceType;
 import com.kynsoft.finamer.invoicing.domain.rules.manageAttachment.ManageAttachmentFileNameNotNullRule;
 import com.kynsoft.finamer.invoicing.domain.rules.manageInvoice.ManageInvoiceValidateRatePlanRule;
@@ -92,6 +91,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
     @Override
     public void handle(TotalCloneCommand command) {
+
         List<ManageBookingDto> bookings = new ArrayList<>();
         List<ManageAttachmentDto> attachmentDtos = new ArrayList<>();
 
@@ -252,14 +252,47 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
             booking.setDueAmount(booking.getInvoiceAmount());
         }
 
-        LocalDateTime invoiceDate = this.invoiceDate(invoiceToClone.getHotel().getId());
+        String invoiceNumber = InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType());
+        if (hotelDto.getManageTradingCompanies() != null
+                && hotelDto.getManageTradingCompanies().getIsApplyInvoice()) {
+            invoiceNumber += "-" + hotelDto.getManageTradingCompanies().getCode();
+        } else {
+            invoiceNumber += "-" + hotelDto.getCode();
+        }
+
+        LocalDate dueDate = command.getInvoiceDate().toLocalDate().plusDays(agencyDto.getCreditDay() != null ? agencyDto.getCreditDay() : 0);
+//        LocalDate dueDate = command.getInvoiceDate().toLocalDate();
+
         EInvoiceStatus status = EInvoiceStatus.RECONCILED;
         ManageInvoiceStatusDto invoiceStatus = this.invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.RECONCILED);
-
-        ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(UUID.randomUUID(), hotelDto, agencyDto, invoiceToClone.getInvoiceType(),
-                invoiceToClone.getManageInvoiceType(), status, invoiceStatus, invoiceDate, true, invoiceToClone.getInvoiceAmount(),
-                invoiceToClone.getInvoiceAmount(), invoiceToClone.getDueAmount(), bookings, attachmentDtos, true,invoiceToClone);
-
+        ManageInvoiceDto clonedInvoice = new ManageInvoiceDto(
+                command.getClonedInvoice(),
+                0L,
+                0L,
+                invoiceNumber,
+                InvoiceType.getInvoiceTypeCode(invoiceToClone.getInvoiceType()) + "-" + 0L,
+                //command.getInvoiceDate(),
+                this.invoiceDate(invoiceToClone.getHotel().getId()),
+                dueDate,
+                true,
+                invoiceToClone.getInvoiceAmount(),
+                invoiceToClone.getDueAmount(),
+                hotelDto,
+                agencyDto,
+                invoiceToClone.getInvoiceType(),
+                status,
+                false,
+                bookings,
+                attachmentDtos,
+                false,
+                null,
+                invoiceToClone.getManageInvoiceType(),
+                invoiceStatus,
+                null,
+                true,
+                invoiceToClone,
+                invoiceToClone.getCredits(), 0
+        );
         //actualizando el invoice con la info de los bookings
         command.getMediator().send(new UpdateInvoiceCalculateInvoiceAmountCommand(clonedInvoice));
         clonedInvoice.setDueAmount(clonedInvoice.getInvoiceAmount());
@@ -272,8 +305,7 @@ public class TotalCloneCommandHandler implements ICommandHandler<TotalCloneComma
 
         try {
             this.producerReplicateManageInvoiceService.create(created, null, null);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
         }
 
         //invoice status history
