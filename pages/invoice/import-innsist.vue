@@ -265,10 +265,12 @@ async function getList() {
     selectedElements.value = []
     resultTable.value?.clearSelectedItems()
     listItems.value = []
+    listItemsSearchErrors.value = []
     options.value.loading = true
     idItemToLoadFirstTime.value = ''
 
     const newListItems = []
+    const newListItemsErrors = []
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
     const { data: dataList, totalPages, totalElements, size, page } = response
 
@@ -278,21 +280,39 @@ async function getList() {
     pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
-      newListItems.push({
-        ...iterator,
-        loadingEdit: false,
-        loadingDelete: false,
-        agency: `${iterator?.agency?.code || ''}-${iterator?.agency?.name || ''}`,
-        agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
-        hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
-        roomType: `${iterator?.roomType?.code || ''}`,
-      })
+      if (!iterator?.hasErrors) {
+        newListItems.push({
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          agency: `${iterator?.agency?.code || ''}-${iterator?.agency?.name || ''}`,
+          agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
+          hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
+          roomType: `${iterator?.roomType?.code || ''}`,
+        })
 
-      totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
-      totalInvoiceAmount.value += iterator.amount
+        totalHotelInvoiceAmount.value += iterator.hotelInvoiceAmount ? Number(iterator.hotelInvoiceAmount) : 0
+        totalInvoiceAmount.value += iterator.amount
+      }
+      else {
+        newListItemsErrors.push({
+          ...iterator,
+          loadingEdit: false,
+          loadingDelete: false,
+          agencyAlias: `${iterator?.agency?.name || ''}-${iterator?.agency?.agencyAlias || ''}`,
+          hotel: `${iterator?.hotel?.code || ''}-${iterator?.hotel?.name || ''}`,
+          roomType: `${iterator?.roomType?.code || ''}`,
+          selected: isRowSelectable(iterator)
+        })
+      }
     }
 
     listItems.value = [...listItems.value, ...newListItems]
+    listItemsSearchErrors.value = [...listItemsSearchErrors.value, ...newListItemsErrors]
+
+    const totalRoomRatesWithErrors = listItemsSearchErrors.value.length
+    pagination.value.limit = pagination.value.limit - totalRoomRatesWithErrors
+    pagination.value.totalElements = pagination.value.totalElements - totalRoomRatesWithErrors
 
     if (listItems.value && listItems.value.length > 0) {
       selectedElements.value = listItems.value.filter(item => item.message === undefined || item.message === null || item.message.trim() === '').map(item => item.id)
@@ -316,7 +336,7 @@ async function getList() {
 }
 
 function isRowSelectable(rowData: any) {
-  return (rowData.message === undefined || rowData.message === null || rowData.message.trim() === '')
+  return (rowData.message === undefined || rowData.message === null || rowData.message.trim() === '' || rowData.hasErrors === false)
 }
 
 async function getListSearchErrors() {
@@ -447,7 +467,7 @@ async function getAgencyList(query: string = '') {
 
 async function openErrorsSearch(event: any) {
   showErrorsSearchDataTable.value = event
-  await getListSearchErrors()
+  // await getListSearchErrors()
 }
 
 async function clearForm() {
@@ -560,22 +580,23 @@ async function searchAndFilter() {
     })
   }
   //
-  newPayload.filter.push({
+  /* newPayload.filter.push({
     key: 'agency.id',
     operator: 'IS_NOT_NULL',
     value: '',
     logicalOperation: 'AND',
     type: 'filterSearch'
-  })
+  }) */
 
   payload.value = newPayload
 
   await getList()
-  await searchAndFilterSearchErrors()
+  // await searchAndFilterSearchErrors()
 
   importProcess.value = true
 }
 
+/*
 async function searchAndFilterSearchErrors() {
   const newPayload: IQueryRequest = {
     filter: [],
@@ -661,7 +682,7 @@ async function searchAndFilterSearchErrors() {
   payloadSearchErrors.value = newPayload
 
   await getListSearchErrors()
-}
+} */
 
 function copiarDatos() {
   copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
@@ -824,7 +845,7 @@ async function importRoomRates() {
 
     options.value.loading = false
     await getList()
-    await searchAndFilterSearchErrors()
+    // await searchAndFilterSearchErrors()
     showErrorsDataTable.value = false
     showDataTable.value = true
   }
@@ -880,7 +901,7 @@ async function importRoomRates() {
 
       options.value.loading = false
       await getList()
-      await searchAndFilterSearchErrors()
+      // await searchAndFilterSearchErrors()
       showErrorsDataTable.value = false
       showDataTable.value = true
     }
