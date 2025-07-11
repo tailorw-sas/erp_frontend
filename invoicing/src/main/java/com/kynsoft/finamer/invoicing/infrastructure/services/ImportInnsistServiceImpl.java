@@ -86,7 +86,7 @@ public class ImportInnsistServiceImpl {
                 }
                 rowNumber++;
             }
-            list.clear();
+             list.clear();
             validatorFactory.removeValidators();
             if (validateInsist && stop) {
                 this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);

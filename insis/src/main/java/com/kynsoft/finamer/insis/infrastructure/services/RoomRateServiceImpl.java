@@ -45,7 +45,7 @@ public class RoomRateServiceImpl implements IRoomRateService {
     @Override
     public UUID create(RoomRateDto dto) {
         RoomRate rate = new RoomRate(dto);
-        UUID id = this.insert(rate);
+        UUID id = this.upsert(rate);
         dto.setId(id);
         return id;
     }
@@ -54,23 +54,23 @@ public class RoomRateServiceImpl implements IRoomRateService {
     public void createMany(List<RoomRateDto> rateDtoList) {
         List<RoomRate> rateList = rateDtoList.stream()
                 .map(RoomRate::new)
-                .collect(Collectors.toList());
-        rateList.forEach(this::insert);
+                .toList();
+        rateList.forEach(this::upsert);
     }
 
     @Override
     public void update(RoomRateDto dto) {
         RoomRate rate = new RoomRate(dto);
         rate.setUpdatedAt(LocalDateTime.now());
-        writeRepository.save(rate);
+        this.upsert(rate);
     }
 
     @Override
     public void updateMany(List<RoomRateDto> rateDtoList) {
         List<RoomRate> rateList = rateDtoList.stream()
                 .map(RoomRate::new)
-                .collect(Collectors.toList());
-        writeRepository.saveAll(rateList);
+                .toList();
+        rateList.forEach(this::upsert);
     }
 
     @Override
@@ -180,8 +180,8 @@ public class RoomRateServiceImpl implements IRoomRateService {
                 .toList();
     }
 
-    private UUID insert(RoomRate roomRate){
-        Object result = this.writeRepository.insertRoomRate(roomRate.getId(), roomRate.getAdults(),
+    private UUID upsert(RoomRate roomRate){
+        RoomRateResult result = this.writeRepository.insertRoomRate(roomRate.getId(), roomRate.getAdults(),
                 roomRate.getAgencyCode(), roomRate.getAmount(),
                 roomRate.getAmountPaymentApplied(), roomRate.getCheckInDate(),
                 roomRate.getCheckOutDate(), roomRate.getChildren(),
@@ -205,6 +205,6 @@ public class RoomRateServiceImpl implements IRoomRateService {
                 Objects.nonNull(roomRate.getRatePlan()) ? roomRate.getRatePlan().getId() : null,
                 Objects.nonNull(roomRate.getRoomCategory()) ? roomRate.getRoomCategory().getId() : null,
                 Objects.nonNull(roomRate.getRoomType()) ? roomRate.getRoomType().getId() : null);
-        return (UUID)result;
+        return result.getId();
     }
 }
