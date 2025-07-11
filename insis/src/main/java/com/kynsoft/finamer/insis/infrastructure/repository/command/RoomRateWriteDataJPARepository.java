@@ -3,10 +3,10 @@ package com.kynsoft.finamer.insis.infrastructure.repository.command;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageAgency;
 import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
 import com.kynsoft.finamer.insis.infrastructure.repository.projection.RoomRateResult;
-import feign.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ public interface RoomRateWriteDataJPARepository extends CrudRepository<RoomRate,
     @Query("UPDATE RoomRate r SET r.agency = :agency WHERE r.agencyCode = :agencyCode")
     int updateAgencyByAgencyCodeAndStatus(@Param("agency") ManageAgency agency, @Param("agencyCode") String agencyCode);
 
-    @Query(value = "select * from public.fn_insert_room_rate(:p_id, :p_adults, :p_agency_code, :p_amount, :p_amount_payment_applied, " +
+    @Query(value = "select o_id as id from public.fn_insert_room_rate(:p_id, :p_adults, :p_agency_code, :p_amount, :p_amount_payment_applied, " +
                                                     " :p_check_in_date, :p_check_out_date, :p_children, :p_coupon_number," +
                                                     " :p_first_name, :p_guest_name, :p_hash, :p_hotel_creation_date, :p_hotel_invoice_amount," +
                                                     " :p_hotel_invoice_number, :p_invoice_folio_number, :p_invoice_date, :p_last_name," +
@@ -49,4 +49,7 @@ public interface RoomRateWriteDataJPARepository extends CrudRepository<RoomRate,
                           @Param("p_invoice_id") UUID invoiceId, @Param("p_room_category_code") String roomCategoryCode,
                           @Param("p_agency_id") UUID agencyId, @Param("p_rate_plan_id") UUID ratePlanId,
                           @Param("p_room_category_id") UUID roomCategoryId, @Param("p_room_type_id") UUID roomTypeId);
+
+    //@Query(value = "select  from public.fn_insert_room_rate(:p_id, :p_adults, :p_agency_code)", nativeQuery = true)
+    //RoomRateResult insertRoomRate(@Param("p_id") UUID id, @Param("p_adults") int adults, @Param("p_agency_code") String agencyCode);
 }
