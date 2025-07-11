@@ -29,7 +29,7 @@ public interface RoomRateWriteDataJPARepository extends CrudRepository<RoomRate,
                                                     " :p_status, :p_stay_days, :p_total_number_of_guest, :p_updated_at, :p_booking_id," +
                                                     " :p_hotel_id, :p_invoice_id, :p_room_category_code, :p_agency_id, :p_rate_plan_id," +
                                                     " :p_room_category_id, :p_room_type_id)", nativeQuery = true)
-    Object insertRoomRate(@Param("p_id") UUID id, @Param("p_adults") int adults,
+    RoomRateResult insertRoomRate(@Param("p_id") UUID id, @Param("p_adults") int adults,
                           @Param("p_agency_code") String agencyCode, @Param("p_amount") Double amount,
                           @Param("p_amount_payment_applied") Double amountPaymentApplied, @Param("p_check_in_date") LocalDate checkInDate,
                           @Param("p_check_out_date") LocalDate checkOutDate, @Param("p_children") int children,
