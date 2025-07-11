@@ -18,7 +18,6 @@ const emit = defineEmits<{
 const isCompleted = computed(() => props.state.type === 'completed')
 const isFailed = computed(() => props.state.type === 'failed')
 const isCancelled = computed(() => props.state.type === 'cancelled')
-const isEmpty = computed(() => props.state.type === 'idle')
 
 const showPdfViewer = computed(() =>
   isCompleted.value && props.format?.id === 'PDF' && props.pdfUrl

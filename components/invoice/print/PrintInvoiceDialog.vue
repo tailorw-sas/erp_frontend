@@ -1,16 +1,7 @@
 <script setup lang="ts">
-import type { PageState } from 'primevue/paginator'
-import { z } from 'zod'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import dayjs from 'dayjs'
-import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
-import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
-import type { GenericObject } from '~/types'
 import type { InvoiceParams } from '@/utils/templates/printInvoice'
-import { getPrintInvoiceTemplate } from '@/utils/templates/printInvoice'
 
 const props = defineProps({
 
@@ -29,29 +20,12 @@ const props = defineProps({
 
 })
 
-const exportSummary = ref(false)
 const invoiceAndBookings = ref(true)
 const invoiceSupport = ref(true)
 
 const loading = ref(false)
 
-const filename = ref<string>()
-
 const dialogVisible = ref(props.openDialog)
-
-const options = ref({
-  tableName: 'Invoice',
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice',
-  loading: false,
-  showDelete: false,
-  showFilters: false,
-  actionsAsMenu: false,
-  showEdit: false,
-  showAcctions: false,
-  messageToDelete: 'Do you want to save the change?',
-  showTitleBar: false
-})
 
 const confAgencyApi = reactive({
   moduleApi: 'settings',
@@ -68,7 +42,7 @@ async function getAgencyById(id: string) {
     const response = await GenericService.getById(confAgencyApi.moduleApi, confAgencyApi.uriApi, id)
     return response
   }
-  catch (error) {
+  catch {
 
   }
 }
@@ -77,7 +51,7 @@ async function getHotelById(id: string) {
     const response = await GenericService.getById(confHotelApi.moduleApi, confHotelApi.uriApi, id)
     return response
   }
-  catch (error) {
+  catch {
 
   }
 }
@@ -236,51 +210,12 @@ async function invoicePrint() {
     document.body.removeChild(a)
     loading.value = false
   }
-  catch (error) {
+  catch {
     loading.value = false
   }
   finally {
     loading.value = false
     dialogVisible.value = false
-  }
-}
-
-async function handleDownload() {
-  loading.value = true
-
-  try {
-    console.log(props?.invoice)
-
-    const obj = await getPrintObj()
-
-    const template = getPrintInvoiceTemplate(obj)
-
-    const elementHTML = document.createElement('div')
-    elementHTML.innerHTML = template
-
-    const doc = new jsPDF('p', 'pt', 'a2')
-
-    doc.html(elementHTML, {
-      callback(doc) {
-        // Guardamos el PDF
-        doc.save(`${obj?.hotelCode}-${obj?.invoiceId}.pdf`)
-      },
-      x: 10,
-      y: 10,
-      autoPaging: 'text'
-
-    })
-
-    // Genera el PDF y lo descarga automáticamente
-
-    filename.value = ''
-    props.closeDialog()
-  }
-  catch (error) {
-    console.log(error)
-  }
-  finally {
-    loading.value = false
   }
 }
 </script>

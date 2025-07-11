@@ -73,10 +73,13 @@ interface ReportStatusResponse {
 }
 
 interface ReportDownloadResponse {
-  base64Report: string
+  base64Report?: string
   fileSizeBytes: number
   fileName: string
   contentType: string
+  downloadUrl?: string
+  storageMethod?: 'S3' | 'BASE64' // ← NUEVO: Método de storage usado
+  expirationDate?: string // ← NUEVO: Cuándo expira la URL S3
 }
 
 // ✅ NEW: Specific state types for better UX
@@ -675,38 +678,62 @@ function useAsyncReportGeneration(config: ReportConfig) {
     }
   }
 
+  // ✅ REEMPLAZAR EL MÉTODO COMPLETO
   function processReportFile(reportData: ReportDownloadResponse): string | null {
     try {
-      // Cleanup previous file
+    // Cleanup previous file
       if (pdfUrl.value) {
         URL.revokeObjectURL(pdfUrl.value)
         pdfUrl.value = ''
       }
 
-      const byteCharacters = atob(reportData.base64Report)
-      const byteArray = new Uint8Array(byteCharacters.length)
+      // ✅ NUEVO: Manejar S3 download
+      if (reportData.storageMethod === 'S3' && reportData.downloadUrl) {
+        Logger.info('📥 [S3 DOWNLOAD] Using S3 presigned URL')
 
-      // Process in chunks for better performance
-      const chunkSize = 1024 * 1024
-      for (let i = 0; i < byteCharacters.length; i += chunkSize) {
-        const chunk = byteCharacters.slice(i, i + chunkSize)
-        for (let j = 0; j < chunk.length; j++) {
-          byteArray[i + j] = chunk.charCodeAt(j)
+        if (reportData.contentType === 'application/pdf') {
+        // Para PDF, usar URL directamente
+          pdfUrl.value = reportData.downloadUrl
+          return reportData.downloadUrl
+        }
+        else {
+        // Para otros formatos, descargar directamente
+          downloadFile(reportData.downloadUrl, reportData.fileName)
+          return reportData.downloadUrl
         }
       }
 
-      const blob = new Blob([byteArray], { type: reportData.contentType })
-      const blobUrl = URL.createObjectURL(blob)
+      // ✅ FALLBACK: Manejar base64 (método actual)
+      if (reportData.base64Report) {
+        Logger.info('📥 [BASE64 DOWNLOAD] Using base64 fallback')
 
-      // Handle based on content type
-      if (reportData.contentType === 'application/pdf') {
-        pdfUrl.value = blobUrl
-      }
-      else {
-        downloadFile(blobUrl, reportData.fileName)
+        const byteCharacters = atob(reportData.base64Report)
+        const byteArray = new Uint8Array(byteCharacters.length)
+
+        // Process in chunks for better performance
+        const chunkSize = 1024 * 1024
+        for (let i = 0; i < byteCharacters.length; i += chunkSize) {
+          const chunk = byteCharacters.slice(i, i + chunkSize)
+          for (let j = 0; j < chunk.length; j++) {
+            byteArray[i + j] = chunk.charCodeAt(j)
+          }
+        }
+
+        const blob = new Blob([byteArray], { type: reportData.contentType })
+        const blobUrl = URL.createObjectURL(blob)
+
+        // Handle based on content type
+        if (reportData.contentType === 'application/pdf') {
+          pdfUrl.value = blobUrl
+        }
+        else {
+          downloadFile(blobUrl, reportData.fileName)
+        }
+
+        return blobUrl
       }
 
-      return blobUrl
+      throw new Error('No download method available (neither S3 nor base64)')
     }
     catch (error) {
       Logger.error('❌ [FILE PROCESSING] Error:', error)
@@ -1283,7 +1310,7 @@ async function loadReport(reportId: string) {
 
     const response = await GenericService.getById<BackendReportInfo>(
       'report',
-      'jasper-report-template/template-with-params/',
+      'jasper-report-template/template-with-params',
       reportId
     )
 
@@ -1611,17 +1638,48 @@ function getFormatIcon(formatId: string): string {
   return format?.icon || 'pi pi-file'
 }
 
+// ✅ REEMPLAZAR EL MÉTODO COMPLETO
 function downloadCurrentReport() {
+  const state = asyncReportGeneration.workflowState.value
+
+  if (state.type === 'completed' && state.report) {
+    const report = state.report
+
+    // ✅ NUEVO: Manejar S3 download
+    if (report.storageMethod === 'S3' && report.downloadUrl) {
+      Logger.info('📥 [MANUAL DOWNLOAD] Using S3 URL')
+      downloadFile(report.downloadUrl, report.fileName)
+      return
+    }
+
+    // ✅ FALLBACK: Manejar base64
+    if (report.base64Report) {
+      Logger.info('📥 [MANUAL DOWNLOAD] Using base64 fallback')
+      const blob = new Blob([atob(report.base64Report)], { type: report.contentType })
+      const url = URL.createObjectURL(blob)
+      downloadFile(url, report.fileName)
+      // Cleanup después de un delay
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return
+    }
+  }
+
+  // Fallback para PDF URL existente
   if (asyncReportGeneration.pdfUrl.value) {
     const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
-    const link = document.createElement('a')
-    link.href = asyncReportGeneration.pdfUrl.value
-    link.download = `report-${timestamp}.pdf`
-    link.click()
+    downloadFile(asyncReportGeneration.pdfUrl.value, `report-${timestamp}.pdf`)
   }
 }
 
 function openInNewTab() {
+  const state = asyncReportGeneration.workflowState.value
+
+  if (state.type === 'completed' && state.report?.storageMethod === 'S3' && state.report.downloadUrl) {
+    window.open(state.report.downloadUrl, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  // Fallback para PDF URL actual
   if (asyncReportGeneration.pdfUrl.value) {
     window.open(asyncReportGeneration.pdfUrl.value, '_blank', 'noopener,noreferrer')
   }
@@ -1634,6 +1692,56 @@ function shareReport() {
       text: 'Generated report',
       url: asyncReportGeneration.pdfUrl.value
     }).catch((err: any) => Logger.error('Error sharing:', err))
+  }
+}
+
+function downloadFile(url: string, filename: string) {
+  try {
+    Logger.info('📥 [DOWNLOAD FILE] Starting download:', { url: `${url.substring(0, 50)}...`, filename })
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.style.display = 'none'
+
+    // Agregar al DOM temporalmente
+    document.body.appendChild(link)
+
+    // Trigger download
+    link.click()
+
+    // Cleanup inmediato
+    document.body.removeChild(link)
+
+    Logger.info('✅ [DOWNLOAD FILE] Download triggered successfully:', filename)
+
+    // Para URLs blob, limpiar después de un delay
+    if (url.startsWith('blob:')) {
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+        Logger.info('🧹 [DOWNLOAD FILE] Blob URL cleaned up:', filename)
+      }, 1000)
+    }
+  }
+  catch (error) {
+    Logger.error('❌ [DOWNLOAD FILE] Error downloading file:', error)
+
+    // Fallback: abrir en nueva ventana
+    try {
+      window.open(url, '_blank', 'noopener,noreferrer')
+      Logger.info('🔄 [DOWNLOAD FILE] Fallback: opened in new tab')
+    }
+    catch (fallbackError) {
+      Logger.error('❌ [DOWNLOAD FILE] Fallback also failed:', fallbackError)
+
+      // Último recurso: mostrar error al usuario
+      toast.add({
+        severity: 'error',
+        summary: 'Download Failed',
+        detail: 'Unable to download file. Please try again.',
+        life: 5000
+      })
+    }
   }
 }
 
@@ -2207,9 +2315,26 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
                       <div class="flex align-items-center gap-2 mb-2">
                         <i :class="getFormatIcon(item.reportFormatType?.id)" />
                         <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
+                        <!-- ✅ NUEVO: Mostrar método de storage -->
+                        <Tag
+                          v-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'S3'"
+                          severity="info"
+                          value="S3"
+                          class="text-xs"
+                        />
+                        <Tag
+                          v-else-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'BASE64'"
+                          severity="warn"
+                          value="Fallback"
+                          class="text-xs"
+                        />
                       </div>
                       <div class="text-sm text-gray-600">
                         Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
+                        <!-- ✅ NUEVO: Mostrar expiración para S3 -->
+                        <span v-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'S3' && asyncReportGeneration.workflowState.value.report.expirationDate">
+                          • Expires: {{ dayjs(asyncReportGeneration.workflowState.value.report.expirationDate).format('MMM DD, HH:mm') }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2226,14 +2351,7 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
                       label="Download Again"
                       icon="pi pi-download"
                       class="p-button-secondary p-button-outlined w-full"
-                      @click="() => {
-                        const report = asyncReportGeneration.workflowState.value.report;
-                        if (report) {
-                          const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
-                          const url = URL.createObjectURL(blob);
-                          asyncReportGeneration.downloadFile(url, report.fileName);
-                        }
-                      }"
+                      @click="downloadCurrentReport"
                     />
                   </div>
                 </div>
