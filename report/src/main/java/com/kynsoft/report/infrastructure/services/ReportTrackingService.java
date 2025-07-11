@@ -1,5 +1,6 @@
 package com.kynsoft.report.infrastructure.services;
 
+import com.kynsoft.report.domain.dto.ReportGenerationResponse;
 import com.kynsoft.report.domain.dto.ReportProcessingDto;
 import com.kynsoft.report.domain.enums.ReportStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,8 +27,7 @@ public class ReportTrackingService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public void createReportTracking(String serverRequestId, String clientRequestId,
-                                     String jasperReportCode, String reportFormatType,
+    public void createReportTracking(String serverRequestId, String clientRequestId, String jasperReportCode, String reportFormatType,
                                      String originalRequestJson) {
         ReportProcessingDto tracking = ReportProcessingDto.builder()
                 .serverRequestId(serverRequestId)
@@ -76,6 +76,37 @@ public class ReportTrackingService {
         }
     }
 
+    public void completeReportProcessingWithS3(String serverRequestId, ReportGenerationResponse reportResponse) {
+        Optional<ReportProcessingDto> trackingOpt = getReportTracking(serverRequestId);
+
+        if (trackingOpt.isPresent()) {
+            ReportProcessingDto tracking = trackingOpt.get();
+
+            // Actualizar con datos híbridos
+            tracking.setStatus(ReportStatus.COMPLETED);
+            tracking.setUpdatedAt(LocalDateTime.now());
+            tracking.setUseS3Storage(reportResponse.isUseS3Storage());
+            tracking.setStorageMethod(reportResponse.getStorageMethod());
+            tracking.setFileSizeBytes(reportResponse.getFileSizeBytes());
+
+            if (reportResponse.isUseS3Storage()) {
+                // Datos S3
+                tracking.setS3PreSignedUrl(reportResponse.getS3DownloadUrl());
+                tracking.setS3ExpirationDate(reportResponse.getExpirationDate());
+                tracking.setReportBase64(null); // Limpiar base64 para ahorrar memoria
+            } else {
+                // Fallback base64
+                tracking.setReportBase64(reportResponse.getBase64Report());
+            }
+
+            // Guardar en Redis
+            saveTracking(tracking);
+
+            logger.info("Report processing completed | ServerID: {} | Storage: {} | Size: {} bytes",
+                    serverRequestId, tracking.getStorageMethod(), tracking.getFileSizeBytes());
+        }
+    }
+
     public Optional<ReportProcessingDto> getReportTracking(String serverRequestId) {
         try {
             String json = redisTemplate.opsForValue().get(REPORT_KEY_PREFIX + serverRequestId);
@@ -88,7 +119,7 @@ public class ReportTrackingService {
         return Optional.empty();
     }
 
-    private void saveTracking(ReportProcessingDto tracking) {
+    public void saveTracking(ReportProcessingDto tracking) {
         try {
             String json = objectMapper.writeValueAsString(tracking);
             redisTemplate.opsForValue().set(
