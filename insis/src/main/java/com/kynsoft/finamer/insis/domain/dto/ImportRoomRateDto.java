@@ -17,7 +17,7 @@ public class ImportRoomRateDto {
     private ImportProcessDto importProcess;
     private RoomRateDto roomRate;
     private String errorMessage;
-    public LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     public ImportRoomRateDto(UUID id, ImportProcessDto importProcess, RoomRateDto roomRate){
         this.id = id;

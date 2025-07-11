@@ -6,6 +6,7 @@ import com.kynsoft.finamer.insis.application.query.objectResponse.manageRatePlan
 import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomCategory.ManageRoomCategoryResponse;
 import com.kynsoft.finamer.insis.application.query.objectResponse.manageRoomType.ManageRoomTypeResponse;
 import com.kynsoft.finamer.insis.domain.dto.RoomRateDto;
+import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,6 +52,7 @@ public class RoomRateResponse {
     private String renewalNumber;
     private ManageRoomCategoryResponse roomCategory;
     private String message;
+    private Boolean hasErrors;
 
     public RoomRateResponse(RoomRateDto dto){
         this.id = dto.getId();
@@ -86,5 +88,14 @@ public class RoomRateResponse {
         this.renewalNumber = dto.getRenewalNumber();
         this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategoryResponse(dto.getRoomCategory()) : null;
         this.message = dto.getMessage();
+        this.setHasErrors(hasErrors(dto));
+    }
+
+    private boolean hasErrors(RoomRateDto roomRateDto){
+        if(Objects.isNull(roomRateDto.getAgency())){
+            return true;
+        }
+
+        return false;
     }
 }

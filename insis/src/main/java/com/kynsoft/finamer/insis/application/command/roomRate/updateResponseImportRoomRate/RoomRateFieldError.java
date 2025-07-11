@@ -1,4 +1,4 @@
-package com.kynsoft.finamer.insis.application.command.booking.updateResponseBooking;
+package com.kynsoft.finamer.insis.application.command.roomRate.updateResponseImportRoomRate;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -149,6 +149,9 @@ public class RoomRate {
     @Column(name = "invoice_id")
     private UUID invoiceId;
 
+    @Column(name = "booking_id")
+    private UUID bookingId;
+
     public RoomRate(RoomRateDto dto){
         this.id = dto.getId();
         this.status = dto.getStatus();
@@ -189,6 +192,7 @@ public class RoomRate {
         this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategory(dto.getRoomCategory()) : null;
         this.hash = dto.getHash();
         this.invoiceId = dto.getInvoiceId();
+        this.bookingId = dto.getBookingId();
     }
 
     public RoomRateDto toAggregate(){
@@ -232,7 +236,8 @@ public class RoomRate {
                 this.roomCategoryCode,
                 Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
                 Objects.isNull(this.agency) ? "Agency doesn´t exist" : null,
-                this.invoiceId
+                this.invoiceId,
+                this.bookingId
         );
     }
 }

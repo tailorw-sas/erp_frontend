@@ -11,6 +11,7 @@ import com.kynsoft.finamer.insis.infrastructure.model.ManageHotel;
 import com.kynsoft.finamer.insis.infrastructure.model.RoomRate;
 import com.kynsoft.finamer.insis.infrastructure.model.enums.RoomRateStatus;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.RoomRateWriteDataJPARepository;
+import com.kynsoft.finamer.insis.infrastructure.repository.projection.RoomRateResult;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.ImportRoomRateReadDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.RoomRateReadDataJPARepository;
 import org.springframework.data.domain.Page;
@@ -44,7 +45,9 @@ public class RoomRateServiceImpl implements IRoomRateService {
     @Override
     public UUID create(RoomRateDto dto) {
         RoomRate rate = new RoomRate(dto);
-        return writeRepository.save(rate).getId();
+        UUID id = this.insert(rate);
+        dto.setId(id);
+        return id;
     }
 
     @Override
@@ -52,7 +55,7 @@ public class RoomRateServiceImpl implements IRoomRateService {
         List<RoomRate> rateList = rateDtoList.stream()
                 .map(RoomRate::new)
                 .collect(Collectors.toList());
-        writeRepository.saveAll(rateList);
+        rateList.forEach(this::insert);
     }
 
     @Override
@@ -175,5 +178,33 @@ public class RoomRateServiceImpl implements IRoomRateService {
                 })
                 .limit(2)
                 .toList();
+    }
+
+    private UUID insert(RoomRate roomRate){
+        Object result = this.writeRepository.insertRoomRate(roomRate.getId(), roomRate.getAdults(),
+                roomRate.getAgencyCode(), roomRate.getAmount(),
+                roomRate.getAmountPaymentApplied(), roomRate.getCheckInDate(),
+                roomRate.getCheckOutDate(), roomRate.getChildren(),
+                roomRate.getCouponNumber(), roomRate.getFirstName(),
+                roomRate.getGuestName(), roomRate.getHash(),
+                roomRate.getHotelCreationDate(), roomRate.getHotelInvoiceAmount(),
+                roomRate.getHotelInvoiceNumber(), roomRate.getInvoiceFolioNumber(),
+                roomRate.getInvoicingDate(), roomRate.getLastName(),
+                roomRate.getOriginalAmount(), roomRate.getQuote(),
+                roomRate.getRateByAdult(), roomRate.getRateByChild(),
+                roomRate.getRatePlanCode(), roomRate.getRemarks(),
+                roomRate.getRenewalNumber(), roomRate.getReservationCode(),
+                roomRate.getRoomNumber(), roomRate.getRoomTypeCode(),
+                roomRate.getStatus().name(), roomRate.getStayDays(),
+                roomRate.getTotalNumberOfGuest(), roomRate.getUpdatedAt(),
+                roomRate.getBookingId(),
+                Objects.nonNull(roomRate.getHotel()) ? roomRate.getHotel().getId() : null,
+                roomRate.getInvoiceId(),
+                roomRate.getRoomCategoryCode(),
+                Objects.nonNull(roomRate.getAgency()) ? roomRate.getAgency().getId() : null,
+                Objects.nonNull(roomRate.getRatePlan()) ? roomRate.getRatePlan().getId() : null,
+                Objects.nonNull(roomRate.getRoomCategory()) ? roomRate.getRoomCategory().getId() : null,
+                Objects.nonNull(roomRate.getRoomType()) ? roomRate.getRoomType().getId() : null);
+        return (UUID)result;
     }
 }

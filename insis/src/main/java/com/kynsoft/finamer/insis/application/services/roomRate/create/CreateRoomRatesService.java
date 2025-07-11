@@ -23,6 +23,8 @@ import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.manageRo
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -100,8 +102,16 @@ public class CreateRoomRatesService {
         ManageHotelDto hotelDto = manageHotelService.findByCode(hotel);
         try{
             if(!createRoomRates.isEmpty()){
+                Instant before = Instant.now();
                 this.processNewCatalogs(createRoomRates, hotelDto);
+                Instant after = Instant.now();
+                System.out.println("************ Process New Catalogs" + Duration.between(before, after).toMillis()  + " ms");
+
+                before = Instant.now();
                 boolean processed = this.processRoomRates(processLog, invoiceDate, createRoomRates, hotelDto);
+                after = Instant.now();
+                System.out.println("************ Process New Rates" + Duration.between(before, after).toMillis()  + " ms");
+
                 this.updateLogAsCompleted(processLog, createRoomRates.size(), processed ? createRoomRates.size() : 0, null);
             }else{
                 this.updateLogAsCompleted(processLog, 0, 0, null);
@@ -438,6 +448,7 @@ public class CreateRoomRatesService {
                 createRoomRate.getHash(),
                 createRoomRate.getRoomCategory(),
                 roomCategory,
+                null,
                 null,
                 null
         );

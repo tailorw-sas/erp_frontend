@@ -56,4 +56,5 @@ public class RoomRateDto {
     private ManageRoomCategoryDto roomCategory;
     private String message;
     private UUID invoiceId;
+    private UUID bookingId;
 }
