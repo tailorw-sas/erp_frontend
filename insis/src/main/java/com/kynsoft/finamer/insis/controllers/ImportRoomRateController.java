@@ -46,7 +46,7 @@ public class ImportRoomRateController {
     public ResponseEntity<?> updateBookinsResponse(@RequestBody UpdateResponseImportBookingRequest request){
         UpdateResponseImportBookingCommand command = UpdateResponseImportBookingCommand.fromRequest(request);
         UpdateResponseImportBookingMessage response = mediator.send(command);
-//metodo que se usa
+
         return ResponseEntity.ok(response);
     }
 
