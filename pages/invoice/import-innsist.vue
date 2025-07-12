@@ -880,9 +880,10 @@ async function importRoomRates() {
         onClose()
       }
 
-      // await updateBookingsStatus(processId.value)
+      await updateBookingsStatus(processId.value)
     }
     catch (error: any) {
+      console.log('VIno por error')
       const messageError = error?.data?.data?.error?.errorMessage || 'Unexpected error. Please, try again'
 
       // invocar al servicio de reverso de bookings
@@ -890,7 +891,7 @@ async function importRoomRates() {
         id: item,
         message: messageError,
       }))
-      // await updateBookingsStatus(processId.value)
+      await updateBookingsStatus(processId.value)
 
       toast.add({
         severity: 'error',
@@ -930,6 +931,8 @@ async function checkProcessStatus(id: any) {
         }
 
         const response = await GenericService.getById(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, id, 'import-status')
+        console.log('Response del estado:')
+        console.log(response)
         status = response.status
         totalImportedRows.value = response.totalRows ?? 0
 
@@ -963,6 +966,8 @@ async function getErrorList(processId: any) {
     pagination.value.totalElements = totalElements
     pagination.value.totalPages = totalPages
 
+    console.log('Respuesta del estado:')
+    console.log(response)
     for (const iterator of dataList) {
       newListItems.push(
         {
@@ -1005,7 +1010,7 @@ async function updateBookingsStatus(processId: any) {
       errorResponses: newListErrorResponse
     }
 
-    await GenericService.updateBookings(confImportBookingApi.moduleApi, confImportBookingApi.uriApi, payload)
+    await GenericService.updateBookings(confImportRoomRateApi.moduleApi, confImportRoomRateApi.uriApi, payload)
   }
   catch (error: any) {
     toast.add({ severity: 'warn', summary: 'Completed with errors', detail: 'The import process finished with errors, please validate the bookings in Manage Invoice', life: 5000 })
