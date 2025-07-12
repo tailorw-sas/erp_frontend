@@ -1014,7 +1014,7 @@ async function getErrorList(processId: any) {
           let errorsCount = 0
           for (const errorField of errorFields) {
             errorsCount++
-            errorMessage += `${errorsCount} - ${errorField.message}.\n`
+            errorMessage += `${errorsCount}: ${errorField.message}.\n`
           }
           errorMessage = errorMessage.trim()
           newListItems.push({
