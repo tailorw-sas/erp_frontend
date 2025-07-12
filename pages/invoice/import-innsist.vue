@@ -952,7 +952,7 @@ async function checkProcessStatus(id: any) {
   })
 }
 
-async function getErrorList(processId: any) {
+/*async function getErrorList(processId: any) {
   try {
     optionsListErrors.value.loading = true
     payload.value = { ...payload.value, query: processId }
@@ -985,6 +985,90 @@ async function getErrorList(processId: any) {
     }
 
     listItemsErrors.value = [...listItemsErrors.value, ...newListItems]
+  }
+  catch (error) {
+    console.error('Error loading file:', error)
+  }
+  finally {
+    optionsListErrors.value.loading = false
+  }
+}*/
+
+async function getErrorList(processId: any) {
+  try {
+    optionsListErrors.value.loading = true
+    payload.value = { ...payload.value, query: processId }
+    listItemsErrors.value = []
+    const newListItems = []
+    const response = await GenericService.importSearch(confInvoiceApi.moduleApi, confInvoiceApi.uriApi, payload.value)
+    console.log(response)
+    const { data: dataList, page, size, totalElements, totalPages } = response.paginatedResponse
+
+    if (totalElements !== null && totalElements > 0) {
+      const existingIds = new Set(listItemsErrors.value.map(item => item.id))
+
+      for (const iterator of dataList) {
+        if (!existingIds.has(iterator.row?.insistImportProcessBookingId)) {
+          let errorMessage = ''
+          const errorFields = iterator.errorFields
+          let errorsCount = 0
+          for (const errorField of errorFields) {
+            errorsCount++
+            errorMessage += `${errorsCount} - ${errorField.message}.\n`
+          }
+          errorMessage = errorMessage.trim()
+          newListItems.push({
+            id: iterator?.row?.insistImportProcessBookingId,
+            trendingCompany: iterator.row?.trendingCompany,
+            hotel: iterator?.row?.manageHotelCode,
+            agencyCode: iterator?.row?.manageAgencyCode,
+            agency: iterator?.row?.manageAgencyCode,
+            checkInDate: iterator?.row?.checkIn,
+            checkOutDate: iterator?.row?.checkOut,
+            stayDays: iterator?.row?.nights,
+            reservationCode: iterator.row?.hotelBookingNumber,
+            guestName: `${iterator?.row?.firstName} ${iterator?.row?.lastName}`,
+            firstName: iterator?.row?.firstName,
+            lastName: iterator?.row?.lastName,
+            amount: iterator.row?.invoiceAmount,
+            roomType: iterator.row?.roomType,
+            couponNumber: iterator.row?.coupon,
+            totalNumberOfGuest: 0,
+            adults: iterator.row?.adults,
+            childrens: iterator.row?.childrens,
+            ratePlan: iterator.row?.ratePlan,
+            invoicingDate: iterator.row?.bookingDate,
+            hotelCreationDate: '',
+            originalAmount: 0,
+            amountPaymentApplied: 0,
+            rateByChild: '',
+            remarks: iterator.row?.remarks,
+            roomNumber: iterator.row?.roomNumber,
+            hotelInvoiceAmount: iterator.row?.hotelInvoiceAmount,
+            hotelInvoiceNumber: iterator.row?.hotelInvoiceNumber,
+            invoiceFolioNumber: '',
+            quote: '',
+            renewalNumber: '',
+            message: errorMessage
+          })
+          existingIds.add(iterator.row?.insistImportProcessBookingId)
+        }
+        /*else {
+          const booking = newListItems.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
+          if (booking.length > 0) {
+            booking[0].amount = booking[0].amount + iterator.row?.invoiceAmount
+            booking[0].hotelInvoiceAmount = booking[0].hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
+          }
+        }*/
+      }
+
+      paginationErroList.value.page = page
+      paginationErroList.value.limit = size
+      paginationErroList.value.totalElements = newListItems.length
+      paginationErroList.value.totalPages = totalPages
+
+      listItemsErrors.value = [...listItemsErrors.value, ...newListItems]
+    }
   }
   catch (error) {
     console.error('Error loading file:', error)
