@@ -23,4 +23,11 @@ public class ReportProcessingDto {
     private String reportFormatType;
     private Long fileSizeBytes;
     private String originalRequestJson;  // Para auditoría completa
+
+    private boolean useS3Storage;
+    private String s3BucketName;
+    private String s3ObjectKey;
+    private String s3PreSignedUrl;
+    private LocalDateTime s3ExpirationDate;
+    private String storageMethod; // "S3" o "BASE64"
 }

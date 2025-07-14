@@ -2,6 +2,7 @@ package com.kynsoft.report.infrastructure.messaging;
 
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateRequest;
 import com.kynsoft.report.controller.ReportController;
+import com.kynsoft.report.domain.dto.ReportGenerationResponse;
 import com.kynsoft.report.domain.events.ReportProcessingEvent;
 import com.kynsoft.report.infrastructure.services.ReportTrackingService;
 import com.kynsoft.report.domain.enums.ReportStatus;
@@ -100,14 +101,12 @@ public class ReportEventConsumer {
             ResponseEntity<String> response = reportController.executeReportInternal(request);
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                String responseBody = response.getBody();
-                String base64Report = extractBase64FromResponse(responseBody);
-                Long fileSize = (long) base64Report.length();
+                ReportGenerationResponse reportResponse = parseHybridResponse(response.getBody());
 
-                reportTrackingService.completeReportProcessing(serverRequestId, base64Report, fileSize);
+                reportTrackingService.completeReportProcessingWithS3(serverRequestId, reportResponse);
 
-                logger.info("Report processing completed successfully | ServerID: {} | ClientID: {} | FileSize: {} bytes",
-                        serverRequestId, clientRequestId, fileSize);
+                logger.info("Report processing completed successfully | ServerID: {} | ClientID: {} | Storage: {} | FileSize: {} bytes",
+                        serverRequestId, clientRequestId, reportResponse.getStorageMethod(), reportResponse.getFileSizeBytes());
             } else {
                 String errorMessage = "Report generation failed with status: " + response.getStatusCode();
                 reportTrackingService.updateReportStatus(serverRequestId, ReportStatus.FAILED, errorMessage);
@@ -123,7 +122,7 @@ public class ReportEventConsumer {
         }
     }
 
-    private String extractBase64FromResponse(String responseBody) {
+    private ReportGenerationResponse parseHybridResponse(String responseBody) {
         try {
             if (responseBody == null || responseBody.trim().isEmpty()) {
                 throw new RuntimeException("Empty response body");
@@ -131,21 +130,23 @@ public class ReportEventConsumer {
 
             var jsonNode = objectMapper.readTree(responseBody);
 
-            if (!jsonNode.has("base64Report")) {
-                throw new RuntimeException("No 'base64Report' field in response");
+            if (jsonNode.has("useS3Storage")) {
+                return objectMapper.readValue(responseBody, ReportGenerationResponse.class);
+            } else if (jsonNode.has("base64Report")) {
+                String base64Report = jsonNode.get("base64Report").asText();
+                return ReportGenerationResponse.builder()
+                        .useS3Storage(false)
+                        .base64Report(base64Report)
+                        .storageMethod("BASE64")
+                        .fileSizeBytes((long) base64Report.length())
+                        .build();
+            } else {
+                throw new RuntimeException("Invalid response format - missing expected fields");
             }
-
-            String base64Report = jsonNode.get("base64Report").asText();
-
-            if (base64Report == null || base64Report.trim().isEmpty()) {
-                throw new RuntimeException("Empty base64Report value");
-            }
-
-            return base64Report;
 
         } catch (Exception e) {
-            logger.error("Error extracting base64 from response | Response: {} | Error: {}", responseBody, e.getMessage());
-            throw new RuntimeException("Error extracting base64 from response: " + e.getMessage(), e);
+            logger.error("Error parsing hybrid response | Response: {} | Error: {}", responseBody, e.getMessage());
+            throw new RuntimeException("Error parsing hybrid response: " + e.getMessage(), e);
         }
     }
 }

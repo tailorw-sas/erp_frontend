@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,4 +17,6 @@ public class ReportDownloadResponse {
     private String fileName;
     private String contentType;
     private String downloadUrl; // Para descargas por URL si el archivo es muy grande
+    private String storageMethod;
+    private LocalDateTime expirationDate;
 }

@@ -1,19 +1,22 @@
 package com.kynsoft.report.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateCommand;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateMessage;
 import com.kynsoft.report.applications.command.generateTemplate.GenerateTemplateRequest;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeQuery;
 import com.kynsoft.report.applications.query.reportTemplate.GetReportParameterByCodeResponse;
-import com.kynsof.share.core.infrastructure.bus.IMediator;
 import com.kynsoft.report.domain.dto.*;
 import com.kynsoft.report.domain.enums.ReportStatus;
 import com.kynsoft.report.domain.events.ReportProcessingEvent;
 import com.kynsoft.report.domain.services.IJasperReportTemplateService;
+import com.kynsoft.report.domain.services.IReportCleanupService;
 import com.kynsoft.report.infrastructure.enums.ReportFormatType;
 import com.kynsoft.report.infrastructure.messaging.ReportEventProducer;
+import com.kynsoft.report.infrastructure.services.ReportS3Service;
 import com.kynsoft.report.infrastructure.services.ReportTrackingService;
+import com.kynsoft.report.infrastructure.utils.ReportS3ConfigurationProperties;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.SimpleExporterInput;
@@ -21,7 +24,6 @@ import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,6 +55,8 @@ public class ReportController {
     private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
     private final ConcurrentHashMap<String, JasperReport> jasperCache = new ConcurrentHashMap<>();
     private final AtomicInteger compileCounter = new AtomicInteger(0);
+    private final ReportS3Service reportS3Service;
+    private final ReportS3ConfigurationProperties s3Config;
 
     @Autowired
     private ReportEventProducer reportEventProducer;
@@ -62,9 +67,15 @@ public class ReportController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public ReportController(IMediator mediator, IJasperReportTemplateService reportService) {
+    @Autowired
+    private IReportCleanupService cleanupService;
+
+    public ReportController(IMediator mediator, IJasperReportTemplateService reportService, ReportS3Service reportS3Service,
+                            ReportS3ConfigurationProperties s3Config) {
         this.mediator = mediator;
         this.reportService = reportService;
+        this.reportS3Service = reportS3Service;
+        this.s3Config = s3Config;
     }
 
     @PostMapping(value = "/generate-template", produces = MediaType.APPLICATION_PDF_VALUE)
@@ -177,16 +188,57 @@ public class ReportController {
 
         if (tracking.isPresent()) {
             ReportProcessingDto report = tracking.get();
-            if (report.getStatus() == ReportStatus.COMPLETED && report.getReportBase64() != null) {
 
-                ReportDownloadResponse response = ReportDownloadResponse.builder()
-                        .base64Report(report.getReportBase64())
-                        .fileSizeBytes(report.getFileSizeBytes())
-                        .fileName(generateFileName(report))
-                        .contentType(getContentType(report.getReportFormatType()))
-                        .build();
+            if (report.getStatus() == ReportStatus.COMPLETED) {
 
-                return ResponseEntity.ok(ApiResponse.success(response));
+                // ✅ NUEVO: Manejo híbrido según storage method
+                if (report.isUseS3Storage()) {
+                    // ✅ S3 Storage - Verificar si URL sigue válida
+                    if (report.getS3ExpirationDate() != null &&
+                            report.getS3ExpirationDate().isBefore(LocalDateTime.now())) {
+
+                        // URL expirada - regenerar si es posible
+                        String newPresignedUrl = regeneratePresignedUrlIfPossible(report);
+                        if (newPresignedUrl != null) {
+                            report.setS3PreSignedUrl(newPresignedUrl);
+                            report.setS3ExpirationDate(LocalDateTime.now().plusHours(s3Config.getPresignedUrlExpiryHours()));
+                            reportTrackingService.saveTracking(report);
+                        } else {
+                            ErrorResponse error = new ErrorResponse("Report expired", "S3 download URL has expired and cannot be regenerated");
+                            return ResponseEntity.badRequest().body(ApiResponse.error(error));
+                        }
+                    }
+
+                    // ✅ Retornar URL de S3
+                    ReportDownloadResponse response = ReportDownloadResponse.builder()
+                            .downloadUrl(report.getS3PreSignedUrl())  // ✅ NUEVO CAMPO
+                            .fileSizeBytes(report.getFileSizeBytes())
+                            .fileName(generateFileName(report))
+                            .contentType(getContentType(report.getReportFormatType()))
+                            .storageMethod("S3")  // ✅ NUEVO CAMPO
+                            .expirationDate(report.getS3ExpirationDate())  // ✅ NUEVO CAMPO
+                            .build();
+
+                    return ResponseEntity.ok(ApiResponse.success(response));
+
+                } else {
+                    // ✅ Base64 Storage (fallback o legacy)
+                    if (report.getReportBase64() == null) {
+                        ErrorResponse error = new ErrorResponse("Report data missing", "Report was processed but data is not available");
+                        return ResponseEntity.badRequest().body(ApiResponse.error(error));
+                    }
+
+                    ReportDownloadResponse response = ReportDownloadResponse.builder()
+                            .base64Report(report.getReportBase64())  // ✅ MANTENER PARA COMPATIBILIDAD
+                            .fileSizeBytes(report.getFileSizeBytes())
+                            .fileName(generateFileName(report))
+                            .contentType(getContentType(report.getReportFormatType()))
+                            .storageMethod("BASE64")  // ✅ NUEVO CAMPO
+                            .build();
+
+                    return ResponseEntity.ok(ApiResponse.success(response));
+                }
+
             } else {
                 ErrorResponse error = new ErrorResponse("Report not ready", "Current status: " + report.getStatus());
                 return ResponseEntity.badRequest().body(ApiResponse.error(error));
@@ -197,11 +249,71 @@ public class ReportController {
         }
     }
 
+    // ✅ NUEVO: Intentar regenerar URL presignada
+    private String regeneratePresignedUrlIfPossible(ReportProcessingDto report) {
+        try {
+            if (report.getS3ObjectKey() != null && reportS3Service.objectExists(report.getS3ObjectKey())) {
+                return reportS3Service.generatePreSignedDownloadUrl(
+                        report.getS3ObjectKey(),
+                        Duration.ofHours(s3Config.getPresignedUrlExpiryHours())
+                );
+            }
+        } catch (Exception e) {
+            logger.warn("Could not regenerate presigned URL for report | ServerID: {} | S3Key: {} | Error: {}",
+                    report.getServerRequestId(), report.getS3ObjectKey(), e.getMessage());
+        }
+        return null;
+    }
     @DeleteMapping("/cleanup/{serverRequestId}")
     public ResponseEntity<ApiResponse<SimpleResponse>> cleanupReport(@PathVariable String serverRequestId) {
         reportTrackingService.deleteReportTracking(serverRequestId);
         SimpleResponse response = new SimpleResponse("Report data cleaned up successfully");
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/admin/cleanup/{date}")
+    public ResponseEntity<ApiResponse<CleanupResult>> manualCleanup(@PathVariable String date) {
+        try {
+            LocalDate cleanupDate = LocalDate.parse(date);
+            CleanupResult result = cleanupService.cleanupReportsForDate(cleanupDate);
+
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(ApiResponse.success(result));
+            } else {
+                return ResponseEntity.status(500).body(ApiResponse.error(
+                        new ErrorResponse("Cleanup failed", result.getErrorMessage())
+                ));
+            }
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse("Invalid date or cleanup error", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(error));
+        }
+    }
+
+    @GetMapping("/admin/cleanup/preview/{date}")
+    public ResponseEntity<ApiResponse<CleanupPreviewResult>> previewCleanup(@PathVariable String date) {
+        try {
+            LocalDate cleanupDate = LocalDate.parse(date);
+            CleanupPreviewResult result = cleanupService.previewCleanup(cleanupDate);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse("Preview failed", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(error));
+        }
+    }
+
+    @PostMapping("/admin/cleanup/range")
+    public ResponseEntity<ApiResponse<CleanupResult>> cleanupDateRange(@RequestParam String startDate, @RequestParam String endDate) {
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            CleanupResult result = cleanupService.cleanupReportsForDateRange(start, end);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            ErrorResponse error = new ErrorResponse("Range cleanup failed", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.error(error));
+        }
     }
 
     private String generateFileName(ReportProcessingDto report) {
@@ -239,7 +351,8 @@ public class ReportController {
             // Use extracted parameter conversion method
             Map<String, Object> convertedParams = convertParameters(request.getParameters());
             logger.info("Final converted parameters: {}", convertedParams);
-            // If GenerateTemplateRequest has getMetadata, log metadata
+
+            // Log metadata if available
             try {
                 java.lang.reflect.Method getMetadataMethod = request.getClass().getMethod("getMetadata");
                 Object metadata = getMetadataMethod.invoke(request);
@@ -249,6 +362,7 @@ public class ReportController {
             } catch (Exception ex) {
                 logger.warn("Error obtaining request metadata: {}", ex.getMessage());
             }
+
             logger.info("Database URL: {}", reportTemplateDto.getDbConectionDto().getUrl());
 
             // Cargar el archivo JRXML
@@ -264,10 +378,12 @@ public class ReportController {
             // Llenar el reporte usando la conexión de base de datos proporcionada
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, convertedParams, connection);
 
+            byte[] reportBytes;
+            String contentType;
+            String fileName;
+
             // Use try-with-resources for ByteArrayOutputStream
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                String contentType;
-                String fileName;
                 ReportFormatType formatType = ReportFormatType.fromString(request.getReportFormatType());
                 switch (formatType) {
                     case XLS:
@@ -279,29 +395,45 @@ public class ReportController {
                         configuration.setCollapseRowSpan(false);
                         exporterxls.setConfiguration(configuration);
                         exporterxls.exportReport();
+                        contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                        fileName = generateFileName(request.getJasperReportCode(), "xlsx");
                         break;
                     case CSV:
                         net.sf.jasperreports.engine.export.JRCsvExporter exporterCsv = new net.sf.jasperreports.engine.export.JRCsvExporter();
                         exporterCsv.setExporterInput(new SimpleExporterInput(jasperPrint));
                         exporterCsv.setExporterOutput(new net.sf.jasperreports.export.SimpleWriterExporterOutput(outputStream));
                         exporterCsv.exportReport();
+                        contentType = "text/csv";
+                        fileName = generateFileName(request.getJasperReportCode(), "csv");
                         break;
                     case PDF:
                     default:
                         JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
+                        contentType = "application/pdf";
+                        fileName = generateFileName(request.getJasperReportCode(), "pdf");
                         break;
                 }
 
-                String base64Report = Base64.getEncoder().encodeToString(outputStream.toByteArray());
-                long endTime = System.currentTimeMillis();
-                logger.info("Report execution completed successfully | Request ID: {} | Duration: {} ms", request.getRequestId(), (endTime - startTime));
-                return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"base64Report\": \"" + base64Report + "\"}");
+                reportBytes = outputStream.toByteArray();
             }
+
+            ReportGenerationResponse response = attemptS3UploadWithFallback(request.getRequestId(), reportBytes, fileName, contentType);
+
+            long endTime = System.currentTimeMillis();
+            logger.info("Report execution completed successfully | Request ID: {} | Duration: {} ms | Storage: {}",
+                    request.getRequestId(), (endTime - startTime), response.getStorageMethod());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(objectMapper.writeValueAsString(response));
+
         } catch (Exception e) {
             long errorTime = System.currentTimeMillis();
             logger.error("Report execution failed | Request ID: {} | Duration: {} ms", request.getRequestId(), (errorTime - startTime));
             logger.error("Report code: {}", request.getJasperReportCode(), e);
-            return ResponseEntity.status(500).body("{\"error\": \"Error generating report\", \"details\": \"" + e.getMessage().replace("\"", "\\\"") + "\"}");
+            return ResponseEntity.status(500)
+                    .body("{\"error\": \"Error generating report\", \"details\": \"" +
+                    e.getMessage().replace("\"", "\\\"") + "\"}");
         } finally {
             if (connection != null) {
                 try {
@@ -379,6 +511,73 @@ public class ReportController {
         } catch (RuntimeException e) {
             throw e;
         }
+    }
+
+    private ReportGenerationResponse attemptS3UploadWithFallback(String serverRequestId, byte[] reportBytes, String fileName, String contentType) {
+
+        // ✅ Verificar si S3 está habilitado y disponible
+        if (!s3Config.isFallbackToBase64() || !reportS3Service.isS3Available()) {
+            logger.warn("S3 not available or disabled, using base64 fallback | ServerRequestId: {}", serverRequestId);
+            return createBase64Response(reportBytes, fileName, contentType, "S3_DISABLED");
+        }
+
+        // ✅ Intentar upload a S3
+        try {
+            logger.info("Attempting S3 upload | ServerRequestId: {} | FileSize: {} bytes",
+                    serverRequestId, reportBytes.length);
+
+            ReportS3UploadResult s3Result = reportS3Service.uploadReportToS3(serverRequestId, reportBytes, fileName, contentType);
+
+            if (s3Result.isSuccess()) {
+                logger.info("S3 upload successful | ServerRequestId: {} | S3Key: {}",
+                        serverRequestId, s3Result.getS3ObjectKey());
+
+                return ReportGenerationResponse.builder()
+                        .useS3Storage(true)
+                        .s3DownloadUrl(s3Result.getPreSignedUrl())
+                        .fileName(fileName)
+                        .contentType(contentType)
+                        .fileSizeBytes((long) reportBytes.length)
+                        .expirationDate(s3Result.getExpirationDate())
+                        .storageMethod("S3")
+                        .build();
+            } else {
+                logger.warn("S3 upload failed, falling back to base64 | ServerRequestId: {} | Error: {}",
+                        serverRequestId, s3Result.getErrorMessage());
+
+                return createBase64Response(reportBytes, fileName, contentType,
+                        "S3_FAILED: " + s3Result.getErrorMessage());
+            }
+
+        } catch (Exception e) {
+            logger.error("Unexpected error during S3 upload, falling back to base64 | ServerRequestId: {}",
+                    serverRequestId, e);
+
+            return createBase64Response(reportBytes, fileName, contentType,
+                    "S3_ERROR: " + e.getMessage());
+        }
+    }
+
+    private ReportGenerationResponse createBase64Response(byte[] reportBytes, String fileName, String contentType, String errorReason) {
+        String base64Report = Base64.getEncoder().encodeToString(reportBytes);
+
+        return ReportGenerationResponse.builder()
+                .useS3Storage(false)
+                .base64Report(base64Report)
+                .fileName(fileName)
+                .contentType(contentType)
+                .fileSizeBytes((long) reportBytes.length)
+                .storageMethod("BASE64")
+                .errorMessage(errorReason)
+                .build();
+    }
+
+    private String generateFileName(String reportCode, String extension) {
+        return String.format("%s_%s.%s",
+                reportCode,
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")),
+                extension
+        );
     }
 }
 
