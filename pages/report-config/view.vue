@@ -5,14 +5,10 @@ import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
-import ProgressSpinner from 'primevue/progressspinner'
-import ProgressBar from 'primevue/progressbar'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import ConfirmPopup from 'primevue/confirmpopup'
-import Timeline from 'primevue/timeline'
-import Steps from 'primevue/steps'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
@@ -496,8 +492,8 @@ function useAsyncReportGeneration(config: ReportConfig) {
   const pdfUrl = ref('')
 
   // Use specialized composables
-  const { isSubmitting, submissionError, submitReport, resetSubmission } = useReportSubmission(config)
-  const { isPolling, pollingAttempt, currentStatus, startPolling, stopPolling, getElapsedTime } = useReportPolling(config)
+  const { submissionError, submitReport, resetSubmission } = useReportSubmission(config)
+  const { pollingAttempt, startPolling, stopPolling } = useReportPolling(config)
   const { downloadReport, cleanupReport } = useReportDownload(config)
 
   // Progress tracking
@@ -536,24 +532,25 @@ function useAsyncReportGeneration(config: ReportConfig) {
       progress.elapsedTime = Date.now() - startTime
 
       if (workflowState.value.type === 'submitting') {
-        progress.percentage = Math.min(15, progress.elapsedTime / 1000 * 5)
+        progress.percentage = Math.min(20, (progress.elapsedTime / 5000) * 20) // 20% max en 5 segundos
         progress.message = 'Submitting report request...'
         progress.currentStep = 1
       }
       else if (workflowState.value.type === 'polling') {
         const state = workflowState.value
-        const progressFromAttempts = (state.attempt / state.maxAttempts) * 70
-        progress.percentage = 15 + progressFromAttempts
+        // Base: 20% + (70% basado en attempts)
+        const progressFromAttempts = Math.min(70, (state.attempt / Math.max(state.maxAttempts, 1)) * 70)
+        progress.percentage = 20 + progressFromAttempts
         progress.message = `Processing report... (${state.attempt}/${state.maxAttempts})`
         progress.currentStep = 2
 
         // Estimate remaining time
-        if (state.attempt > 5) {
+        if (state.attempt > 3) {
           const avgTimePerAttempt = progress.elapsedTime / state.attempt
           progress.estimatedTimeRemaining = (state.maxAttempts - state.attempt) * avgTimePerAttempt
         }
       }
-    }, 1000)
+    }, 500) // Update más frecuente para suavidad
   }
 
   function stopProgressTracking() {
@@ -603,13 +600,13 @@ function useAsyncReportGeneration(config: ReportConfig) {
       startPolling(
         submissionResult.serverRequestId,
         // onStatusUpdate
-        (status: ReportStatusResponse) => {
+        () => {
           if (workflowState.value.type === 'polling') {
             workflowState.value.attempt = pollingAttempt.value
           }
         },
         // onComplete
-        async (status: ReportStatusResponse) => {
+        async () => {
           await handleReportCompletion(submissionResult.serverRequestId)
         },
         // onError
@@ -764,11 +761,6 @@ function useAsyncReportGeneration(config: ReportConfig) {
       stopPolling()
       workflowState.value = { type: 'cancelled' }
       progress.message = 'Generation cancelled by user'
-
-      // Cleanup server resources if we have a server request ID
-      if (workflowState.value.type === 'polling') {
-        cleanupReport(workflowState.value.serverRequestId)
-      }
     }
   }
 
@@ -1254,51 +1246,6 @@ const formattedElapsedTime = computed(() => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 })
 
-const formattedEstimatedTime = computed(() => {
-  if (!asyncReportGeneration.progress.estimatedTimeRemaining) { return null }
-
-  const seconds = Math.floor(asyncReportGeneration.progress.estimatedTimeRemaining / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `~${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-})
-
-// ✅ NEW: Timeline data for better UX
-const timelineEvents = computed(() => {
-  const events = []
-  const state = asyncReportGeneration.workflowState.value
-
-  // Submit step
-  events.push({
-    status: state.type === 'idle' ? 'outlined' : 'filled',
-    date: state.type !== 'idle' ? 'Submitted' : 'Pending',
-    icon: 'pi pi-send',
-    color: state.type === 'idle' ? '#9C27B0' : '#673AB7'
-  })
-
-  // Processing step
-  if (state.type === 'polling' || state.type === 'completed' || (state.type === 'failed' && state.serverRequestId)) {
-    events.push({
-      status: state.type === 'polling' ? 'filled' : state.type === 'completed' ? 'filled' : 'outlined',
-      date: state.type === 'polling' ? 'Processing...' : state.type === 'completed' ? 'Processed' : 'Failed',
-      icon: 'pi pi-cog',
-      color: state.type === 'polling' ? '#FF9800' : state.type === 'completed' ? '#4CAF50' : '#F44336'
-    })
-  }
-
-  // Complete step
-  if (state.type === 'completed') {
-    events.push({
-      status: 'filled',
-      date: 'Completed',
-      icon: 'pi pi-check',
-      color: '#4CAF50'
-    })
-  }
-
-  return events
-})
-
 // ========== METHODS ==========
 async function loadReport(reportId: string) {
   if (!reportId) {
@@ -1415,7 +1362,7 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 // ✅ NEW: Enhanced report execution with new async workflow
 async function executeReport() {
   if (!canGenerate.value) {
-    const errorId = errorBoundary.captureError('form', new Error('Cannot generate report: required fields missing'))
+    errorBoundary.captureError('form', new Error('Cannot generate report: required fields missing'))
     return
   }
 
@@ -1470,19 +1417,6 @@ async function retryGeneration() {
       item.value.reportFormatType
     )
     await asyncReportGeneration.retryGeneration(payload)
-  }
-}
-
-// ✅ NEW: Cancel functionality
-function cancelGeneration() {
-  if (asyncReportGeneration.canCancel.value) {
-    asyncReportGeneration.cancelGeneration()
-    toast.add({
-      severity: 'info',
-      summary: 'Generation Cancelled',
-      detail: 'Report generation has been cancelled',
-      life: 3000
-    })
   }
 }
 
@@ -1778,7 +1712,7 @@ async function handleErrorRetry(context: string) {
         await errorBoundary.retryOperation(
           latestError.id,
           () => asyncReportGeneration.generateReportAsync(payload),
-          (result) => {
+          () => {
             Logger.info('✅ [ERROR RETRY] Generation retry successful')
           },
           (error) => {
@@ -1819,16 +1753,6 @@ function handleErrorReport() {
     detail: 'Error report functionality will be implemented soon',
     life: 3000
   })
-}
-
-function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
-  const state = asyncReportGeneration.workflowState.value
-
-  if (state.type === 'submitting') { return 'submitting' }
-  if (state.type === 'polling') { return 'processing' }
-  if (asyncReportGeneration.progress.currentStep === 3) { return 'downloading' }
-
-  return 'processing'
 }
 </script>
 
@@ -2194,14 +2118,114 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
 
             <!-- Enhanced Viewer Content -->
             <div class="report-viewer__preview-content">
-              <!-- ✅ PROGRESS SKELETON - Cuando está activo -->
-              <ProgressSkeleton
-                v-if="asyncReportGeneration.isActive.value"
-                :current-step="asyncReportGeneration.progress.currentStep"
-                :show-polling-details="asyncReportGeneration.workflowState.value.type === 'polling'"
-                :variant="getProgressVariant()"
-                :animated="true"
-              />
+              <div v-if="asyncReportGeneration.isActive.value" class="report-progress-card">
+                <!-- Progress Header -->
+                <div class="report-progress-header">
+                  <h4>
+                    <i class="pi pi-cog" />
+                    Generating Report...
+                  </h4>
+                  <span class="elapsed-time">{{ formattedElapsedTime }}</span>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="report-progress-steps">
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 1,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 1,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      📤
+                    </div>
+                    <div class="report-progress-step-title">
+                      Submitting
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Sending request
+                    </div>
+                  </div>
+
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 2,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 2,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      ⚙️
+                    </div>
+                    <div class="report-progress-step-title">
+                      Processing
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Generating report
+                    </div>
+                  </div>
+
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 3,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 3,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      📥
+                    </div>
+                    <div class="report-progress-step-title">
+                      Downloading
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Preparing file
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="report-progress-bar-section">
+                  <div class="report-progress-bar-wrapper">
+                    <div class="report-progress-bar-fill" :style="{ width: `${progressPercentage}%` }" />
+                  </div>
+
+                  <div class="report-progress-bar-details">
+                    <div class="progress-message">
+                      <i class="pi pi-spin pi-spinner" />
+                      {{ asyncReportGeneration.progress.message }}
+                    </div>
+                    <div class="progress-percentage">
+                      {{ progressPercentage }}%
+                    </div>
+                  </div>
+
+                  <!-- Stats -->
+                  <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="report-progress-bar-stats">
+                    <div class="stat-item">
+                      <span class="stat-value">{{ asyncReportGeneration.workflowState.value.attempt }}</span>
+                      <span class="stat-label">Attempt</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-value">{{ formattedElapsedTime }}</span>
+                      <span class="stat-label">Elapsed</span>
+                    </div>
+                    <div v-if="formattedEstimatedTime" class="stat-item">
+                      <span class="stat-value">{{ formattedEstimatedTime }}</span>
+                      <span class="stat-label">Remaining</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="report-progress-actions">
+                  <Button
+                    v-if="asyncReportGeneration.canCancel.value"
+                    label="Cancel"
+                    icon="pi pi-times"
+                    class="p-button-secondary p-button-outlined"
+                    @click="cancelGeneration"
+                  />
+                </div>
+              </div>
 
               <!-- ✅ ERROR STATE -->
               <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
