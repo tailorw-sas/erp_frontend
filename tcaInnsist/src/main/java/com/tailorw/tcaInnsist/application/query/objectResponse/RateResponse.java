@@ -1,12 +1,14 @@
 package com.tailorw.tcaInnsist.application.query.objectResponse;
 
 import com.kynsof.share.core.domain.bus.query.IResponse;
+import com.kynsof.share.utils.DateConvert;
 import com.tailorw.tcaInnsist.domain.dto.RateDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
@@ -15,8 +17,8 @@ public class RateResponse implements IResponse {
 
     private String reservationCode;
     private String couponNumber;
-    private LocalDate checkInDate;
-    private LocalDate checkOutDate;
+    private String checkInDate;
+    private String checkOutDate;
     private int stayDays;
     private String hotelCode;
     private String agencyCode;
@@ -25,12 +27,12 @@ public class RateResponse implements IResponse {
     private String lastName;
     private int totalNumberOfGuest;
     private int adults;
-    private int childrens;
+    private int children;
     private Double amount;
     private String roomTypeCode;
     private String ratePlanCode;
-    private LocalDate invoicingDate;
-    private LocalDate hotelCreationDate;
+    private String invoicingDate;
+    private String hotelCreationDate;
     private Double originalAmount;
     private Double amountPaymentApplied;
     private Double rateByAdult;
@@ -41,13 +43,15 @@ public class RateResponse implements IResponse {
     private String hotelInvoiceNumber;
     private String invoiceFolioNumber;
     private Double quote;
+    private String renewalNumber;
+    private String roomCategory;
     private String hash;
 
     public RateResponse(RateDto dto){
         this.reservationCode = dto.getReservationCode();
         this.couponNumber = dto.getCouponNumber();
-        this.checkInDate = dto.getCheckInDate();
-        this.checkOutDate = dto.getCheckOutDate();
+        this.checkInDate = DateConvert.convertLocalDateToString(dto.getCheckInDate(), DateConvert.getIsoLocalDateFormatter());
+        this.checkOutDate = DateConvert.convertLocalDateToString(dto.getCheckOutDate(), DateConvert.getIsoLocalDateFormatter());
         this.stayDays = dto.getStayDays();
         this.hotelCode = dto.getHotelCode();
         this.agencyCode = dto.getAgencyCode();
@@ -56,12 +60,12 @@ public class RateResponse implements IResponse {
         this.lastName = dto.getLastName();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
+        this.children = dto.getChildren();
         this.amount = dto.getAmount();
         this.roomTypeCode = dto.getRoomTypeCode();
         this.ratePlanCode = dto.getRatePlanCode();
-        this.invoicingDate = dto.getInvoicingDate();
-        this.hotelCreationDate = dto.getHotelCreationDate();
+        this.invoicingDate = DateConvert.convertLocalDateToString(dto.getInvoicingDate(), DateConvert.getIsoLocalDateFormatter());
+        this.hotelCreationDate = DateConvert.convertLocalDateToString(dto.getHotelCreationDate(), DateConvert.getIsoLocalDateFormatter());
         this.originalAmount = dto.getOriginalAmount();
         this.amountPaymentApplied = this.getAmountPaymentApplied();
         this.rateByAdult = dto.getRateByAdult();
@@ -72,6 +76,8 @@ public class RateResponse implements IResponse {
         this.hotelInvoiceNumber = dto.getHotelInvoiceNumber();
         this.invoiceFolioNumber = dto.getInvoiceFolioNumber();
         this.quote = dto.getQuote();
+        this.renewalNumber = dto.getRenewalNumber();
+        this.roomCategory = dto.getRoomCategory();
         this.hash = dto.getHash();
     }
 }

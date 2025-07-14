@@ -15,17 +15,15 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.redis.booking.Boo
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 
 @Service
 public class ImportInnsistServiceImpl {
 
-    private final IManageAgencyService agencyService;
-
+    private final IManageAgencyService manageAgencyService;
     private final IManageHotelService manageHotelService;
 
     private final BookingImportCacheRedisRepository repository;
@@ -34,13 +32,13 @@ public class ImportInnsistServiceImpl {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final ManageEmployeeReadDataJPARepository employeeReadDataJPARepository;
 
-    public ImportInnsistServiceImpl(IManageAgencyService agencyService,
+    public ImportInnsistServiceImpl(IManageAgencyService manageAgencyService,
             IManageHotelService manageHotelService,
             BookingImportCacheRedisRepository repository,
             IBookingImportHelperService bookingImportHelperService,
             ValidatorFactory<BookingRow> validatorFactory,
             ApplicationEventPublisher applicationEventPublisher, ManageEmployeeReadDataJPARepository employeeReadDataJPARepository) {
-        this.agencyService = agencyService;
+        this.manageAgencyService = manageAgencyService;
         this.manageHotelService = manageHotelService;
         this.repository = repository;
         this.bookingImportHelperService = bookingImportHelperService;
@@ -60,41 +58,40 @@ public class ImportInnsistServiceImpl {
 
             UUID insistImportProcessId = UUID.randomUUID();
             //Construye el objeto usado en el excel y guarda en cache.
-            this.create(request.getImportList(), request.getImportInnsitProcessId(), insistImportProcessId);
+            List<BookingImportCache> bookingImportCacheList = this.create(request.getImportList(), request.getImportInnsitProcessId(), insistImportProcessId);
 
             //Obtengo de cache
-            List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
-            boolean validateInsist = validatorFactory.validateInsist(list);
+            //List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
+            boolean validateInsist = validatorFactory.validateInsist(bookingImportCacheList);
             validatorFactory.createValidators(EImportType.INNSIST.name());
 
             int rowNumber = 0;
-            boolean stop = true;
+            boolean stopImportProcess = false;
 
             List<UUID> agencies = this.employeeReadDataJPARepository.findAgencyIdsByEmployeeId(UUID.fromString(request.getEmployee()));
             List<UUID> hotels = this.employeeReadDataJPARepository.findHotelsIdsByEmployeeId(UUID.fromString(request.getEmployee()));
 
-            for (BookingImportCache bookingImportCache : list) {
+            for (BookingImportCache bookingImportCache : bookingImportCacheList) {
                 BookingRow row = bookingImportCache.toAggregateImportInsist();
                 row.setRowNumber(rowNumber);
                 row.setImportProcessId(row.getInsistImportProcessId());
                 row.setAgencies(agencies);
                 row.setHotels(hotels);
-                if (validatorFactory.validate(row)) {
-                    bookingImportHelperService.groupAndCachingImportBooking(row, EImportType.NO_VIRTUAL);
-                } else {
-                    stop = false;
+                if (!validatorFactory.validate(row)) {
+                    stopImportProcess = true;
                 }
                 rowNumber++;
             }
-            list.clear();
+
             validatorFactory.removeValidators();
-            if (validateInsist && stop) {
-                this.bookingImportHelperService.createInvoiceGroupingByCoupon(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
-                this.bookingImportHelperService.createInvoiceGroupingByBooking(request.getImportInnsitProcessId().toString(), request.getEmployee(), true);
+            if (validateInsist && !stopImportProcess) {
+                this.bookingImportHelperService.createInvoiceGroupingByCoupon(insistImportProcessId.toString(), request.getEmployee(), true);
+                this.bookingImportHelperService.createInvoiceGroupingByBooking(insistImportProcessId.toString(), request.getEmployee(), true);
             }
+            bookingImportCacheList.clear();
             BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
                     .status(EProcessStatus.FINISHED)
-                    .total(list.size())
+                    .total(bookingImportCacheList.size())
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
             bookingImportHelperService.removeAllImportCache(request.getImportInnsitProcessId().toString());
@@ -113,7 +110,14 @@ public class ImportInnsistServiceImpl {
         }
     }
 
-    private void create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID insistImportProcessId) {
+    private List<BookingImportCache> create(List<ImportInnsistBookingKafka> bookingRowList, UUID importInnsitProcessId, UUID insistImportProcessId) {
+        List<BookingImportCache> bookingImportCacheList = new ArrayList<>();
+
+        List<String> agencyCodes = bookingRowList.stream()
+                .filter(importRow -> Objects.nonNull(importRow.getManageAgencyCode()) && !importRow.getManageAgencyCode().isEmpty())
+                .map(ImportInnsistBookingKafka::getManageAgencyCode).toList();
+        Map<String, ManageAgencyDto> agencyMap = this.getAgencyMap(agencyCodes);
+
         for (ImportInnsistBookingKafka importInnsistBookingKafka : bookingRowList) {
             for (ImportInnsistRoomRateKafka roomRate : importInnsistBookingKafka.getRoomRates()) {
                 BookingRow bookingRow = new BookingRow();
@@ -146,14 +150,22 @@ public class ImportInnsistServiceImpl {
                 bookingRow.setAmountPAX(roomRate.getAdults().doubleValue() + roomRate.getChildren().doubleValue());
                 bookingRow.setRoomNumber(roomRate.getRoomNumber());
                 bookingRow.setHotelInvoiceAmount(roomRate.getHotelAmount());
-                this.bookingImportHelperService.saveCachingImportBooking(bookingRow);
+
+                ManageAgencyDto agencyDto = agencyMap.get(bookingRow.getManageAgencyCode());
+                BookingImportCache bookingImportCache = this.bookingImportHelperService.saveCachingImportBooking(bookingRow, agencyDto);
+                bookingImportCacheList.add(bookingImportCache);
             }
         }
+        return bookingImportCacheList;
+    }
+
+    private Map<String, ManageAgencyDto> getAgencyMap(List<String> agencyCodes){
+        return this.manageAgencyService.getMapByCode(agencyCodes);
     }
 
     private void clearCache() {
         this.manageHotelService.clearManageHotelCache();
-        this.agencyService.clearManageHotelCache();
+        this.manageAgencyService.clearManageHotelCache();
     }
 
     @Async

@@ -25,25 +25,29 @@ public class ImportProcess {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private ImportProcessStatus status;
 
+    @Column(name = "import_date")
     private LocalDate importDate;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "completed_at", nullable = true, updatable = true)
     private LocalDateTime completedAt;
 
+    @Column(name = "total_booking")
     private int totalBooking;
 
+    @Column(name = "user_id")
     private UUID userId;
 
-    @Column(nullable = true)
+    @Column(name = "total_successful", nullable = true)
     private int totalSuccessful;
 
-    @Column(nullable = true)
+    @Column(name = "total_failed", nullable = true)
     private int  totalFailed;
 
     public ImportProcess(ImportProcessDto dto){

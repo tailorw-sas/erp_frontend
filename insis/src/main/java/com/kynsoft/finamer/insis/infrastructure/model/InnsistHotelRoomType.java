@@ -26,17 +26,20 @@ public class InnsistHotelRoomType implements Serializable {
     @JoinColumn(name = "hotel_id")
     public ManageHotel hotel;
 
+    @Column(name = "room_type_prefix")
     private String roomTypePrefix;
 
+    @Column(name = "status")
     private String status;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted")
     private boolean deleted;
 
     public InnsistHotelRoomType(InnsistHotelRoomTypeDto dto){

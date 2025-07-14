@@ -11,7 +11,6 @@ import com.kynsoft.finamer.insis.application.query.objectResponse.manageRatePlan
 import com.kynsoft.finamer.insis.domain.dto.ManageRatePlanDto;
 import com.kynsoft.finamer.insis.domain.services.IManageRatePlanService;
 import com.kynsoft.finamer.insis.infrastructure.model.ManageRatePlan;
-import com.kynsoft.finamer.insis.infrastructure.model.ManageRoomType;
 import com.kynsoft.finamer.insis.infrastructure.repository.command.ManageRatePlanWriteDataJPARepository;
 import com.kynsoft.finamer.insis.infrastructure.repository.query.ManageRatePlanReadDataJPARepository;
 import org.springframework.data.domain.Page;
@@ -87,7 +86,7 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
 
     @Override
     public ManageRatePlanDto findByCodeAndHotel(String code, UUID hotel) {
-        Optional<ManageRatePlan> ratePlan = readRepository.findByCodeAndManageHotel_Id(code, hotel);
+        Optional<ManageRatePlan> ratePlan = readRepository.findByCodeAndHotel_Id(code, hotel);
         if(ratePlan.isPresent()){
             return ratePlan.get().toAggregate();
         }
@@ -111,6 +110,16 @@ public class ManageRatePlanServiceImpl implements IManageRatePlanService {
                         row -> (String)row[0],
                         row -> (UUID)row[1]
                 ));
+    }
+
+    @Override
+    public List<ManageRatePlanDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId) {
+        if(Objects.nonNull(hotelId)){
+            return readRepository.findByCodeInAndHotel_Id(codes, hotelId).stream()
+                    .map(ManageRatePlan::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("Hotel Id must not be null");
     }
 
     @Override

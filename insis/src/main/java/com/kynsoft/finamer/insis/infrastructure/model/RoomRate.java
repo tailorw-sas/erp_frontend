@@ -19,12 +19,14 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "roomRate")
+@Table(name = "room_rate")
 public class RoomRate {
+
     @Id
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private RoomRateStatus status;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -32,51 +34,131 @@ public class RoomRate {
     private ManageHotel hotel;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    private String agency;
-    private LocalDate checkInDate;
-    private LocalDate checkOutDate;
-    private int stayDays;
-    private String reservationCode;
-    private String guestName;
-    private String firstName;
-    private String lastName;
-    private Double amount;
-    private String roomType;
-    private String couponNumber;
-    private int totalNumberOfGuest;
-    private int adults;
-    private int childrens;
-    private String ratePlan;
-    private LocalDate invoicingDate;
-    private LocalDate hotelCreationDate;
-    private Double originalAmount;
-    private Double amountPaymentApplied;
-    private Double rateByAdult;
-    private Double rateByChild;
-    private String remarks;
-    private String roomNumber;
-    private Double hotelInvoiceAmount;
-    private String hotelInvoiceNumber;
-    private String invoiceFolioNumber;
-    private Double quote;
-    private String renewalNumber;
-    private String hash;
+    @Column(name = "agency_code")
+    private String agencyCode;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "booking_id")
-    private Booking booking;
+    @JoinColumn(name = "agency_id")
+    private ManageAgency agency;
+
+    @Column(name = "check_in_date")
+    private LocalDate checkInDate;
+
+    @Column(name = "check_out_date")
+    private LocalDate checkOutDate;
+
+    @Column(name = "stay_days")
+    private int stayDays;
+
+    @Column(name = "reservation_code")
+    private String reservationCode;
+
+    @Column(name = "guest_name")
+    private String guestName;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "amount")
+    private Double amount;
+
+    @Column(name = "room_type_code")
+    private String roomTypeCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "room_type_id")
+    private ManageRoomType roomType;
+
+    @Column(name = "coupon_number")
+    private String couponNumber;
+
+    @Column(name = "total_number_of_guest")
+    private int totalNumberOfGuest;
+
+    @Column(name = "adults")
+    private int adults;
+
+    @Column(name = "children")
+    private int children;
+
+    @Column(name = "rate_plan_code")
+    private String ratePlanCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rate_plan_id")
+    private ManageRatePlan ratePlan;
+
+    @Column(name = "invoice_date")
+    private LocalDate invoicingDate;
+
+    @Column(name = "hotel_creation_date")
+    private LocalDate hotelCreationDate;
+
+    @Column(name = "original_amount")
+    private Double originalAmount;
+
+    @Column(name = "amount_payment_applied")
+    private Double amountPaymentApplied;
+
+    @Column(name = "rate_by_adult")
+    private Double rateByAdult;
+
+    @Column(name = "rate_by_child")
+    private Double rateByChild;
+
+    @Column(name = "remarks")
+    private String remarks;
+
+    @Column(name = "room_number")
+    private String roomNumber;
+
+    @Column(name = "hotel_invoice_amount")
+    private Double hotelInvoiceAmount;
+
+    @Column(name = "hotel_invoice_number")
+    private String hotelInvoiceNumber;
+
+    @Column(name = "invoice_folio_number")
+    private String invoiceFolioNumber;
+
+    @Column(name = "quote")
+    private Double quote;
+
+    @Column(name = "renewal_number")
+    private String renewalNumber;
+
+    @Column(name = "room_category_code")
+    private String roomCategoryCode;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "room_category_id")
+    private ManageRoomCategory roomCategory;
+
+    @Column(name = "hash")
+    private String hash;
+
+    @Column(name = "invoice_id")
+    private UUID invoiceId;
+
+    @Column(name = "booking_id")
+    private UUID bookingId;
 
     public RoomRate(RoomRateDto dto){
         this.id = dto.getId();
+        this.status = dto.getStatus();
         this.hotel = Objects.nonNull(dto.getHotel()) ? new ManageHotel(dto.getHotel()) : null;
         this.updatedAt = dto.getUpdatedAt();
-        this.agency = dto.getAgency();
+        this.agencyCode = dto.getAgencyCode();
+        this.agency = Objects.nonNull(dto.getAgency()) ? new ManageAgency(dto.getAgency()) : null;
         this.checkInDate = dto.getCheckInDate();
         this.checkOutDate = dto.getCheckOutDate();
         this.stayDays = dto.getStayDays();
@@ -85,12 +167,14 @@ public class RoomRate {
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.amount = dto.getAmount();
-        this.roomType = dto.getRoomType();
+        this.roomTypeCode = dto.getRoomTypeCode();
+        this.roomType = Objects.nonNull(dto.getRoomType()) ? new ManageRoomType(dto.getRoomType()) : null;
         this.couponNumber = dto.getCouponNumber();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
-        this.ratePlan = dto.getRatePlan();
+        this.children = dto.getChildren();
+        this.ratePlanCode = dto.getRatePlanCode();
+        this.ratePlan = Objects.nonNull(dto.getRatePlan()) ? new ManageRatePlan(dto.getRatePlan()) : null;
         this.invoicingDate = dto.getInvoicingDate();
         this.hotelCreationDate = dto.getHotelCreationDate();
         this.originalAmount = dto.getOriginalAmount();
@@ -104,8 +188,11 @@ public class RoomRate {
         this.invoiceFolioNumber = dto.getInvoiceFolioNumber();
         this.quote = dto.getQuote();
         this.renewalNumber = dto.getRenewalNumber();
+        this.roomCategoryCode = dto.getRoomCategoryCode();
+        this.roomCategory = Objects.nonNull(dto.getRoomCategory()) ? new ManageRoomCategory(dto.getRoomCategory()) : null;
         this.hash = dto.getHash();
-        this.booking = Objects.nonNull(dto.getBooking()) ? new Booking(dto.getBooking()) : null;
+        this.invoiceId = dto.getInvoiceId();
+        this.bookingId = dto.getBookingId();
     }
 
     public RoomRateDto toAggregate(){
@@ -114,7 +201,8 @@ public class RoomRate {
                 this.status,
                 Objects.nonNull(this.hotel) ? this.hotel.toAggregate() : null,
                 this.updatedAt,
-                this.agency,
+                this.agencyCode,
+                Objects.nonNull(this.agency) ? this.agency.toAggregate() : null,
                 this.checkInDate,
                 this.checkOutDate,
                 this.stayDays,
@@ -123,12 +211,14 @@ public class RoomRate {
                 this.firstName,
                 this.lastName,
                 this.amount,
-                this.roomType,
+                this.roomTypeCode,
+                Objects.nonNull(this.roomCategory) ? this.roomType.toAggregate() : null,
                 this.couponNumber,
                 this.totalNumberOfGuest,
                 this.adults,
-                this.childrens,
-                this.ratePlan,
+                this.children,
+                this.ratePlanCode,
+                Objects.nonNull(this.ratePlan) ? this.ratePlan.toAggregate() : null,
                 this.invoicingDate,
                 this.hotelCreationDate,
                 this.originalAmount,
@@ -143,7 +233,11 @@ public class RoomRate {
                 this.quote,
                 this.renewalNumber,
                 this.hash,
-                Objects.nonNull(this.booking) ? this.booking.toAggregate() : null
+                this.roomCategoryCode,
+                Objects.nonNull(this.roomCategory) ? this.roomCategory.toAggregate() : null,
+                Objects.isNull(this.agency) ? "Agency doesn´t exist" : null,
+                this.invoiceId,
+                this.bookingId
         );
     }
 }

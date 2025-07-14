@@ -20,19 +20,23 @@ public class ManageTradingCompany implements Serializable {
     @Id
     private UUID id;
 
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "company")
     private String company;
 
+    @Column(name = "innsist_code")
     private String innsistCode;
 
+    @Column(name = "status")
     private String status;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
     @OneToOne(fetch = FetchType.EAGER, optional = true)

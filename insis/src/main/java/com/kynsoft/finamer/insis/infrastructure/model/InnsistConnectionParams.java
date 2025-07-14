@@ -23,44 +23,48 @@ public class InnsistConnectionParams implements Serializable {
     @Id
     private UUID id;
 
+    @Column(name = "host_name")
     private String hostName;
 
+    @Column(name = "port_number")
     private int portNumber;
 
-    private String dataBaseName;
+    @Column(name = "database_name")
+    private String databaseName;
 
+    @Column(name = "user_name")
     private String userName;
 
+    @Column(name = "password")
     private String password;
 
+    @Column(name = "description")
     private String description;
 
+    @Column(name = "status")
     private String status;
 
+    @Column(name = "deleted")
     private boolean deleted;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
-
-    //@OneToOne(mappedBy = "innsistConnectionParams", cascade = CascadeType.ALL)
-    //private ManageTradingCompany tradingCompany;
 
     public InnsistConnectionParams(InnsistConnectionParamsDto dto){
         this.id = dto.getId();
         this.hostName = dto.getHostName();
         this.portNumber = dto.getPortNumber();;
-        this.dataBaseName = dto.getDataBaseName();
+        this.databaseName = dto.getDatabaseName();
         this.userName = dto.getUserName();
         this.password = dto.getPassword();
         this.description = dto.getDescription();
         this.status = dto.getStatus();
         this.deleted = dto.isDeleted();
         this.updatedAt = dto.getUpdatedAt();
-        //this.tradingCompany = dto.getManageTradingCompany() != null ? new ManageTradingCompany(dto.getManageTradingCompany()) : null;
     }
 
     public InnsistConnectionParamsDto toAggregate(){
@@ -68,14 +72,13 @@ public class InnsistConnectionParams implements Serializable {
                 id,
                 hostName,
                 portNumber,
-                dataBaseName,
+                databaseName,
                 userName,
                 password,
                 description,
                 status,
                 deleted,
-                updatedAt//,
-                //tradingCompany != null ? tradingCompany.toAggregate() : null
+                updatedAt
         );
     }
 }

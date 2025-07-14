@@ -15,6 +15,7 @@ import com.tailorw.finamer.scheduler.infrastructure.services.businessProcesses.T
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -195,14 +196,14 @@ public abstract class SchedulerService {
 
         return switch (intervalTypeEnum) {
             case MINUTE -> {
-                // Si es un nuevo día o ha pasado el intervalo en minutos
+                // Si es un nuevo día o ha pasado el intervalo en minutos y esta dentro del rango de hora de inicio y fin establecido
                 LocalDateTime nextExecutionTime = lastExecution.plusMinutes(scheduler.getInterval());
-                yield isNewDay || now.isAfter(nextExecutionTime);
+                yield (isNewDay && this.isBetweenStartAndEndTime(now, scheduler)) || (now.isAfter(nextExecutionTime) && this.isBetweenStartAndEndTime(now, scheduler));
             }
             case HOUR -> {
-                // Si es un nuevo día o ha pasado el intervalo en horas
+                // Si es un nuevo día o ha pasado el intervalo en horas y esta dentro del rango de hora de inicio y fin establecido
                 LocalDateTime nextExecutionTime = lastExecution.plusHours(scheduler.getInterval());
-                yield isNewDay || now.isAfter(nextExecutionTime);
+                yield (isNewDay && this.isBetweenStartAndEndTime(now, scheduler)) || (now.isAfter(nextExecutionTime) && this.isBetweenStartAndEndTime(now, scheduler));
             }
             case ONE_TIME ->
                 // Ejecutar solo una vez en el día y a partir de la hora especificada
@@ -359,7 +360,13 @@ public abstract class SchedulerService {
         logService.update(schedulerLog);
     }
 
+    private boolean isBetweenStartAndEndTime(LocalDateTime now, BusinessProcessSchedulerDto businessProcessSchedulerDto){
+        LocalTime startTime = Objects.isNull(businessProcessSchedulerDto.getStartTime()) ? LocalTime.MIDNIGHT : businessProcessSchedulerDto.getStartTime();
+        LocalTime endTime = Objects.isNull(businessProcessSchedulerDto.getEndTime()) ? LocalTime.of(23, 59, 59) : businessProcessSchedulerDto.getEndTime();
+        LocalTime currentTime = now.toLocalTime();
 
+        return !currentTime.isBefore(startTime) && !currentTime.isAfter(endTime);
+    }
 
     private void logInfo(String message) {
         logger.log(Level.INFO, message);
