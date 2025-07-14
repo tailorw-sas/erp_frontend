@@ -675,7 +675,7 @@ function useAsyncReportGeneration(config: ReportConfig) {
     }
   }
 
-  // ✅ REEMPLAZAR EL MÉTODO COMPLETO
+  // ✅ REEMPLAZAR el método processReportFile completo
   function processReportFile(reportData: ReportDownloadResponse): string | null {
     try {
     // Cleanup previous file
@@ -689,13 +689,14 @@ function useAsyncReportGeneration(config: ReportConfig) {
         Logger.info('📥 [S3 DOWNLOAD] Using S3 presigned URL')
 
         if (reportData.contentType === 'application/pdf') {
-        // Para PDF, usar URL directamente
+        // Para PDF, usar URL directamente para preview
           pdfUrl.value = reportData.downloadUrl
           return reportData.downloadUrl
         }
         else {
-        // Para otros formatos, descargar directamente
-          downloadFile(reportData.downloadUrl, reportData.fileName)
+        // ✅ PARA EXCEL/CSV: Forzar descarga inmediata
+          Logger.info('📥 [S3 DOWNLOAD] Force downloading non-PDF file:', reportData.fileName)
+          forceDownloadFromUrl(reportData.downloadUrl, reportData.fileName)
           return reportData.downloadUrl
         }
       }
@@ -735,6 +736,87 @@ function useAsyncReportGeneration(config: ReportConfig) {
     catch (error) {
       Logger.error('❌ [FILE PROCESSING] Error:', error)
       return null
+    }
+  }
+
+  function forceDownloadFromUrl(url: string, filename: string) {
+    try {
+      Logger.info('📥 [FORCE DOWNLOAD] Starting forced download from URL:', filename)
+
+      // Método 1: Intentar fetch + blob + download
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+          return response.blob()
+        })
+        .then((blob) => {
+        // Crear blob URL temporal
+          const blobUrl = URL.createObjectURL(blob)
+
+          // Crear link de descarga
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = filename
+          link.style.display = 'none'
+
+          // Trigger download
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+
+          // Cleanup
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+
+          Logger.info('✅ [FORCE DOWNLOAD] Download completed:', filename)
+
+          // Mostrar notificación
+          toast.add({
+            severity: 'success',
+            summary: 'Download Started',
+            detail: `${filename} is being downloaded`,
+            life: 3000
+          })
+        })
+        .catch((error) => {
+          Logger.warn('⚠️ [FORCE DOWNLOAD] Fetch method failed, trying fallback:', error)
+
+          // Fallback: Abrir en nueva ventana con download hint
+          const link = document.createElement('a')
+          link.href = url
+          link.download = filename
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+
+          // Agregar atributos para forzar descarga
+          link.setAttribute('download', filename)
+          link.style.display = 'none'
+
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+
+          toast.add({
+            severity: 'info',
+            summary: 'Download Alternative',
+            detail: 'File opened in new tab. Use browser download if needed.',
+            life: 4000
+          })
+        })
+    }
+    catch (error) {
+      Logger.error('❌ [FORCE DOWNLOAD] All methods failed:', error)
+
+      // Último recurso: URL directo
+      window.open(url, '_blank')
+
+      toast.add({
+        severity: 'warn',
+        summary: 'Manual Download',
+        detail: 'Please right-click the opened link and select "Save As"',
+        life: 6000
+      })
     }
   }
 
