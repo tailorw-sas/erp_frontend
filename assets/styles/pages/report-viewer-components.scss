@@ -584,3 +584,377 @@ $status-error: $error-color;
     --enhanced-form-border-width: 3px;
   }
 }
+
+
+// ===============================
+// 🎯 ENHANCED PROGRESS SYSTEM - ENTERPRISE LEVEL
+// ===============================
+
+.report-progress {
+  &-card {
+    @include card-base;
+    padding: $spacing-xl;
+    margin-bottom: $spacing-lg;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    border-radius: $border-radius-xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $primary-color 0%, $success-color 50%, $primary-color 100%);
+      animation: progress-shimmer 2s linear infinite;
+    }
+  }
+  
+  &-header {
+    @extend .flex, .align-items-center, .justify-content-between;
+    margin-bottom: $spacing-lg;
+    
+    h4 {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      @extend .flex, .align-items-center;
+      gap: $spacing-sm;
+      
+      .pi {
+        color: $primary-color;
+        animation: pulse 2s ease-in-out infinite;
+      }
+    }
+    
+    .elapsed-time {
+      font-size: $font-size-base;
+      color: $gray-600;
+      background: $gray-100;
+      padding: $spacing-sm $spacing-md;
+      border-radius: $border-radius;
+      font-weight: $font-weight-semibold;
+      border: 1px solid $gray-200;
+    }
+  }
+  
+  &-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    margin-bottom: $spacing-xl;
+    
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+      gap: $spacing-sm;
+    }
+  }
+  
+  &-step {
+    @extend .flex, .flex-column, .align-items-center;
+    text-align: center;
+    padding: $spacing-lg $spacing-md;
+    border-radius: $border-radius-lg;
+    background: $gray-50;
+    border: 2px solid $gray-200;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: calc(-#{$spacing-md} - 1px);
+      width: $spacing-md;
+      height: 2px;
+      background: $gray-300;
+      z-index: 1;
+      
+      @media (max-width: $breakpoint-md) {
+        display: none;
+      }
+    }
+    
+    &:last-child::after {
+      display: none;
+    }
+    
+    &-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      @extend .flex, .align-items-center, .justify-content-center;
+      font-size: $font-size-xl;
+      margin-bottom: $spacing-sm;
+      background: $gray-200;
+      color: $gray-500;
+      transition: all 0.3s ease;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+    }
+    
+    &-title {
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-700;
+      margin: 0;
+      transition: color 0.3s ease;
+    }
+    
+    &-subtitle {
+      font-size: $font-size-small;
+      color: $gray-500;
+      margin: $spacing-xs 0 0 0;
+      transition: color 0.3s ease;
+    }
+    
+    // States
+    &--active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+      border-color: $primary-color;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+      
+      .report-progress-step-icon {
+        background: $primary-color;
+        color: white;
+        animation: bounce 1.5s ease-in-out infinite;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      .report-progress-step-title {
+        color: $primary-color;
+      }
+      
+      .report-progress-step-subtitle {
+        color: $gray-600;
+      }
+      
+      &::after {
+        background: $primary-color;
+      }
+    }
+    
+    &--completed {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+      border-color: $success-color;
+      
+      .report-progress-step-icon {
+        background: $success-color;
+        color: white;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      .report-progress-step-title {
+        color: $success-color;
+      }
+      
+      &::after {
+        background: $success-color;
+      }
+    }
+  }
+  
+  &-bar {
+    &-section {
+      margin-bottom: $spacing-lg;
+    }
+    
+    &-wrapper {
+      position: relative;
+      height: 12px;
+      background: $gray-200;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: $spacing-md;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0) 0%, 
+          rgba(255, 255, 255, 0.3) 50%, 
+          rgba(255, 255, 255, 0) 100%);
+        animation: progress-shine 2s linear infinite;
+      }
+    }
+    
+    &-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $primary-color 0%, $success-color 100%);
+      border-radius: 6px;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+        animation: progress-pulse 1.5s ease-in-out infinite;
+      }
+    }
+    
+    &-details {
+      @extend .flex, .align-items-center, .justify-content-between;
+      
+      .progress-message {
+        font-size: $font-size-base;
+        color: $gray-700;
+        font-weight: $font-weight-medium;
+        @extend .flex, .align-items-center;
+        gap: $spacing-sm;
+        
+        .pi {
+          color: $primary-color;
+          animation: spin 1s linear infinite;
+        }
+      }
+      
+      .progress-percentage {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-bold;
+        color: $primary-color;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: $spacing-md;
+      margin-top: $spacing-md;
+      
+      .stat-item {
+        text-align: center;
+        padding: $spacing-md;
+        background: $gray-50;
+        border-radius: $border-radius;
+        border: 1px solid $gray-200;
+        
+        .stat-value {
+          display: block;
+          font-size: $font-size-lg;
+          font-weight: $font-weight-bold;
+          color: $gray-900;
+          margin-bottom: $spacing-xs;
+        }
+        
+        .stat-label {
+          font-size: $font-size-small;
+          color: $gray-600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+  
+  &-actions {
+    @extend .flex, .align-items-center, .justify-content-center;
+    gap: $spacing-md;
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $gray-200;
+    
+    .p-button {
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+// ===============================
+// PROGRESS ANIMATIONS
+// ===============================
+
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes progress-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes progress-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translate3d(0, 0, 0); }
+  40%, 43% { transform: translate3d(0, -8px, 0); }
+  70% { transform: translate3d(0, -4px, 0); }
+  90% { transform: translate3d(0, -2px, 0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+// ===============================
+// ERROR/SUCCESS STATES
+// ===============================
+
+.report-progress-card {
+  &--error {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(220, 38, 38, 0.2);
+    
+    &::before {
+      background: $error-color;
+      animation: none;
+    }
+    
+    .report-progress-step--active .report-progress-step-icon {
+      background: $error-color;
+    }
+  }
+  
+  &--success {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(5, 150, 105, 0.2);
+    
+    &::before {
+      background: $success-color;
+      animation: none;
+    }
+  }
+}

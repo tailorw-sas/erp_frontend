@@ -5,14 +5,10 @@ import dayjs from 'dayjs'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import Button from 'primevue/button'
-import ProgressSpinner from 'primevue/progressspinner'
-import ProgressBar from 'primevue/progressbar'
 import Dropdown from 'primevue/dropdown'
 import Tag from 'primevue/tag'
 import Toast from 'primevue/toast'
 import ConfirmPopup from 'primevue/confirmpopup'
-import Timeline from 'primevue/timeline'
-import Steps from 'primevue/steps'
 import Logger from '~/utils/Logger'
 import { GenericService } from '~/services/generic-services'
 import EnhancedFormComponent from '~/components/form/EnhancedFormComponent.vue'
@@ -73,10 +69,13 @@ interface ReportStatusResponse {
 }
 
 interface ReportDownloadResponse {
-  base64Report: string
+  base64Report?: string
   fileSizeBytes: number
   fileName: string
   contentType: string
+  downloadUrl?: string
+  storageMethod?: 'S3' | 'BASE64' // ← NUEVO: Método de storage usado
+  expirationDate?: string // ← NUEVO: Cuándo expira la URL S3
 }
 
 // ✅ NEW: Specific state types for better UX
@@ -493,8 +492,8 @@ function useAsyncReportGeneration(config: ReportConfig) {
   const pdfUrl = ref('')
 
   // Use specialized composables
-  const { isSubmitting, submissionError, submitReport, resetSubmission } = useReportSubmission(config)
-  const { isPolling, pollingAttempt, currentStatus, startPolling, stopPolling, getElapsedTime } = useReportPolling(config)
+  const { submissionError, submitReport, resetSubmission } = useReportSubmission(config)
+  const { pollingAttempt, startPolling, stopPolling } = useReportPolling(config)
   const { downloadReport, cleanupReport } = useReportDownload(config)
 
   // Progress tracking
@@ -533,24 +532,25 @@ function useAsyncReportGeneration(config: ReportConfig) {
       progress.elapsedTime = Date.now() - startTime
 
       if (workflowState.value.type === 'submitting') {
-        progress.percentage = Math.min(15, progress.elapsedTime / 1000 * 5)
+        progress.percentage = Math.min(20, (progress.elapsedTime / 5000) * 20) // 20% max en 5 segundos
         progress.message = 'Submitting report request...'
         progress.currentStep = 1
       }
       else if (workflowState.value.type === 'polling') {
         const state = workflowState.value
-        const progressFromAttempts = (state.attempt / state.maxAttempts) * 70
-        progress.percentage = 15 + progressFromAttempts
+        // Base: 20% + (70% basado en attempts)
+        const progressFromAttempts = Math.min(70, (state.attempt / Math.max(state.maxAttempts, 1)) * 70)
+        progress.percentage = 20 + progressFromAttempts
         progress.message = `Processing report... (${state.attempt}/${state.maxAttempts})`
         progress.currentStep = 2
 
         // Estimate remaining time
-        if (state.attempt > 5) {
+        if (state.attempt > 3) {
           const avgTimePerAttempt = progress.elapsedTime / state.attempt
           progress.estimatedTimeRemaining = (state.maxAttempts - state.attempt) * avgTimePerAttempt
         }
       }
-    }, 1000)
+    }, 500) // Update más frecuente para suavidad
   }
 
   function stopProgressTracking() {
@@ -600,13 +600,13 @@ function useAsyncReportGeneration(config: ReportConfig) {
       startPolling(
         submissionResult.serverRequestId,
         // onStatusUpdate
-        (status: ReportStatusResponse) => {
+        () => {
           if (workflowState.value.type === 'polling') {
             workflowState.value.attempt = pollingAttempt.value
           }
         },
         // onComplete
-        async (status: ReportStatusResponse) => {
+        async () => {
           await handleReportCompletion(submissionResult.serverRequestId)
         },
         // onError
@@ -675,38 +675,62 @@ function useAsyncReportGeneration(config: ReportConfig) {
     }
   }
 
+  // ✅ REEMPLAZAR EL MÉTODO COMPLETO
   function processReportFile(reportData: ReportDownloadResponse): string | null {
     try {
-      // Cleanup previous file
+    // Cleanup previous file
       if (pdfUrl.value) {
         URL.revokeObjectURL(pdfUrl.value)
         pdfUrl.value = ''
       }
 
-      const byteCharacters = atob(reportData.base64Report)
-      const byteArray = new Uint8Array(byteCharacters.length)
+      // ✅ NUEVO: Manejar S3 download
+      if (reportData.storageMethod === 'S3' && reportData.downloadUrl) {
+        Logger.info('📥 [S3 DOWNLOAD] Using S3 presigned URL')
 
-      // Process in chunks for better performance
-      const chunkSize = 1024 * 1024
-      for (let i = 0; i < byteCharacters.length; i += chunkSize) {
-        const chunk = byteCharacters.slice(i, i + chunkSize)
-        for (let j = 0; j < chunk.length; j++) {
-          byteArray[i + j] = chunk.charCodeAt(j)
+        if (reportData.contentType === 'application/pdf') {
+        // Para PDF, usar URL directamente
+          pdfUrl.value = reportData.downloadUrl
+          return reportData.downloadUrl
+        }
+        else {
+        // Para otros formatos, descargar directamente
+          downloadFile(reportData.downloadUrl, reportData.fileName)
+          return reportData.downloadUrl
         }
       }
 
-      const blob = new Blob([byteArray], { type: reportData.contentType })
-      const blobUrl = URL.createObjectURL(blob)
+      // ✅ FALLBACK: Manejar base64 (método actual)
+      if (reportData.base64Report) {
+        Logger.info('📥 [BASE64 DOWNLOAD] Using base64 fallback')
 
-      // Handle based on content type
-      if (reportData.contentType === 'application/pdf') {
-        pdfUrl.value = blobUrl
-      }
-      else {
-        downloadFile(blobUrl, reportData.fileName)
+        const byteCharacters = atob(reportData.base64Report)
+        const byteArray = new Uint8Array(byteCharacters.length)
+
+        // Process in chunks for better performance
+        const chunkSize = 1024 * 1024
+        for (let i = 0; i < byteCharacters.length; i += chunkSize) {
+          const chunk = byteCharacters.slice(i, i + chunkSize)
+          for (let j = 0; j < chunk.length; j++) {
+            byteArray[i + j] = chunk.charCodeAt(j)
+          }
+        }
+
+        const blob = new Blob([byteArray], { type: reportData.contentType })
+        const blobUrl = URL.createObjectURL(blob)
+
+        // Handle based on content type
+        if (reportData.contentType === 'application/pdf') {
+          pdfUrl.value = blobUrl
+        }
+        else {
+          downloadFile(blobUrl, reportData.fileName)
+        }
+
+        return blobUrl
       }
 
-      return blobUrl
+      throw new Error('No download method available (neither S3 nor base64)')
     }
     catch (error) {
       Logger.error('❌ [FILE PROCESSING] Error:', error)
@@ -737,11 +761,6 @@ function useAsyncReportGeneration(config: ReportConfig) {
       stopPolling()
       workflowState.value = { type: 'cancelled' }
       progress.message = 'Generation cancelled by user'
-
-      // Cleanup server resources if we have a server request ID
-      if (workflowState.value.type === 'polling') {
-        cleanupReport(workflowState.value.serverRequestId)
-      }
     }
   }
 
@@ -1227,51 +1246,6 @@ const formattedElapsedTime = computed(() => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 })
 
-const formattedEstimatedTime = computed(() => {
-  if (!asyncReportGeneration.progress.estimatedTimeRemaining) { return null }
-
-  const seconds = Math.floor(asyncReportGeneration.progress.estimatedTimeRemaining / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `~${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-})
-
-// ✅ NEW: Timeline data for better UX
-const timelineEvents = computed(() => {
-  const events = []
-  const state = asyncReportGeneration.workflowState.value
-
-  // Submit step
-  events.push({
-    status: state.type === 'idle' ? 'outlined' : 'filled',
-    date: state.type !== 'idle' ? 'Submitted' : 'Pending',
-    icon: 'pi pi-send',
-    color: state.type === 'idle' ? '#9C27B0' : '#673AB7'
-  })
-
-  // Processing step
-  if (state.type === 'polling' || state.type === 'completed' || (state.type === 'failed' && state.serverRequestId)) {
-    events.push({
-      status: state.type === 'polling' ? 'filled' : state.type === 'completed' ? 'filled' : 'outlined',
-      date: state.type === 'polling' ? 'Processing...' : state.type === 'completed' ? 'Processed' : 'Failed',
-      icon: 'pi pi-cog',
-      color: state.type === 'polling' ? '#FF9800' : state.type === 'completed' ? '#4CAF50' : '#F44336'
-    })
-  }
-
-  // Complete step
-  if (state.type === 'completed') {
-    events.push({
-      status: 'filled',
-      date: 'Completed',
-      icon: 'pi pi-check',
-      color: '#4CAF50'
-    })
-  }
-
-  return events
-})
-
 // ========== METHODS ==========
 async function loadReport(reportId: string) {
   if (!reportId) {
@@ -1283,7 +1257,7 @@ async function loadReport(reportId: string) {
 
     const response = await GenericService.getById<BackendReportInfo>(
       'report',
-      'jasper-report-template/template-with-params/',
+      'jasper-report-template/template-with-params',
       reportId
     )
 
@@ -1388,7 +1362,7 @@ async function loadReportParameters(id: string, code: string, reportData?: Repor
 // ✅ NEW: Enhanced report execution with new async workflow
 async function executeReport() {
   if (!canGenerate.value) {
-    const errorId = errorBoundary.captureError('form', new Error('Cannot generate report: required fields missing'))
+    errorBoundary.captureError('form', new Error('Cannot generate report: required fields missing'))
     return
   }
 
@@ -1443,19 +1417,6 @@ async function retryGeneration() {
       item.value.reportFormatType
     )
     await asyncReportGeneration.retryGeneration(payload)
-  }
-}
-
-// ✅ NEW: Cancel functionality
-function cancelGeneration() {
-  if (asyncReportGeneration.canCancel.value) {
-    asyncReportGeneration.cancelGeneration()
-    toast.add({
-      severity: 'info',
-      summary: 'Generation Cancelled',
-      detail: 'Report generation has been cancelled',
-      life: 3000
-    })
   }
 }
 
@@ -1611,17 +1572,48 @@ function getFormatIcon(formatId: string): string {
   return format?.icon || 'pi pi-file'
 }
 
+// ✅ REEMPLAZAR EL MÉTODO COMPLETO
 function downloadCurrentReport() {
+  const state = asyncReportGeneration.workflowState.value
+
+  if (state.type === 'completed' && state.report) {
+    const report = state.report
+
+    // ✅ NUEVO: Manejar S3 download
+    if (report.storageMethod === 'S3' && report.downloadUrl) {
+      Logger.info('📥 [MANUAL DOWNLOAD] Using S3 URL')
+      downloadFile(report.downloadUrl, report.fileName)
+      return
+    }
+
+    // ✅ FALLBACK: Manejar base64
+    if (report.base64Report) {
+      Logger.info('📥 [MANUAL DOWNLOAD] Using base64 fallback')
+      const blob = new Blob([atob(report.base64Report)], { type: report.contentType })
+      const url = URL.createObjectURL(blob)
+      downloadFile(url, report.fileName)
+      // Cleanup después de un delay
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return
+    }
+  }
+
+  // Fallback para PDF URL existente
   if (asyncReportGeneration.pdfUrl.value) {
     const timestamp = dayjs().format('YYYY-MM-DD_HH-mm-ss')
-    const link = document.createElement('a')
-    link.href = asyncReportGeneration.pdfUrl.value
-    link.download = `report-${timestamp}.pdf`
-    link.click()
+    downloadFile(asyncReportGeneration.pdfUrl.value, `report-${timestamp}.pdf`)
   }
 }
 
 function openInNewTab() {
+  const state = asyncReportGeneration.workflowState.value
+
+  if (state.type === 'completed' && state.report?.storageMethod === 'S3' && state.report.downloadUrl) {
+    window.open(state.report.downloadUrl, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  // Fallback para PDF URL actual
   if (asyncReportGeneration.pdfUrl.value) {
     window.open(asyncReportGeneration.pdfUrl.value, '_blank', 'noopener,noreferrer')
   }
@@ -1634,6 +1626,56 @@ function shareReport() {
       text: 'Generated report',
       url: asyncReportGeneration.pdfUrl.value
     }).catch((err: any) => Logger.error('Error sharing:', err))
+  }
+}
+
+function downloadFile(url: string, filename: string) {
+  try {
+    Logger.info('📥 [DOWNLOAD FILE] Starting download:', { url: `${url.substring(0, 50)}...`, filename })
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.style.display = 'none'
+
+    // Agregar al DOM temporalmente
+    document.body.appendChild(link)
+
+    // Trigger download
+    link.click()
+
+    // Cleanup inmediato
+    document.body.removeChild(link)
+
+    Logger.info('✅ [DOWNLOAD FILE] Download triggered successfully:', filename)
+
+    // Para URLs blob, limpiar después de un delay
+    if (url.startsWith('blob:')) {
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+        Logger.info('🧹 [DOWNLOAD FILE] Blob URL cleaned up:', filename)
+      }, 1000)
+    }
+  }
+  catch (error) {
+    Logger.error('❌ [DOWNLOAD FILE] Error downloading file:', error)
+
+    // Fallback: abrir en nueva ventana
+    try {
+      window.open(url, '_blank', 'noopener,noreferrer')
+      Logger.info('🔄 [DOWNLOAD FILE] Fallback: opened in new tab')
+    }
+    catch (fallbackError) {
+      Logger.error('❌ [DOWNLOAD FILE] Fallback also failed:', fallbackError)
+
+      // Último recurso: mostrar error al usuario
+      toast.add({
+        severity: 'error',
+        summary: 'Download Failed',
+        detail: 'Unable to download file. Please try again.',
+        life: 5000
+      })
+    }
   }
 }
 
@@ -1670,7 +1712,7 @@ async function handleErrorRetry(context: string) {
         await errorBoundary.retryOperation(
           latestError.id,
           () => asyncReportGeneration.generateReportAsync(payload),
-          (result) => {
+          () => {
             Logger.info('✅ [ERROR RETRY] Generation retry successful')
           },
           (error) => {
@@ -1711,16 +1753,6 @@ function handleErrorReport() {
     detail: 'Error report functionality will be implemented soon',
     life: 3000
   })
-}
-
-function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
-  const state = asyncReportGeneration.workflowState.value
-
-  if (state.type === 'submitting') { return 'submitting' }
-  if (state.type === 'polling') { return 'processing' }
-  if (asyncReportGeneration.progress.currentStep === 3) { return 'downloading' }
-
-  return 'processing'
 }
 </script>
 
@@ -2086,14 +2118,114 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
 
             <!-- Enhanced Viewer Content -->
             <div class="report-viewer__preview-content">
-              <!-- ✅ PROGRESS SKELETON - Cuando está activo -->
-              <ProgressSkeleton
-                v-if="asyncReportGeneration.isActive.value"
-                :current-step="asyncReportGeneration.progress.currentStep"
-                :show-polling-details="asyncReportGeneration.workflowState.value.type === 'polling'"
-                :variant="getProgressVariant()"
-                :animated="true"
-              />
+              <div v-if="asyncReportGeneration.isActive.value" class="report-progress-card">
+                <!-- Progress Header -->
+                <div class="report-progress-header">
+                  <h4>
+                    <i class="pi pi-cog" />
+                    Generating Report...
+                  </h4>
+                  <span class="elapsed-time">{{ formattedElapsedTime }}</span>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="report-progress-steps">
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 1,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 1,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      📤
+                    </div>
+                    <div class="report-progress-step-title">
+                      Submitting
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Sending request
+                    </div>
+                  </div>
+
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 2,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 2,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      ⚙️
+                    </div>
+                    <div class="report-progress-step-title">
+                      Processing
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Generating report
+                    </div>
+                  </div>
+
+                  <div
+                    class="report-progress-step" :class="{
+                      'report-progress-step--active': asyncReportGeneration.progress.currentStep === 3,
+                      'report-progress-step--completed': asyncReportGeneration.progress.currentStep > 3,
+                    }"
+                  >
+                    <div class="report-progress-step-icon">
+                      📥
+                    </div>
+                    <div class="report-progress-step-title">
+                      Downloading
+                    </div>
+                    <div class="report-progress-step-subtitle">
+                      Preparing file
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="report-progress-bar-section">
+                  <div class="report-progress-bar-wrapper">
+                    <div class="report-progress-bar-fill" :style="{ width: `${progressPercentage}%` }" />
+                  </div>
+
+                  <div class="report-progress-bar-details">
+                    <div class="progress-message">
+                      <i class="pi pi-spin pi-spinner" />
+                      {{ asyncReportGeneration.progress.message }}
+                    </div>
+                    <div class="progress-percentage">
+                      {{ progressPercentage }}%
+                    </div>
+                  </div>
+
+                  <!-- Stats -->
+                  <div v-if="asyncReportGeneration.workflowState.value.type === 'polling'" class="report-progress-bar-stats">
+                    <div class="stat-item">
+                      <span class="stat-value">{{ asyncReportGeneration.workflowState.value.attempt }}</span>
+                      <span class="stat-label">Attempt</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-value">{{ formattedElapsedTime }}</span>
+                      <span class="stat-label">Elapsed</span>
+                    </div>
+                    <div v-if="formattedEstimatedTime" class="stat-item">
+                      <span class="stat-value">{{ formattedEstimatedTime }}</span>
+                      <span class="stat-label">Remaining</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="report-progress-actions">
+                  <Button
+                    v-if="asyncReportGeneration.canCancel.value"
+                    label="Cancel"
+                    icon="pi pi-times"
+                    class="p-button-secondary p-button-outlined"
+                    @click="cancelGeneration"
+                  />
+                </div>
+              </div>
 
               <!-- ✅ ERROR STATE -->
               <div v-else-if="asyncReportGeneration.workflowState.value.type === 'failed'" class="report-viewer__error-section">
@@ -2207,9 +2339,26 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
                       <div class="flex align-items-center gap-2 mb-2">
                         <i :class="getFormatIcon(item.reportFormatType?.id)" />
                         <span class="font-semibold">{{ asyncReportGeneration.workflowState.value.report.fileName }}</span>
+                        <!-- ✅ NUEVO: Mostrar método de storage -->
+                        <Tag
+                          v-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'S3'"
+                          severity="info"
+                          value="S3"
+                          class="text-xs"
+                        />
+                        <Tag
+                          v-else-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'BASE64'"
+                          severity="warn"
+                          value="Fallback"
+                          class="text-xs"
+                        />
                       </div>
                       <div class="text-sm text-gray-600">
                         Size: {{ Math.round((asyncReportGeneration.workflowState.value.report.fileSizeBytes || 0) / 1024) }} KB
+                        <!-- ✅ NUEVO: Mostrar expiración para S3 -->
+                        <span v-if="asyncReportGeneration.workflowState.value.report.storageMethod === 'S3' && asyncReportGeneration.workflowState.value.report.expirationDate">
+                          • Expires: {{ dayjs(asyncReportGeneration.workflowState.value.report.expirationDate).format('MMM DD, HH:mm') }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2226,14 +2375,7 @@ function getProgressVariant(): 'submitting' | 'processing' | 'downloading' {
                       label="Download Again"
                       icon="pi pi-download"
                       class="p-button-secondary p-button-outlined w-full"
-                      @click="() => {
-                        const report = asyncReportGeneration.workflowState.value.report;
-                        if (report) {
-                          const blob = new Blob([atob(report.base64Report)], { type: report.contentType });
-                          const url = URL.createObjectURL(blob);
-                          asyncReportGeneration.downloadFile(url, report.fileName);
-                        }
-                      }"
+                      @click="downloadCurrentReport"
                     />
                   </div>
                 </div>
