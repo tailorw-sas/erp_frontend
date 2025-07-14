@@ -21,6 +21,8 @@ import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.manageRa
 import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.manageRoomCategory.ProducerReplicateManageRoomCategoryService;
 import com.kynsoft.finamer.insis.infrastructure.services.kafka.producer.manageRoomType.ProducerReplicateManageRoomTypeService;
 import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -54,6 +56,8 @@ public class CreateRoomRatesService {
 
     private final ExecutorService executor = Executors.newFixedThreadPool(3);
     private final ExecutorService loadCatalogsExecutor = Executors.newFixedThreadPool(4);
+
+    private static final Logger log = LoggerFactory.getLogger(CreateRoomRatesService.class);
 
     public CreateRoomRatesService(CreateManageRatePlanService createManageRatePlanService,
                                   CreateManageRoomTypeService createManageRoomTypeService,
@@ -93,6 +97,9 @@ public class CreateRoomRatesService {
                                 LocalDate invoiceDate,
                                 BatchType batchType,
                                 List<CreateRoomRateRequest> createRoomRates){
+        log.info("[{}] Iniciando creación de room rates para hotel '{}', fecha {}, tipo '{}'. Total a crear: {}",
+                processId, hotel, invoiceDate, batchType.name(), createRoomRates.size());
+
         BatchProcessLogDto processLog = this.createLog(hotel, invoiceDate, invoiceDate, processId, batchType);
 
         RulesChecker.checkRule(new ValidateObjectNotNullRule<String>(hotel, "hotel", "The hotel code must not be null"));
@@ -105,18 +112,21 @@ public class CreateRoomRatesService {
                 Instant before = Instant.now();
                 this.processNewCatalogs(createRoomRates, hotelDto);
                 Instant after = Instant.now();
-                System.out.println("************ Process New Catalogs" + Duration.between(before, after).toMillis()  + " ms");
+                log.debug("************ Process New Catalogs" + Duration.between(before, after).toMillis()  + " ms");
 
                 before = Instant.now();
                 boolean processed = this.processRoomRates(processLog, invoiceDate, createRoomRates, hotelDto);
                 after = Instant.now();
-                System.out.println("************ Process New Rates" + Duration.between(before, after).toMillis()  + " ms");
+                log.debug("************ Process New Rates" + Duration.between(before, after).toMillis()  + " ms");
 
                 this.updateLogAsCompleted(processLog, createRoomRates.size(), processed ? createRoomRates.size() : 0, null);
+                log.info("[{}] Proceso completado correctamente para hotel '{}'", processId, hotel);
             }else{
+                log.info("[{}] No se detectaron tarifas para crear. Proceso marcado como completado sin acción", processId);
                 this.updateLogAsCompleted(processLog, 0, 0, null);
             }
         } catch (RuntimeException rex){
+            log.error("[{}] Error en proceso de creación de tarifas: {}", processId, rex.getMessage(), rex);
             this.updateLogAsCompleted(processLog, createRoomRates.size(),  0, rex.getMessage());
         }
     }
@@ -223,12 +233,10 @@ public class CreateRoomRatesService {
     }
 
     private boolean processExistingBooking(List<CreateRoomRateRequest> createRoomRates, List<RoomRateDto> currentRoomRates, ManageHotelDto hotelDto, UUID processId){
-        List<RoomRateDto> pendingRoomRates = currentRoomRates.stream()
-                .filter(roomRateDto -> roomRateDto.getStatus() != RoomRateStatus.PROCESSED)
-                .collect(Collectors.toList());
+        boolean shouldCancelRoomRate = this.shouldCancelRoomRate(currentRoomRates, createRoomRates);
 
-        if (shouldCancelRoomRate(pendingRoomRates, createRoomRates)) {
-            cancelRates(pendingRoomRates);
+        if (shouldCancelRoomRate) {
+            cancelRates(currentRoomRates);
             createRates(hotelDto, createRoomRates, processId);
             return true;
         }
@@ -258,9 +266,14 @@ public class CreateRoomRatesService {
     }
 
     private boolean shouldCancelRoomRate(List<RoomRateDto> currentRates, List<CreateRoomRateRequest> createRoomRates){
+        if(currentRates.isEmpty()){
+            return false;
+        }
+
         if(currentRates.size() != createRoomRates.size()){
             return true;
         }
+
         Set<String> existingHashes = currentRates.stream()
                 .map(RoomRateDto::getHash)
                 .collect(Collectors.toSet());
@@ -272,10 +285,14 @@ public class CreateRoomRatesService {
 
     private void cancelRates(List<RoomRateDto> ratesToCancell){
         ratesToCancell.forEach(rate -> {
-            if(!rate.getStatus().equals(RoomRateStatus.PROCESSED)){
+            if(rate.getStatus() != RoomRateStatus.PROCESSED ){
                 rate.setStatus(RoomRateStatus.DELETED);
-                rate.setUpdatedAt(LocalDateTime.now());
             }
+            if(rate.getStatus() == RoomRateStatus.PROCESSED
+                    || rate.getStatus() == RoomRateStatus.IN_PROCESS){
+                rate.setStatus(RoomRateStatus.ANNULLED);
+            }
+            rate.setUpdatedAt(LocalDateTime.now());
         });
         service.updateMany(ratesToCancell);
     }
@@ -454,16 +471,6 @@ public class CreateRoomRatesService {
         );
     }
 
-    public static List<CreateRoomRateCommand> findRecordsWithDifferentHash(List<RoomRateDto> roomRateDtos, List<CreateRoomRateCommand> createRoomRateCommands) {
-        Set<String> roomRateDtoHashes = roomRateDtos.stream()
-                .map(RoomRateDto::getHash)
-                .collect(Collectors.toSet());
-
-        return createRoomRateCommands.stream()
-                .filter(command -> !roomRateDtoHashes.contains(command.getHash()))
-                .collect(Collectors.toList());
-    }
-
     @PreDestroy
     public void cleanUp() {
         shutdownExecutor("executor", executor);
@@ -474,18 +481,18 @@ public class CreateRoomRatesService {
         service.shutdown();
         try {
             if (!service.awaitTermination(30, TimeUnit.SECONDS)) {
-                System.err.println("❗ [" + name + "] no terminó en 30 segundos. Forzando cierre...");
+                log.error("❗ [" + name + "] no terminó en 30 segundos. Forzando cierre...");
                 List<Runnable> droppedTasks = service.shutdownNow();
 
                 if (!droppedTasks.isEmpty()) {
-                    System.err.println("⚠️ [" + name + "] Tareas no ejecutadas: " + droppedTasks.size());
+                    log.error("⚠️ [" + name + "] Tareas no ejecutadas: " + droppedTasks.size());
                 }
             } else {
-                System.out.println("✅ [" + name + "] Todas las tareas finalizaron correctamente.");
+                log.error("✅ [" + name + "] Todas las tareas finalizaron correctamente.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("🛑 [" + name + "] interrupción detectada. Forzando cierre inmediato...");
+            log.error("🛑 [" + name + "] interrupción detectada. Forzando cierre inmediato...");
             service.shutdownNow();
         }
     }

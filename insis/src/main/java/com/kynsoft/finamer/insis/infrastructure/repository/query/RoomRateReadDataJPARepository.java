@@ -32,6 +32,8 @@ public interface RoomRateReadDataJPARepository extends CrudRepository<RoomRate, 
     @Query(value = "SELECT * FROM get_rates_count_by_invoicedate(:hotelIds, :fromInvoiceDate, :toInvoiceDate)", nativeQuery = true)
     List<Object[]> countByHotelAndInvoiceDate(@Param("hotelIds") UUID[] hotelIds, @Param("fromInvoiceDate") LocalDate fromInvoiceDate, @Param("toInvoiceDate") LocalDate toInvoiceDate);
 
+    List<RoomRate> findByHotel_IdAndInvoicingDateAndStatusIn(UUID hotelId, LocalDate invoicingDate, List<RoomRateStatus> statuses);
+
     List<RoomRate> findByHotel_IdAndInvoicingDateAndStatusNot(UUID hotelId, LocalDate invoicingDate, RoomRateStatus status);
 
     @Query("SELECT r FROM RoomRate r WHERE r.id IN :ids AND r.status IN :statuses")

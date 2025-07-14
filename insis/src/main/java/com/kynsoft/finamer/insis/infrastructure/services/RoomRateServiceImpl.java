@@ -107,7 +107,8 @@ public class RoomRateServiceImpl implements IRoomRateService {
     @Override
     public List<RoomRateDto> findByHotelAndInvoiceDate(UUID hotelId, LocalDate invoiceDate) {
         if(Objects.nonNull(hotelId) && Objects.nonNull(invoiceDate)){
-            return readRepository.findByHotel_IdAndInvoicingDateAndStatusNot(hotelId, invoiceDate, RoomRateStatus.DELETED).stream()
+            List<RoomRateStatus> activeStatuses = Arrays.asList(RoomRateStatus.PENDING, RoomRateStatus.FAILED, RoomRateStatus.PROCESSED, RoomRateStatus.IN_PROCESS);
+            return readRepository.findByHotel_IdAndInvoicingDateAndStatusIn(hotelId, invoiceDate, activeStatuses).stream()
                     .map(RoomRate::toAggregate).toList();
         }
         throw new IllegalArgumentException("Both hotelId and invoiceDate must be provided and cannot be null.");

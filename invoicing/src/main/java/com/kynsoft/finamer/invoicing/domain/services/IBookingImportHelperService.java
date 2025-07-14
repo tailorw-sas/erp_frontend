@@ -1,8 +1,10 @@
 package com.kynsoft.finamer.invoicing.domain.services;
 
+import com.kynsoft.finamer.invoicing.domain.dto.ManageAgencyDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.EImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.ImportBookingRequest;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
+import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 
 public interface IBookingImportHelperService {
 
@@ -15,7 +17,7 @@ public interface IBookingImportHelperService {
 
     boolean canImportRow(BookingRow bookingRow,EImportType importType);
 
-    void saveCachingImportBooking(BookingRow bookingRow);
+    BookingImportCache saveCachingImportBooking(BookingRow bookingRow, ManageAgencyDto agencyDto);
 
     void createInvoiceGroupingByCoupon(String importProcessId, String employee, boolean insisit);
 

@@ -87,8 +87,8 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
     }
 
     @Override
-    public void saveCachingImportBooking(BookingRow bookingRow) {
-        this.createCacheInsist(bookingRow);
+    public BookingImportCache saveCachingImportBooking(BookingRow bookingRow, ManageAgencyDto agencyDto) {
+        return this.createCacheInsist(bookingRow, agencyDto);
     }
 
     @Override
@@ -579,12 +579,14 @@ public class BookingImportHelperServiceImpl implements IBookingImportHelperServi
         repository.save(bookingImportCache);
     }
 
-    private void createCacheInsist(BookingRow bookingRow) {
+    private BookingImportCache createCacheInsist(BookingRow bookingRow, ManageAgencyDto agencyDto) {
         BookingImportCache bookingImportCache = new BookingImportCache(bookingRow);
         bookingImportCache.setInsistImportProcessId(bookingRow.getInsistImportProcessId());
         bookingImportCache.setImportProcessId(bookingRow.getImportProcessId());
         bookingImportCache.setInsistImportProcessBookingId(bookingRow.getInsistImportProcessBookingId());
+        bookingImportCache.setGenerationType(agencyDto.getGenerationType().name());
         repository.save(bookingImportCache);
+        return bookingImportCache;
     }
 
     private void createInvoiceHistory(ManageInvoiceDto manageInvoice, String employee) {

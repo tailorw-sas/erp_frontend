@@ -33,4 +33,6 @@ public interface IManageAgencyService {
     void clearManageHotelCache();
 
     Map<UUID, ManageAgencyDto> getMapById(List<UUID> agencyIds);
+
+    Map<String, ManageAgencyDto> getMapByCode(List<String> agencyCodes);
 }

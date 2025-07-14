@@ -5,5 +5,6 @@ public enum RoomRateStatus {
     IN_PROCESS,
     PROCESSED,
     FAILED,
-    DELETED;
+    DELETED,
+    ANNULLED;
 }

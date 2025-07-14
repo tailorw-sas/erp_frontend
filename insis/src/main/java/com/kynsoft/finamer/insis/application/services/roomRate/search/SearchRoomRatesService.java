@@ -45,11 +45,12 @@ public class SearchRoomRatesService {
                                     List<FilterCriteria> filter,
                                     String query){
         Instant before = Instant.now();
-        PaginatedResponse response = this.searchRoomRates(pageable, filter);
+        //PaginatedResponse response = this.searchRoomRates(pageable, filter);
         Instant after = Instant.now();
         System.out.println("*********** Search de room rates: " + Duration.between(before, after).toMillis());
 
-        if(response.getData().isEmpty()){
+        //if(response.getData().isEmpty()){
+        try{
             InvoiceDateRange invoiceDateRange = this.extractInvoiceDateFilter(filter);
             //TODO Implementar una validacion de que si hay algunos dias en el rango de fechas lance un error de que solo se puede sincronizar un dia
 
@@ -65,9 +66,13 @@ public class SearchRoomRatesService {
             System.out.println("*********** Create room rates: " + Duration.between(before, after).toMillis());
 
             return this.searchRoomRates(pageable, filter);
+        }catch (Exception ex){
+            return this.searchRoomRates(pageable, filter);
         }
 
-        return response;
+        //}
+
+        //return response;
     }
 
     private PaginatedResponse searchRoomRates(Pageable pageable,
