@@ -1,21 +1,24 @@
-import { signOut } from 'next-auth/react'
+import { useRouter } from 'vue-router'
 
-export default defineNuxtPlugin({
-  setup() {
-    const config = useRuntimeConfig()
-    const api = $fetch.create({
-      baseURL: config.app.baseURL,
-      onResponseError({ response }) {
-        if (response.status === 401) {
-          signOut({ callbackUrl: '/auth/login' })
-        }
+export default defineNuxtPlugin((nuxtApp) => {
+  const config = useRuntimeConfig()
+  const router = useRouter()
+
+  const api = $fetch.create({
+    baseURL: config.app.baseURL,
+    timeout: 600_000,
+    onRequest({ request, options }) {
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.log('Requesting:', request, options)
       }
-    })
-
-    return {
-      provide: {
-        api
+    },
+    onResponseError({ response }) {
+      if (response.status === 401) {
+        router.push('/auth/login')
       }
     }
-  }
+  })
+
+  nuxtApp.provide('api', api)
 })

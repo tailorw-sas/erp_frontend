@@ -945,7 +945,7 @@ async function checkProcessStatus(id: any) {
         clearInterval(interval)
         const errorMessage
           = error?.data?.data?.error?.errorMessage
-          || 'An unexpected error occurred while checking the process status.'
+            || 'An unexpected error occurred while checking the process status.'
         reject(new Error(errorMessage))
       }
     }, 2000)
@@ -1213,17 +1213,9 @@ onMounted(async () => {
                   <label class="filter-label font-bold" for="">Agency:</label>
                   <div class="w-full" style=" z-index:5 ">
                     <DebouncedMultiSelectComponent
-                      v-if="!loadingSaveAll"
-                      id="autocomplete"
-                      class="w-full"
-                      field="name"
-                      item-value="id"
-                      :multiple="true"
-                      :max-selected-labels="1"
-                      :model="filterToSearch.agency"
-                      :suggestions="agencyList"
-                      @load="($event) => getAgencyList($event)"
-                      @change="($event) => {
+                      v-if="!loadingSaveAll" id="autocomplete" class="w-full" field="name"
+                      item-value="id" :multiple="true" :max-selected-labels="1" :model="filterToSearch.agency"
+                      :suggestions="agencyList" @load="($event) => getAgencyList($event)" @change="($event) => {
                         if (!filterToSearch.agency.find((element: any) => element?.id === 'All') && $event.find((element: any) => element?.id === 'All')) {
                           filterToSearch.agency = $event.filter((element: any) => element?.id === 'All')
                         }
@@ -1243,8 +1235,9 @@ onMounted(async () => {
                   <div class="w-full">
                     <DebouncedAutoCompleteComponent
                       v-if="!loadingSaveAll" id="autocomplete" :multiple="false"
-                      class="w-full" field="name" item-value="id" :model="filterToSearch.hotel"
-                      :suggestions="hotelList" @load="($event) => getHotelListFilter($event)" @change="($event) => { filterToSearch.hotel = $event }"
+                      class="w-full" field="name" item-value="id" :model="filterToSearch.hotel" :suggestions="hotelList"
+                      @load="($event) => getHotelListFilter($event)"
+                      @change="($event) => { filterToSearch.hotel = $event }"
                     >
                       <template #option="props">
                         <span>{{ props.item.code }} - {{ props.item.name }}</span>
@@ -1261,8 +1254,8 @@ onMounted(async () => {
                   <label class="filter-label font-bold" for="">From:</label>
                   <div class="w-full" style=" z-index:5 ">
                     <Calendar
-                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus"
-                      show-icon icon-display="input" class="w-full" :max-date="new Date()"
+                      v-model="filterToSearch.from" date-format="yy-mm-dd" icon="pi pi-calendar-plus" show-icon
+                      icon-display="input" class="w-full" :max-date="new Date()"
                     />
                   </div>
                 </div>
@@ -1283,8 +1276,8 @@ onMounted(async () => {
                 <div class="flex flex-row w-full">
                   <div class="flex align-items-center mx-3">
                     <Button
-                      v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search"
-                      :disabled="disabledSearch" :loading="loadingSearch" @click="searchAndFilter"
+                      v-tooltip.top="'Search'" class="w-3rem mx-2 " icon="pi pi-search" :disabled="disabledSearch"
+                      :loading="loadingSearch" @click="searchAndFilter"
                     />
                     <Button
                       v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
@@ -1292,10 +1285,8 @@ onMounted(async () => {
                     />
                   </div>
                   <Button
-                    v-tooltip.top="'Copiar tabla'"
-                    class="p-button-lg w-1rem h-2rem pt-2 -mr-2 -ml-2"
-                    icon="pi pi-copy"
-                    @click="copiarDatos"
+                    v-tooltip.top="'Copiar tabla'" class="p-button-lg w-1rem h-2rem pt-2 -mr-2 -ml-2"
+                    icon="pi pi-copy" @click="copiarDatos"
                   />
                 </div>
               </div>
@@ -1308,22 +1299,14 @@ onMounted(async () => {
 
       <div v-if="showDataTable" class="p-0">
         <DynamicTable
-          ref="resultTable"
-          :data="listItems"
-          :columns="columns"
-          :options="options"
-          :pagination="pagination"
-          @on-change-pagination="payloadOnChangePage = $event"
-          @on-change-filter="parseDataTableFilter"
-          @on-list-item="resetListItems"
-          @on-sort-field="onSortField"
-          @update:clicked-item="onMultipleSelect($event)"
+          ref="resultTable" :data="listItems" :columns="columns" :options="options" :pagination="pagination"
+          @on-change-pagination="payloadOnChangePage = $event" @on-change-filter="parseDataTableFilter"
+          @on-list-item="resetListItems" @on-sort-field="onSortField" @update:clicked-item="onMultipleSelect($event)"
           @on-expand-row="getRoomRateByBooking($event)"
         >
           <template #column-status="{ data }">
             <Badge
-              v-tooltip.top="data.message"
-              :value="getStatusName(data.status)"
+              v-tooltip.top="data.message" :value="getStatusName(data.status)"
               :style="`background-color: ${getStatusBadgeBackgroundColorByItem(data.status)}`"
             />
           </template>
@@ -1335,7 +1318,10 @@ onMounted(async () => {
           <template #expansion="{ data: item }">
             <div class="p-0 m-0">
               <DataTable :value="item.roomRates" striped-rows>
-                <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <Column
+                  v-for="column of columnsExpandable" :key="column.field" :field="column.field"
+                  :header="column.header" :sortable="column?.sortable"
+                />
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
                     <span v-if="!options?.loading" class="flex flex-column align-items-center justify-content-center">
@@ -1359,8 +1345,14 @@ onMounted(async () => {
             <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
               <Row>
                 <Column footer="Totals:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
-                <Column :footer="formatNumber(Math.round((totalHotelInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
-                <Column :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700" />
+                <Column
+                  :footer="formatNumber(Math.round((totalHotelInvoiceAmount + Number.EPSILON) * 100) / 100)"
+                  footer-style="font-weight: 700; width:'10px' "
+                />
+                <Column
+                  :footer="formatNumber(Math.round((totalInvoiceAmount + Number.EPSILON) * 100) / 100)"
+                  footer-style="font-weight: 700"
+                />
                 <Column :colspan="12" />
               </Row>
             </ColumnGroup>
@@ -1370,12 +1362,18 @@ onMounted(async () => {
           <ColumnGroup type="footer" class="flex align-items-center font-bold font-100" style="font-weight: 700">
             <Row>
               <Column footer="Booking to import:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
-              <Column :footer="formatNumber(Math.round((pagination.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column
+                :footer="formatNumber(Math.round((pagination.totalElements + Number.EPSILON) * 100) / 100)"
+                footer-style="font-weight: 700; width:'10px' "
+              />
               <Column :colspan="12" />
             </Row>
             <Row>
               <Column footer="Booking with errors:" :colspan="12" footer-style="text-align:right; font-weight: 700" />
-              <Column :footer="formatNumber(Math.round((paginationSearchErrors.totalElements + Number.EPSILON) * 100) / 100)" footer-style="font-weight: 700; width:'10px' " />
+              <Column
+                :footer="formatNumber(Math.round((paginationSearchErrors.totalElements + Number.EPSILON) * 100) / 100)"
+                footer-style="font-weight: 700; width:'10px' "
+              />
               <Column :colspan="12" />
             </Row>
           </ColumnGroup>
@@ -1383,15 +1381,10 @@ onMounted(async () => {
       </div>
       <div v-if="showErrorsDataTable" class="p-0">
         <DynamicTable
-          :data="listItemsErrors"
-          :columns="columnsErrors"
-          :options="optionsListErrors"
-          :pagination="paginationErroList"
-          @on-change-pagination="payloadOnChangePageErrorList = $event"
-          @on-change-filter="parseDataTableFilterErrorList"
-          @on-list-item="resetErrorListItems"
-          @on-sort-field="onSortFieldErrorList"
-          @on-expand-row="getRoomRateByBookingErrors($event)"
+          :data="listItemsErrors" :columns="columnsErrors" :options="optionsListErrors"
+          :pagination="paginationErroList" @on-change-pagination="payloadOnChangePageErrorList = $event"
+          @on-change-filter="parseDataTableFilterErrorList" @on-list-item="resetErrorListItems"
+          @on-sort-field="onSortFieldErrorList" @on-expand-row="getRoomRateByBookingErrors($event)"
         >
           <template #column-message="{ data }">
             <div id="fieldError">
@@ -1401,10 +1394,16 @@ onMounted(async () => {
           <template #expansion="{ data: item }">
             <div class="p-0 m-0">
               <DataTable :value="item.roomRates" striped-rows>
-                <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <Column
+                  v-for="column of columnsExpandable" :key="column.field" :field="column.field"
+                  :header="column.header" :sortable="column?.sortable"
+                />
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                    <span v-if="!optionsListErrors?.loading" class="flex flex-column align-items-center justify-content-center">
+                    <span
+                      v-if="!optionsListErrors?.loading"
+                      class="flex flex-column align-items-center justify-content-center"
+                    >
                       <div class="row">
                         <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
                       </div>
@@ -1432,13 +1431,9 @@ onMounted(async () => {
     <div class="grid">
       <div class="col-12 md:order-1 md:col-12 xl:col-12">
         <DynamicTable
-          :data="listItemsSearchErrors"
-          :columns="columnsSearchErrors"
-          :options="optionsSearchErrors"
-          :pagination="paginationSearchErrors"
-          @on-change-pagination="payloadOnChangePage = $event"
-          @on-change-filter="parseDataTableFilterSearchErrors"
-          @on-sort-field="onSortFieldSearchErrors"
+          :data="listItemsSearchErrors" :columns="columnsSearchErrors" :options="optionsSearchErrors"
+          :pagination="paginationSearchErrors" @on-change-pagination="payloadOnChangePage = $event"
+          @on-change-filter="parseDataTableFilterSearchErrors" @on-sort-field="onSortFieldSearchErrors"
           @on-expand-row="getRoomRateByBookingSearchErrors($event)"
         >
           <template #column-message="{ data }">
@@ -1449,10 +1444,16 @@ onMounted(async () => {
           <template #expansion="{ data: item }">
             <div class="p-0 m-0">
               <DataTable :value="item.roomRates" striped-rows>
-                <Column v-for="column of columnsExpandable" :key="column.field" :field="column.field" :header="column.header" :sortable="column?.sortable" />
+                <Column
+                  v-for="column of columnsExpandable" :key="column.field" :field="column.field"
+                  :header="column.header" :sortable="column?.sortable"
+                />
                 <template #empty>
                   <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
-                    <span v-if="!optionsListErrors?.loading" class="flex flex-column align-items-center justify-content-center">
+                    <span
+                      v-if="!optionsListErrors?.loading"
+                      class="flex flex-column align-items-center justify-content-center"
+                    >
                       <div class="row">
                         <i class="pi pi-trash mb-3" style="font-size: 2rem;" />
                       </div>
