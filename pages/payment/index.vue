@@ -31,6 +31,9 @@ const authStore = useAuthStore()
 const { status, data: userData } = useAuth()
 const isAdmin = (userData.value?.user as any)?.isAdmin === true
 
+// Add missing detailsList variable
+const detailsList = ref<any[]>([])
+
 // const  = { id: 'All', name: 'All', status: 'ACTIVE' }
 const listItems = ref<any[]>([])
 const clientItemsList = ref<any[]>([])
@@ -1425,132 +1428,89 @@ async function resetListItems() {
 }
 
 async function searchAndFilter() {
-  payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-  if (filterToSearch.value.criteria && filterToSearch.value.value) {
-    let keyValue = ''
-    const keyTemp = filterToSearch.value.criteria ? filterToSearch.value.criteria.id : ''
-    if (keyTemp !== '' && keyTemp === 'id') {
-      keyValue = 'paymentId'
-    }
+  // ─── Common reset ─────────────────────────────────────────────────────────
+  payload.value.filter = []
+  payload.value.page = 0
+  options.value.selectAllItemByDefault = false
+
+  // ─── Si “Pay Applied” está marcado, buscamos directamente en los PaymentDetail ───
+  if (filterToSearch.value.from && filterAllDateRange.value === false) {
     payload.value.filter = [...payload.value.filter, {
-      key: keyValue || (filterToSearch.value.criteria ? filterToSearch.value.criteria.id : ''),
-      operator: (
-        keyTemp === 'paymentDetails.remark'
-        || keyTemp === 'paymentDetails.manageBooking.fullName'
-        || keyTemp === 'paymentDetails.manageBooking.reservationNumber'
-        || keyTemp === 'paymentDetails.manageBooking.couponNumber'
-        || keyTemp === 'reference'
-      )
-        ? 'LIKE'
-        : 'LIKE',
-      value: filterToSearch.value.value,
+      key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
+      operator: 'GREATER_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
       logicalOperation: 'AND',
-      type: 'filterSearch',
+      type: 'filterSearch'
     }]
   }
-  else {
-    payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-    // Client
-    if (filterToSearch.value.client?.length > 0) {
-      const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'client.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
-    // Agency
-    if (filterToSearch.value.agency?.length > 0) {
-      const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'agency.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
-    // Hotel
-    if (filterToSearch.value.hotel?.length > 0) {
-      const filteredItems = filterToSearch.value.hotel.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'hotel.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
-    // Status
-    if (filterToSearch.value.status?.length > 0) {
-      const filteredItems = filterToSearch.value.status.filter((item: any) => item?.id !== 'All')
-      if (filteredItems.length > 0) {
-        const itemIds = filteredItems?.map((item: any) => item?.id)
-        payload.value.filter = [...payload.value.filter, {
-          key: 'paymentStatus.id',
-          operator: 'IN',
-          value: itemIds,
-          logicalOperation: 'AND',
-          type: 'filterSearch'
-        }]
-      }
-    }
 
-    // Date
-    if (filterToSearch.value.from && filterAllDateRange.value === false) {
-      payload.value.filter = [...payload.value.filter, {
-        key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
+  if (filterToSearch.value.to && filterAllDateRange.value === false) {
+    payload.value.filter = [...payload.value.filter, {
+      key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
+      operator: 'LESS_THAN_OR_EQUAL_TO',
+      value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    }]
+  }
+
+  // ─── Si no está marcado, usamos el flujo normal de búsqueda de Payments ───
+
+  // 1) Criterio + texto
+  if (filterToSearch.value.criteria && filterToSearch.value.value) {
+    const keyTemp = filterToSearch.value.criteria.id
+    const keyValue = keyTemp === 'id' ? 'paymentId' : keyTemp
+
+    payload.value.filter.push({
+      key: keyValue,
+      operator: 'LIKE',
+      value: filterToSearch.value.value,
+      logicalOperation: 'AND',
+      type: 'filterSearch'
+    })
+  }
+  else {
+    // 2) Filtros IN (client, agency, hotel, status)
+    const addIn = (key: string, items: any[]) => {
+      const ids = items.filter(x => x.id !== 'All').map(x => x.id)
+      if (ids.length) {
+        payload.value.filter.push({
+          key,
+          operator: 'IN',
+          value: ids,
+          logicalOperation: 'AND',
+          type: 'filterSearch'
+        })
+      }
+    }
+    if (filterToSearch.value.client?.length) { addIn('client.id', filterToSearch.value.client) }
+    if (filterToSearch.value.agency?.length) { addIn('agency.id', filterToSearch.value.agency) }
+    if (filterToSearch.value.hotel?.length) { addIn('hotel.id', filterToSearch.value.hotel) }
+    if (filterToSearch.value.status?.length) { addIn('paymentStatus.id', filterToSearch.value.status) }
+
+    // 3) Rango de fechas sobre el pago
+    if (filterToSearch.value.from && !filterAllDateRange.value) {
+      payload.value.filter.push({
+        key: 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      }]
+      })
     }
-
-    if (filterToSearch.value.to && filterAllDateRange.value === false) {
-      payload.value.filter = [...payload.value.filter, {
-        key: filterToSearch.value.payApplied ? 'paymentDetails.transactionDate' : 'transactionDate',
+    if (filterToSearch.value.to && !filterAllDateRange.value) {
+      payload.value.filter.push({
+        key: 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
         type: 'filterSearch'
-      }]
+      })
     }
-
-    // Pay Apply
-    // if (filterToSearch.value.payApplied !== null) {
-    //   payload.value.filter = [...payload.value.filter, {
-    //     key: 'payApply',
-    //     operator: 'EQUAL',
-    //     value: filterToSearch.value.payApplied,
-    //     logicalOperation: 'AND',
-    //     type: 'filterSearch'
-    //   }]
-    // }
-
-    // // Detail
-    // if (filterToSearch.value.detail !== null) {
-    //   payload.value.filter = [...payload.value.filter, {
-    //     key: 'paymentDetails',
-    //     operator: 'EXISTS',
-    //     value: '',
-    //     logicalOperation: 'AND',
-    //     type: 'filterSearch'
-    //   }]
-    // }
   }
-  options.value.selectAllItemByDefault = false
+
+  console.log('PAYMENT PAYLOAD:', JSON.stringify(payload.value, null, 2))
+  // Llamo al endpoint de Payments
   await getList()
 }
 
