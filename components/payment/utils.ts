@@ -1,9 +1,3 @@
-// components/payment/utils.ts
-// ❌ Remover importaciones directas que causaban error
-// import { jsPDF } from 'jspdf'
-// import 'jspdf-autotable'
-
-// ✅ Tipos TypeScript para mejor tipo de datos
 interface PaymentDetail {
   id: string
   paymentId: number
