@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { v4 } from 'uuid'
 import AttachmentHistoryDialog from './AttachmentHistoryDialog.vue'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { Container } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -70,8 +69,6 @@ const { data: userData } = useAuth()
 
 const invoice = ref<any>(props.selectedInvoiceObj)
 const defaultAttachmentType = ref<any>(null)
-const disableDeleteBtn = ref(props.disableDeleteBtn)
-const documentOptionHasBeenUsed = ref(props.documentOptionHasBeenUsed)
 
 const route = useRoute()
 
@@ -275,10 +272,6 @@ async function clearForm() {
   idItem.value = ''
 
   await getInvoiceSupportAttachment()
-  // if (props?.listItems?.length > 0) {
-  //   idItemToLoadFirstTime.value = props?.listItems[0]?.id
-  // }
-  // await getList()
   formReload.value += 1
 }
 
@@ -291,12 +284,9 @@ async function getList() {
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
 
-    const { data: dataList, page, size, totalElements, totalPages } = response
+    const { data: dataList, totalElements } = response
 
-    // Pagination.value.page = page
-    // Pagination.value.limit = size
     Pagination.value.totalElements = totalElements
-    // Pagination.value.totalPages = totalPages
 
     for (const iterator of dataList) {
       ListItems.value = [...ListItems.value, {
@@ -452,29 +442,12 @@ async function getResourceTypeList(query = '') {
   }
 }
 
-// function searchAndFilter() {
-//   if (filterToSearch.value.criteria && filterToSearch.value.search) {
-//     Payload.value.filter = [{
-//       key: filterToSearch.value.criteria,
-//       operator: 'LIKE',
-//       value: filterToSearch.value.search,
-//       logicalOperation: 'AND',
-//       type: 'filterSearch',
-//     }]
-//   }
-//   getList()
-// }
-
 async function createItem(item: { [key: string]: any }) {
   if (item) {
     loadingSaveAll.value = true
     const payload: { [key: string]: any } = { ...item }
 
-    // const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
-
     payload.invoice = props.selectedInvoice
-
-    // payload.file = file
 
     payload.employee = userData?.value?.user?.name
     payload.employeeId = userData?.value?.user?.userId
@@ -504,7 +477,7 @@ async function createItem(item: { [key: string]: any }) {
 async function updateItem(item: { [key: string]: any }) {
   loadingSaveAll.value = true
   const payload: { [key: string]: any } = { ...item }
-  const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+  const file = typeof item?.file === 'object' ? await GenericService.getImageUrl(item?.file) : item?.file
 
   payload.file = file
 
@@ -539,12 +512,12 @@ async function deleteItem(id: string) {
       props.deleteItem(id)
     }
     else {
-      await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
+      await GenericService.delete(options.value.moduleApi, options.value.uriApi, id, 'employee', userData?.value?.user?.userId)
 
       await getList()
     }
   }
-  catch (error) {
+  catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
     loadingDelete.value = false
   }
@@ -714,44 +687,6 @@ function showHistory() {
   attachmentHistoryDialogOpen.value = true
 }
 
-function downloadFile() {
-  // if (props.isCreationDialog) {
-  //   const reader = new FileReader()
-  //   reader.readAsDataURL(item.value.file)
-  //   reader.onload = (e) => {
-  //     const tempLink = document.createElement('a')
-  //     tempLink.style.display = 'none'
-  //     tempLink.href = e.target.result as string
-  //     tempLink.download = item.value.filename
-  //     document.body.appendChild(tempLink)
-  //     tempLink.click()
-  //     document.body.removeChild(tempLink)
-  //   }
-
-  //   return
-  // }
-
-  // if (item.value) {
-  //   const link = document.createElement('a')
-  //   link.href = item.value.file
-  //   link.setAttribute('download', `${item.value.filename}`)
-  //   link.setAttribute('target', '_blank')
-  //   document.body.appendChild(link)
-  //   link.click()
-  //   document.body.removeChild(link)
-  // }
-}
-
-// function openOrDownloadFile(url: string) {
-//   if (isValidUrl(url)) {
-//     // window.open(url, '_blank')
-//     navigateTo(`/view-file/?url=${url}`, { open: { target: '_blank' } })
-//   }
-//   else {
-//     console.error('Invalid URL')
-//   }
-// }
-
 function openFileInNewWindow() {
   if (item.value && item.value.file) {
     if (typeof item.value.file === 'string' && item.value.file.length > 0) {
@@ -759,8 +694,6 @@ function openFileInNewWindow() {
     }
     else if (typeof item.value.file === 'object') {
       const fileData = item.value.file
-      const fileName = item.value.filename || 'downloaded_file'
-
       const blob = new Blob([fileData], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
 
@@ -771,10 +704,6 @@ function openFileInNewWindow() {
     }
   }
 }
-
-const haveAttachmentWithAttachmentTypeInv = computed(() => {
-  return ListItems.value?.some((attachment: any) => attachment?.type?.code === 'INV')
-})
 
 function isFieldDisabled() {
   return !ListItems.value.some(item => item.type?.attachInvDefault)
@@ -930,7 +859,7 @@ onMounted(async () => {
             @on-list-item="ResetListItems"
             @on-sort-field="OnSortField"
           >
-            <template v-if="isCreationDialog" #pagination-total="props">
+            <template v-if="isCreationDialog">
               <span class="font-bold font">
                 {{ listItemsLocal?.length }}
               </span>
@@ -953,7 +882,7 @@ onMounted(async () => {
                 @delete="requireConfirmationToDelete($event)"
                 @submit="requireConfirmationToSave($event)"
               >
-                <template #field-resourceType="{ item: data, onUpdate }">
+                <template #field-resourceType="{ onUpdate }">
                   <DebouncedAutoCompleteComponent
                     v-if="!loadingSaveAll"
                     id="autocomplete"
@@ -1131,7 +1060,7 @@ onMounted(async () => {
                     <Button
                       v-tooltip.top="'View File'" class="w-3rem mx-2 sticky" icon="pi pi-eye" :disabled="!idItem"
                       @click="() => {
-                        openOrDownloadFile(props?.item?.item?.file)
+                        //openOrDownloadFile(props?.item?.item?.file)
                         // openFileInNewWindow()
                       }"
                     />
@@ -1152,13 +1081,6 @@ onMounted(async () => {
                       @click="requireConfirmationToDelete"
                     />
                   </IfCan>
-                  <!-- <Button
-                    v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem mx-1" icon="pi pi-times" @click="() => {
-
-                      clearForm()
-                      closeDialog()
-                    }"
-                  /> -->
                 </template>
               </EditFormV2>
             </div>
@@ -1196,7 +1118,7 @@ onMounted(async () => {
                 @delete="requireConfirmationToDelete($event)"
                 @submit="saveItem(item)"
               >
-                <template #field-resourceType="{ item: data, onUpdate }">
+                <template #field-resourceType="{ onUpdate }">
                   <DebouncedAutoCompleteComponent
                     v-if="!loadingSaveAll"
                     id="autocomplete"
