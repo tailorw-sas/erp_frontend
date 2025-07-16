@@ -249,7 +249,6 @@ async function savePrint() {
   }
 }
 
-
 async function getHotelList(query: string = '') {
   try {
     const payload = {
@@ -624,7 +623,6 @@ onMounted(async () => {
 
         <div class="flex align-items-end justify-content-end">
           <Button v-tooltip.top="'Print'" class="w-3rem mx-2" icon="pi pi-print" :disabled="selectedElements.length === 0" @click="savePrint" />
-          <!-- <Button v-tooltip.top="'Cancel'" severity="secondary" class="w-3rem p-button" icon="pi pi-times" @click="clearForm" /> -->
         </div>
       </div>
     </div>

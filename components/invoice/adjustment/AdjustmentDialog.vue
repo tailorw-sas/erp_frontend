@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import { InvoiceType } from '~/utils/Enums'
 
 const props = defineProps({
   fields: {
@@ -81,26 +82,6 @@ const route = useRoute()
 const invoiceType = ref('')
 const amountError = ref(false)
 
-function validateInvoiceAmount(newAmount: number) {
-  let amount = props.invoiceAmount
-
-  if (props.idItem) {
-    amount -= props.item?.amount
-  }
-
-  amountError.value = false
-  if (invoiceType.value === InvoiceType.INVOICE) {
-    if (Number(amount) + newAmount < 0) {
-      amountError.value = true
-    }
-  }
-  if (invoiceType.value === InvoiceType.CREDIT || invoiceType.value === InvoiceType.OLD_CREDIT) {
-    if (Number(amount) + newAmount > 0) {
-      amountError.value = true
-    }
-  }
-}
-
 watch(() => props.invoiceObj, () => {
   if (props.invoiceObj?.invoiceType?.id) {
     invoiceType.value = props.invoiceObj?.invoiceType?.id
@@ -141,9 +122,10 @@ onMounted(() => {
           <Calendar
             v-if="!loadingSaveAll" v-model="data.date" date-format="yy-mm-dd"
             :max-date="dayjs().endOf('day').toDate()" @update:model-value="($event) => {
+              const selectedDate = Array.isArray($event) ? $event[0] : $event
 
-              if (dayjs($event).isValid()){
-                onUpdate('date', dayjs($event).startOf('day').toDate())
+              if (dayjs(selectedDate).isValid()) {
+                onUpdate('date', dayjs(selectedDate).startOf('day').toDate())
               }
             }"
           />
@@ -201,12 +183,12 @@ onMounted(() => {
           <Skeleton v-else height="2rem" class="mb-2" />
         </template>
 
-        <template #form-footer="props">
+        <template #form-footer="slotProps">
           <div class="field flex justify-content-end mr-3 mb-2">
             <Button
               v-tooltip.top="'Save'" label="Save" class="w-6rem mx-1" icon="pi pi-save" @click="($event) => {
                 if (!amountError) {
-                  props.item.submitForm($event)
+                  slotProps.item.submitForm($event)
                 }
               }"
             />

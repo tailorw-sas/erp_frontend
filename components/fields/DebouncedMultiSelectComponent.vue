@@ -93,7 +93,7 @@ watch(() => props.suggestions, (newSuggestions) => {
       await wait(50) // Espera 50ms
       emit('change', ev)
     }"
-    @before-show="($event) => {
+    @before-show="() => {
       emit('load', '')
     }"
   >
