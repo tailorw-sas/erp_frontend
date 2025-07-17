@@ -1,7 +1,25 @@
 --RENAME TABLES
 ALTER TABLE roomrate RENAME TO room_rate;
+ALTER TABLE IF EXISTS import_roomrate RENAME TO import_room_rate;
 
-ALTER TABLE import_roomrate RENAME TO import_room_rate;
+CREATE TABLE IF NOT EXISTS import_room_rate
+(
+    id UUID NOT NULL,
+    created_at TIMESTAMP(6) WITHOUT TIME ZONE NOT NULL,
+    error_message VARCHAR(255),
+    updated_at TIMESTAMP(6) WITHOUT TIME ZONE,
+    import_process_id UUID,
+    room_rate_id UUID,
+    CONSTRAINT pk_import_room_rate PRIMARY KEY (id),
+    CONSTRAINT fk_import_room_rate_import_process_id FOREIGN KEY (import_process_id)
+        REFERENCES import_process (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_import_room_rate_room_rate_id FOREIGN KEY (room_rate_id)
+        REFERENCES room_rate (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
 
 ALTER TABLE IF EXISTS manage_employee_agencies_relations RENAME TO manage_employee_agency;
 DO $$
@@ -64,10 +82,37 @@ ALTER TABLE room_rate RENAME hotelinvoicenumber TO hotel_invoice_number;
 ALTER TABLE room_rate RENAME invoicefolionumber TO invoice_folio_number;
 ALTER TABLE room_rate RENAME renewalnumber TO renewal_number;
 
-ALTER TABLE import_room_rate RENAME roomRate_id TO room_rate_id;
-ALTER TABLE import_room_rate RENAME errormessage TO error_message;
-ALTER TABLE import_room_rate RENAME createdat TO created_at;
-ALTER TABLE import_room_rate RENAME updatedat TO updated_at;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'import_room_rate' AND column_name = 'roomrate_id') THEN
+        EXECUTE 'ALTER TABLE import_room_rate RENAME COLUMN roomrate_id TO room_rate_id';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'import_room_rate' AND column_name = 'errormessage') THEN
+        EXECUTE 'ALTER TABLE import_room_rate RENAME errormessage TO error_message';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'import_room_rate' AND column_name = 'createdat') THEN
+        EXECUTE 'ALTER TABLE import_room_rate RENAME createdat TO created_at';
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'import_room_rate' AND column_name = 'updatedat') THEN
+        EXECUTE 'ALTER TABLE import_room_rate RENAME updatedat TO updated_at';
+    END IF;
+END $$;
 
 ALTER TABLE import_process RENAME importdate TO import_date;
 ALTER TABLE import_process RENAME createdat TO created_at;
@@ -102,11 +147,13 @@ ALTER TABLE manage_employee RENAME updatedat TO updated_at;
 
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'manage_employee_agency' AND column_name = 'parent_id') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'manage_employee_agency' AND column_name = 'parent_id') THEN
         EXECUTE 'ALTER TABLE manage_employee_agency RENAME COLUMN parent_id TO employee_id';
     END IF;
 
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'manage_employee_agency' AND column_name = 'child_id') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'manage_employee_agency' AND column_name = 'child_id') THEN
         EXECUTE 'ALTER TABLE manage_employee_agency RENAME COLUMN child_id TO agency_id';
     END IF;
 END$$;
@@ -114,11 +161,13 @@ END$$;
 
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'manage_employee_hotel' AND column_name = 'parent_id') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'manage_employee_hotel' AND column_name = 'parent_id') THEN
         EXECUTE 'ALTER TABLE manage_employee_hotel RENAME COLUMN parent_id TO employee_id';
     END IF;
 
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'manage_employee_hotel' AND column_name = 'child_id') THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public'
+                AND table_name = 'manage_employee_hotel' AND column_name = 'child_id') THEN
         EXECUTE 'ALTER TABLE manage_employee_hotel RENAME COLUMN child_id TO hotel_id';
     END IF;
 END$$;
@@ -146,3 +195,6 @@ CREATE INDEX IF NOT EXISTS idx_employee_agency_agency_id ON manage_employee_agen
 
 CREATE INDEX IF NOT EXISTS idx_employee_hotel_employee_id ON manage_employee_hotel(employee_id);
 CREATE INDEX IF NOT EXISTS idx_employee_hotel_agency_id ON manage_employee_hotel(hotel_id);
+
+CREATE INDEX IF NOT EXISTS idx_import_process_roomrate ON import_room_rate(import_process_id, room_rate_id);
+CREATE INDEX IF NOT EXISTS idx_roomrate ON import_room_rate(room_rate_id);
