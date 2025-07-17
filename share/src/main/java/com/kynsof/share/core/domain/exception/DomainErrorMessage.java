@@ -441,7 +441,8 @@ public enum DomainErrorMessage implements IDomainErrorMessage {
     HOTEL_ACCESS(2100, Series.DOMAIN_ERROR,"The employee does not have access to the hotel."),
     AGENCY_ACCESS(2101, Series.DOMAIN_ERROR,"The employee does not have access to the agency."),
     BUSINESS_PROCESS_SCHEDULER_START_END_TIME_FORMAT_IS_NOT_VALID(2026, Series.DOMAIN_ERROR, "Start or End Time format is not valid"),
-    STRING_MUST_NOT_BE_EMPTY(2027, Series.DOMAIN_ERROR, "The string field must not be empty")
+    STRING_MUST_NOT_BE_EMPTY(2027, Series.DOMAIN_ERROR, "The string field must not be empty"),
+    TCA_INNSIST_INVOICE_DATE_FORMAT_IS_NOT_VALID(2015, Series.DOMAIN_ERROR, "Invoice Date format is not valid"),
     ;
 
     private static final DomainErrorMessage[] VALUES;
