@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import dayjs from 'dayjs'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { useToast } from 'primevue/usetoast'
 import { GenericService } from '~/services/generic-services'
 
@@ -29,12 +32,28 @@ const props = defineProps({
 
 })
 
+const toast = useToast()
+
 const invoiceAndBookings = ref(true)
 const invoiceSupport = ref(true)
 
 const loading = ref(false)
 const filename = ref<string>()
 const dialogVisible = ref(props.openDialog)
+
+const options = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-invoice',
+  loading: false,
+  showDelete: false,
+  showFilters: false,
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
+})
 
 async function invoicePrint() {
   try {
@@ -64,12 +83,53 @@ async function invoicePrint() {
     document.body.removeChild(a)
     loading.value = false
   }
-  catch {
+  catch (error) {
     loading.value = false
   }
   finally {
     loading.value = false
     dialogVisible.value = false
+  }
+
+  // generateStyledPDF()
+}
+
+async function handleDownload() {
+  loading.value = true
+
+  try {
+    // Crea una nueva instancia de jsPDF
+    const doc = new jsPDF('landscape')
+
+    // Configura las opciones para autoTable
+    const options: any = {
+      head: [['ID', 'Hotel', 'Agency', 'Inv. No', 'Gen. Date', 'Manual', 'Amount', 'Invoice Balance', 'Status']],
+      body: props.invoices.map((item: any) => [item.invoiceId, `${item.hotel.code}-${item.hotel.name}`, `${item.agency.code}-${item.agency.name}`, item.invoiceNumber, item.invoiceDate, String(item.isManual), item?.invoiceAmount, item?.invoiceAmount, item?.status]),
+      foot: [['', '', '', '', '', 'Totals:', props.totalAmount, props.totalDueAmount, '']],
+      styles: {
+        cellWidth: 30
+      },
+
+      didDrawPage(data: any) {
+        // Agrega encabezados al documento
+        doc.setFontSize(10)
+        doc.text('Invoice Management', data.settings.margin.left, 8)
+      },
+    }
+
+    // Usa autoTable para agregar la tabla al documento
+    autoTable(doc, { ...options })
+
+    // Genera el PDF y lo descarga automáticamente
+    doc.save(`${filename.value || 'Invoice'}.pdf`)
+    filename.value = ''
+    props.closeDialog()
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Error generating invoice', life: 3000 })
+  }
+  finally {
+    loading.value = false
   }
 }
 </script>

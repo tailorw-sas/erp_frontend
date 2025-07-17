@@ -5,22 +5,13 @@ import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
 import type { PropType } from 'vue'
+import type { IFilter, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
 import { getLastDayOfMonth } from '../../utils/helpers'
-import type { IFilter, IQueryRequest, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
-import type { IColumn, ISortOptions } from './interfaces/ITableInterfaces'
+import type { IColumn, IObjApi, ISortOptions } from './interfaces/ITableInterfaces'
 import DialogDelete from './components/DialogDelete.vue'
 import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
-
-export interface IObjApi {
-  moduleApi: string
-  uriApi: string
-  filter?: IFilter[]
-  keyValue?: string
-  mapFunction?: (data: any) => any
-  sortOption?: ISortOptions
-}
 
 const props = defineProps({
   componentTableId: {
@@ -171,20 +162,20 @@ const filters1 = ref(objetoFilter
 //         verified: { value: null, matchMode: FilterMatchMode.EQUALS }
 //    }
 )
-// const filtersReset = reactive(objetoFilter
-// {
-// search: { value: null, matchMode: FilterMatchMode.CONTAINS },
-// moduleName: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-// action: { value: null, matchMode: FilterMatchMode.IN },
-// 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-// representative: { value: null, matchMode: FilterMatchMode.IN },
-// date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-// balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-// status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-// activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-// verified: { value: null, matchMode: FilterMatchMode.EQUALS }
-// }
-// )
+const filtersReset = reactive(objetoFilter
+  // {
+  // search: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  // moduleName: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+  // action: { value: null, matchMode: FilterMatchMode.IN },
+  // 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+  // representative: { value: null, matchMode: FilterMatchMode.IN },
+  // date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+  // balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+  // status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+  // activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
+  // verified: { value: null, matchMode: FilterMatchMode.EQUALS }
+  // }
+)
 
 const menuItems = ref([
   {
@@ -208,10 +199,12 @@ const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
 const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
 // const menuItemsBoolean = ref(ENUM_OPERATOR_BOOLEAN)
 
+const selectMultiple1: Ref = ref(null)
+
 async function onRowExpand({ data }: any) {
   emits('onExpandRow', data?.id)
 }
-function onRowCollapse(_event: { data: { name: any } }) {
+function onRowCollapse(event: { data: { name: any } }) {
   emits('onExpandRow', '')
 }
 
@@ -227,7 +220,16 @@ function onChangeFilters(value: DataTableFilterMeta) {
   emits('onChangeFilter', value)
 }
 
-function clearIndividualFilter(param1: string) {
+function openNew() {
+  emits ('onConfirmCreate')
+}
+
+function clearFilter1() {
+  filters1.value = { ...filtersReset }
+  emits('onChangeFilter', null)
+}
+
+function clearIndividualFilter(param1) {
   filters1.value[param1] = JSON.parse(JSON.stringify(objFilterToClear.value[param1]))
   objForValues.value[param1] = []
 
@@ -275,7 +277,7 @@ function onSelectItem(item: any) {
   }
 }
 
-function onRowDoubleClick(event: { originalEvent: { type: string }, data: any }) {
+function onRowDoubleClick(event) {
   if (event.originalEvent.type === 'dblclick' && event.data) {
     emits('onRowDoubleClick', event.data)
   }
@@ -342,21 +344,15 @@ async function getList(
   try {
     let listItems: any[] = [] // Cambio el tipo de elementos a any
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
-      // Nueva lógica para evitar duplicados en el filtro
-      const mappedFilters = objToSearch && objToSearch.query !== ''
-        ? objToSearch.keys.map<IFilter>(key => ({
-          key,
-          operator: 'LIKE',
-          value: objToSearch.query,
-          logicalOperation: 'OR',
-          type: 'filterSearch'
-        }))
-        : []
-      // Eliminar filtros duplicados por clave y tipo
-      const uniqueFilters = [...new Map([...mappedFilters, ...filter].map(item => [`${item.key}_${item.type}`, item])).values()]
-
-      const payload: IQueryRequest = {
-        filter: uniqueFilters,
+      const payload = {
+        filter: objToSearch && objToSearch.query !== ''
+          ? [
+              ...objToSearch.keys.map(key => ({ key, operator: 'LIKE', value: objToSearch.query, logicalOperation: 'OR' })),
+              ...filter
+            ]
+          : [
+              ...filter
+            ],
         query: '',
         pageSize: 200,
         page: 0,
@@ -435,6 +431,45 @@ async function getOptionsList() {
   }
 }
 
+async function getOptionsListOldVersion() {
+  try {
+    for (const iterator of props.columns) {
+      switch (iterator.type) {
+        case 'text':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'number':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.CONTAINS }
+          break
+        case 'select':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.IN }
+          // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
+          break
+        case 'local-select':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.IN }
+          // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
+          break
+        case 'date':
+        case 'date-editable':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.DATE_IS }
+          break
+        case 'bool':
+          filters1.value[iterator.field] = { value: null, matchMode: FilterMatchMode.EQUALS }
+          break
+        default:
+          break
+      }
+
+      if ((iterator.type === 'local-select' || iterator.type === 'select') && (iterator.localItems && iterator.localItems?.length > 0)) {
+        objListData[iterator.field] = [...iterator.localItems]
+      }
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+}
+
 async function getDataFromSelectors() {
   try {
     for (const iterator of props.columns) {
@@ -447,7 +482,7 @@ async function getDataFromSelectors() {
             uriApi: iterator.objApi?.uriApi || '',
             keyValue: iterator.objApi?.keyValue
           },
-          iterator.objApi?.filter as IFilter[] || [],
+          iterator.objApi?.filter || [],
           iterator.localItems || [],
           iterator.objApi?.mapFunction,
           iterator.objApi?.sortOption
@@ -467,7 +502,7 @@ async function getDataFromSelectors() {
     }
   }
   catch (error) {
-    Logger.log(error)
+    console.log(error)
   }
 }
 
@@ -480,7 +515,7 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
         uriApi: column.objApi?.uriApi || '',
         keyValue: column.objApi?.keyValue
       },
-      column.objApi?.filter as IFilter[] || [],
+      column.objApi?.filter || [],
       column.localItems || [],
       column.objApi?.mapFunction,
       column.objApi?.sortOption,
@@ -502,7 +537,7 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
   }
   catch (error) {
     objForLoadings.value[column.field] = false
-    Logger.log(error)
+    console.log(error)
   }
 }
 
@@ -559,7 +594,7 @@ function clearSelectedItems() {
   clickedItem.value = []
 }
 
-watch(() => props.data, async (_newValue) => {
+watch(() => props.data, async (newValue) => {
   if (props.options?.selectAllItemByDefault) {
     clickedItem.value = [...clickedItem.value, ...props.data]
     // Delete item duplicated
@@ -649,6 +684,7 @@ defineExpose({ clearSelectedItems })
         :lazy="props.isCustomSorting"
         scrollable
         :scroll-height="'scrollHeight' in props?.options ? props?.options?.scrollHeight : '70vh'"
+        :filters="filters1"
         edit-mode="cell"
         style="border: 0"
         @sort="onSortField"
@@ -819,8 +855,8 @@ defineExpose({ clearSelectedItems })
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props: menuProps }">
-                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>
                   </a>
@@ -846,8 +882,8 @@ defineExpose({ clearSelectedItems })
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsNumeric" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props: menuProps }">
-                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>
                   </a>
@@ -912,8 +948,8 @@ defineExpose({ clearSelectedItems })
                 @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
               />
               <Menu id="overlay_menu_filter" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsSelect" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props: menuProps }">
-                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="filterModel.matchMode = item.id; filterCallback()">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="filterModel.matchMode = item.id; filterCallback()">
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>
                   </a>
@@ -975,37 +1011,35 @@ defineExpose({ clearSelectedItems })
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
-          <template #editor="{ data, field }">
-            <template v-if="column.type === 'date-editable'">
-              <slot :name="`column-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
-                <Calendar
-                  v-model="data[field]"
-                  :manual-input="false"
-                  style="width: 100%"
-                  :view="(column.props?.calendarMode as 'month' | 'date' | 'year') || 'month'"
-                  date-format="yy-mm-dd"
-                  :max-date="column.props?.maxDate"
-                  @update:model-value="onCellEditComplete($event, data)"
-                />
-              </slot>
-            </template>
-            <template v-else-if="column.editable && (column.type === 'text' || column.type === 'number')">
-              <slot :name="`column-editable-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
-                <InputText v-if="column.type === 'text'" v-model="data[field]" style="width: 100%" autofocus fluid />
-                <InputNumber v-if="column.type === 'number'" v-model="data[field]" style="width: 100%" autofocus fluid />
-              </slot>
-            </template>
+          <template v-if="column.type === 'date-editable'" #editor="{ data: dataList, field }">
+            <slot :name="`column-${column.field}`" :item="{ dataList, field, column, onCellEditComplete }">
+              <Calendar
+                v-model="dataList[field]"
+                :manual-input="false"
+                style="width: 100%"
+                :view="column.props?.calendarMode || 'month'"
+                date-format="yy-mm-dd"
+                :max-date="column.props?.maxDate"
+                @update:model-value="onCellEditComplete($event, dataList)"
+              />
+            </slot>
+          </template>
+          <template v-if="column.editable && (column.type === 'text' || column.type === 'number')" #editor="{ data, field }">
+            <slot :name="`column-editable-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
+              <InputText v-if="column.type === 'text'" v-model="data[field]" style="width: 100%" autofocus fluid />
+              <InputNumber v-if="column.type === 'number'" v-model="data[field]" style="width: 100%" autofocus fluid />
+            </slot>
           </template>
         </Column>
         <Column v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header="" :style="{ 'width': `${props.actionsWidth}px`, 'text-align': 'center' }">
-          <template #body="{ data }">
+          <template #body="{ data, index }">
             <span v-if="options?.actionsAsMenu ? options?.actionsAsMenu : false">
-              <Button type="button" icon="pi pi-ellipsis-v" severity="secondary" text aria-haspopup="true" aria-controls="overlay_menu" @click="toggleMenu($event)" />
+              <Button type="button" icon="pi pi-ellipsis-v" severity="secondary" text aria-haspopup="true" aria-controls="overlay_menu" @click="toggleMenu($event, index, data)" />
               <!-- <Menu v-if="true" ref="menu" id="overlay_menu" :model="menuItems" :popup="true" /> -->
 
               <Menu id="overlay_menu" ref="menu" :model="menuItems" :popup="true" class="w-full md:w-9rem">
-                <template #item="{ item, props: menuProps }">
-                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="handleAction(item.action, data)">
+                <template #item="{ item, props }">
+                  <a v-ripple class="flex align-items-center" v-bind="props.action" @click="handleAction(item.action, data)">
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>
                   </a>
@@ -1080,8 +1114,8 @@ defineExpose({ clearSelectedItems })
       <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
       <div class="flex align-items-center">
         <Paginator
-          :rows="Number(props.pagination?.limit ?? 50)"
-          :total-records="props.pagination?.totalElements ?? 0"
+          :rows="Number(props.pagination.limit) || 50"
+          :total-records="props.pagination.totalElements"
           :rows-per-page-options="[10, 20, 30, 50, 100, 200, 500]"
           @page="onChangePageOrLimit($event)"
         />

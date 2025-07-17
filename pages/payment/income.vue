@@ -90,7 +90,6 @@ const bookingOptions = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
   showFilters: false,
-  messageToDelete: 'Are you sure you want to delete this booking?'
 })
 
 const roomRateOptions = ref({
@@ -100,16 +99,12 @@ const roomRateOptions = ref({
   moduleApi: 'invoicing',
   uriApi: 'manage-booking',
   showFilters: false,
-  messageToDelete: 'Are you sure you want to delete this room rate?'
 })
 
 const adjustmentOptions = ref({
   tableName: 'Adjustments',
   loading: false,
   actionsAsMenu: false,
-  moduleApi: 'invoicing',
-  uriApi: 'manage-adjustment',
-  messageToDelete: 'Are you sure you want to delete this adjustment?'
 })
 
 function handleAttachmentHistoryDialogOpen() {
@@ -386,7 +381,7 @@ const fieldAdjustments = ref<FieldDefinitionType[]>([
         if (typeof value === 'string') {
         // Eliminar comas y espacios antes de convertir a número
           const cleanValue = Number(value.replace(/,/g, '').trim())
-          return Number.isNaN(cleanValue) ? value : cleanValue
+          return isNaN(cleanValue) ? value : cleanValue
         }
         return value
       },

@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import type { IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { PageState } from 'primevue/paginator'
+import { z } from 'zod'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import dayjs from 'dayjs'
+import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
+import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
+import type { GenericObject } from '~/types'
 
 const props = defineProps({
 
@@ -19,6 +27,15 @@ const props = defineProps({
 
 })
 
+const Pagination = ref<IPagination>({
+  page: 0,
+  limit: 50,
+  totalElements: 0,
+  totalPages: 0,
+  search: ''
+})
+const PayloadOnChangePage = ref<PageState>()
+
 const Payload = ref<IQueryRequest>({
   filter: [],
   query: '',
@@ -28,10 +45,31 @@ const Payload = ref<IQueryRequest>({
   sortType: ENUM_SHORT_TYPE.DESC
 })
 
+const ListItems = ref<any[]>([])
+
+const exportSummary = ref(false)
 const invoiceAndBookings = ref(true)
 const invoiceSupport = ref(true)
+
 const loading = ref(false)
+
+const filename = ref<string>()
+
 const dialogVisible = ref(props.openDialog)
+
+const options = ref({
+  tableName: 'Invoice',
+  moduleApi: 'invoicing',
+  uriApi: 'manage-attachment',
+  loading: false,
+  showDelete: false,
+  showFilters: false,
+  actionsAsMenu: false,
+  showEdit: false,
+  showAcctions: false,
+  messageToDelete: 'Do you want to save the change?',
+  showTitleBar: false
+})
 
 async function invoicePrint() {
   try {
@@ -61,12 +99,72 @@ async function invoicePrint() {
     document.body.removeChild(a)
     loading.value = false
   }
-  catch {
+  catch (error) {
     loading.value = false
   }
   finally {
     loading.value = false
     dialogVisible.value = false
+  }
+
+  // generateStyledPDF()
+}
+
+async function getList() {
+  try {
+    options.value.loading = true
+    ListItems.value = []
+
+    const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, Payload.value)
+
+    const { data: dataList, page, size, totalElements, totalPages } = response
+
+    Pagination.value.page = page
+    Pagination.value.limit = size
+    Pagination.value.totalElements = totalElements
+    Pagination.value.totalPages = totalPages
+
+    for (const iterator of dataList) {
+      ListItems.value = [...ListItems.value, { ...iterator, loadingEdit: false, loadingDelete: false }]
+    }
+  }
+  catch (error) {
+    console.error(error)
+  }
+  finally {
+    options.value.loading = false
+  }
+}
+
+async function handleDownload() {
+  loading.value = true
+
+  try {
+    await getList()
+
+    const files = ListItems.value.map(attachment => [attachment.filename, attachment.file])
+
+    downloadFiles(files)
+  }
+  catch (error) {
+    console.log(error)
+  }
+  finally {
+    loading.value = false
+  }
+}
+function downloadFiles(files: any[]) {
+  for (let i = 0; i < files?.length; i++) {
+    const file = files[i]
+    const link = document.createElement('a')
+    link.href = file[1]
+    link.download = file[0]
+    link.target = '_blank'
+
+    document.body.appendChild(link)
+
+    link.click()
+    link.remove()
   }
 }
 

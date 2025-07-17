@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
+import { z } from 'zod'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'

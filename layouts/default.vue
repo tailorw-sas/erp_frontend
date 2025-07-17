@@ -78,22 +78,19 @@ const businessStore = useBusinessStore()
 const authStore = useAuthStore()
 
 try {
-  await useAsyncData('userMe', () =>
-    authStore.getUserMe().then(() => true))
+  await useAsyncData('userMe', () => authStore.getUserMe().then(true))
 
   const orderedBusinesses = authStore.userData.data.businesses.sort((a, b) => {
     return a.businessId > b.businessId ? 1 : -1
   })
 
   const bussinessSelected = authStore.userData.data.selectedBusiness
-    ? authStore.userData.data.businesses.find(
-        item => item.businessId === authStore.userData.data.selectedBusiness
-      )
+    ? authStore.userData.data.businesses.find(item => item.businessId === authStore.userData.data.selectedBusiness)
     : orderedBusinesses[0] ?? null
 
   businessStore.setCurrent(bussinessSelected)
 }
-catch {
+catch (error) {
   businessStore.$reset()
 }
 </script>

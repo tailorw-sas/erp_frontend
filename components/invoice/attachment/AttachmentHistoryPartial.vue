@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { PageState } from 'primevue/paginator'
+import { z } from 'zod'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
+import type { Container, FieldDefinitionType } from '~/components/form/EditFormV2WithContainer'
 import type { IColumn, IPagination } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { GenericObject } from '~/types'
@@ -46,7 +50,19 @@ const props = defineProps({
 
 const invoice = ref(props.selectedInvoiceObj)
 
+const attachmentTypeList = ref<any[]>([])
+const confattachmentTypeListApi = reactive({
+  moduleApi: 'settings',
+  uriApi: 'manage-attachment-type',
+})
+
 const formReload = ref(0)
+const loadingSaveAll = ref(false)
+const confirm = useConfirm()
+
+console.log(invoice.value)
+
+const loadingDelete = ref(false)
 
 const idItem = ref('')
 const item = ref<GenericObject>({
@@ -57,6 +73,7 @@ const item = ref<GenericObject>({
   invoice: props.selectedInvoice,
   attachmentId: '',
   resource: invoice.value.invoiceId,
+  // @ts-expect-error
   resourceType: `${invoice.value.invoiceType?.name || OBJ_ENUM_INVOICE[invoice.value.invoiceType]}`
 })
 
@@ -70,6 +87,7 @@ const itemTemp = ref<GenericObject>({
   resource: '',
   resourceType: '',
 })
+const toast = useToast()
 
 const Columns: IColumn[] = [
   { field: 'attachmentId', header: 'Id', type: 'text', width: '70px' },
@@ -130,22 +148,30 @@ async function ResetListItems() {
 
 function OnSortField(event: any) {
   if (event) {
+    console.log(event);
     Payload.value.sortBy = getSortField(event.sortField)
     Payload.value.sortType = event.sortOrder
     getList()
   }
 }
 
+
 function getSortField(field: any) {
+  
   switch (field) {
     case 'status':
       return 'type.status'
 
-    case 'invoiceId' :
+    case 'invoiceId'  :
       return 'invoice.invoiceId'
+   
+
+
     default: return field
+      
   }
 }
+
 
 function clearForm() {
   item.value = { ...itemTemp.value }
@@ -184,6 +210,108 @@ async function ParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, Columns)
   Payload.value.filter = [...parseFilter || []]
   getList()
+}
+
+async function getAttachmentTypeList() {
+  try {
+    const payload
+      = {
+        filter: [],
+        query: '',
+        pageSize: 200,
+        page: 0,
+        sortBy: 'createdAt',
+        sortType: ENUM_SHORT_TYPE.DESC
+      }
+
+    attachmentTypeList.value = []
+    const response = await GenericService.search(confattachmentTypeListApi.moduleApi, confattachmentTypeListApi.uriApi, payload)
+    const { data: dataList } = response
+    for (const iterator of dataList) {
+      attachmentTypeList.value = [...attachmentTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code, status: iterator.status }]
+    }
+  }
+  catch (error) {
+    console.error('Error loading Attachment Type list:', error)
+  }
+}
+
+async function createItem(item: { [key: string]: any }) {
+  if (item) {
+    loadingSaveAll.value = true
+    const payload: { [key: string]: any } = { ...item }
+
+    const file = typeof item?.file === 'object' ? await GenericService.getUrlByImage(item?.file) : item?.file
+
+    payload.invoice = props.selectedInvoice
+
+    payload.file = file
+
+    payload.type = item.type?.id
+    await GenericService.create(options.value.moduleApi, options.value.uriApi, payload)
+  }
+}
+
+async function updateItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  const payload: { [key: string]: any } = { ...item }
+  payload.type = item.type?.id
+  await GenericService.update(options.value.moduleApi, options.value.uriApi, idItem.value || '', payload)
+}
+
+async function deleteItem(id: string) {
+  try {
+    loadingDelete.value = true
+    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
+    clearForm()
+  }
+  catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
+    loadingDelete.value = false
+  }
+  finally {
+    loadingDelete.value = false
+  }
+}
+
+async function saveItem(item: { [key: string]: any }) {
+  loadingSaveAll.value = true
+  let successOperation = true
+
+  if (idItem.value) {
+    try {
+      if (props.isCreationDialog) {
+        await props.updateItem(item)
+        clearForm()
+        return loadingSaveAll.value = false
+      }
+      await updateItem(item)
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+    idItem.value = ''
+  }
+  else {
+    try {
+      if (props.isCreationDialog) {
+        await props.addItem(item)
+        clearForm()
+        return loadingSaveAll.value = false
+      }
+      await createItem(item)
+    }
+    catch (error: any) {
+      successOperation = false
+      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
+    }
+  }
+  loadingSaveAll.value = false
+  if (successOperation) {
+    clearForm()
+    getList()
+  }
 }
 
 watch(() => props.selectedInvoiceObj, () => {

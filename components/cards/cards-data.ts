@@ -1,6 +1,7 @@
 import { ref } from 'vue' // Asegúrate de importar la interfaz desde la ruta correcta
 import type { Card } from './CardInterface'
 import icon_1 from '~/assets/images/home/icon_1.png'
+import icon_12 from '~/assets/images/home/icon_12.png'
 import icon_2 from '~/assets/images/home/icon_2.png'
 import icon_3 from '~/assets/images/home/icon_3.png'
 import icon_4 from '~/assets/images/home/icon_4.png'
