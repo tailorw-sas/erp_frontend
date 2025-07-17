@@ -6,7 +6,6 @@ import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomCategoryKafk
 import com.kynsof.share.core.domain.kafka.entity.ReplicateManageRoomTypeKafka;
 import com.kynsof.share.core.domain.rules.ValidateObjectNotNullRule;
 import com.kynsof.share.core.domain.rules.ValidateStringNotEmptyRule;
-import com.kynsoft.finamer.insis.application.command.roomRate.create.CreateRoomRateCommand;
 import com.kynsoft.finamer.insis.application.services.batchLog.BatchLogService;
 import com.kynsoft.finamer.insis.application.services.manageRatePlan.create.CreateManageRatePlanService;
 import com.kynsoft.finamer.insis.application.services.manageRoomCategory.create.CreateManageRoomCategoryService;
@@ -97,16 +96,28 @@ public class CreateRoomRatesService {
                                 LocalDate invoiceDate,
                                 BatchType batchType,
                                 List<CreateRoomRateRequest> createRoomRates){
+        ManageHotelDto hotelDto = this.manageHotelService.findByCode(hotel);
+        this.createRoomRates(processId,
+                hotelDto,
+                invoiceDate,
+                batchType,
+                createRoomRates);
+    }
+
+    public void createRoomRates(UUID processId,
+                                ManageHotelDto hotelDto,
+                                LocalDate invoiceDate,
+                                BatchType batchType,
+                                List<CreateRoomRateRequest> createRoomRates){
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(hotelDto.getCode(), "hotel", "The hotel code must not be null"));
+        RulesChecker.checkRule(new ValidateStringNotEmptyRule(hotelDto.getCode(), "hotel", "The hotel code must not be empty"));
+
         log.info("[{}] Iniciando creación de room rates para hotel '{}', fecha {}, tipo '{}'. Total a crear: {}",
-                processId, hotel, invoiceDate, batchType.name(), createRoomRates.size());
+                processId, hotelDto.getCode(), invoiceDate, batchType.name(), createRoomRates.size());
 
-        BatchProcessLogDto processLog = this.createLog(hotel, invoiceDate, invoiceDate, processId, batchType);
-
-        RulesChecker.checkRule(new ValidateObjectNotNullRule<String>(hotel, "hotel", "The hotel code must not be null"));
-        RulesChecker.checkRule(new ValidateStringNotEmptyRule(hotel, "hotel", "The hotel code must not be empty"));
+        BatchProcessLogDto processLog = this.createLog(hotelDto.getCode(), invoiceDate, invoiceDate, processId, batchType);
 
         this.updateLogAsInProcess(processLog);
-        ManageHotelDto hotelDto = manageHotelService.findByCode(hotel);
         try{
             if(!createRoomRates.isEmpty()){
                 Instant before = Instant.now();
@@ -120,7 +131,7 @@ public class CreateRoomRatesService {
                 log.debug("************ Process New Rates" + Duration.between(before, after).toMillis()  + " ms");
 
                 this.updateLogAsCompleted(processLog, createRoomRates.size(), processed ? createRoomRates.size() : 0, null);
-                log.info("[{}] Proceso completado correctamente para hotel '{}'", processId, hotel);
+                log.info("[{}] Proceso completado correctamente para hotel '{}'", processId, hotelDto.getCode());
             }else{
                 log.info("[{}] No se detectaron tarifas para crear. Proceso marcado como completado sin acción", processId);
                 this.updateLogAsCompleted(processLog, 0, 0, null);
