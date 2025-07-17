@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS import_room_rate
         REFERENCES room_rate (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
+);
 
 ALTER TABLE IF EXISTS manage_employee_agencies_relations RENAME TO manage_employee_agency;
 DO $$
