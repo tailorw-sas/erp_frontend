@@ -17,22 +17,19 @@ public class CreateGroupedRatesCommand implements ICommand {
     private UUID id;
     private String hotel;
     private LocalDate invoiceDate;
-    private String reservationCode;
-    private String couponNumber;
     private List<CreateRoomRateCommand> roomRateCommandList;
+    private String batchType;
 
     public CreateGroupedRatesCommand(UUID id,
                                      String hotel,
                                      LocalDate invoiceDate,
-                                     String reservationNumber,
-                                     String couponNumber,
-                                     List<CreateRoomRateCommand> roomRateCommandList){
+                                     List<CreateRoomRateCommand> roomRateCommandList,
+                                     String batchType){
         this.id = id;
         this.hotel = hotel;
         this.invoiceDate = invoiceDate;
-        this.reservationCode = reservationNumber;
-        this.couponNumber = couponNumber;
         this.roomRateCommandList = roomRateCommandList;
+        this.batchType = batchType;
     }
 
     @Override

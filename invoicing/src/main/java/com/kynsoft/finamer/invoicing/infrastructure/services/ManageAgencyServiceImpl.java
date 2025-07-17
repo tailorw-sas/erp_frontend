@@ -100,6 +100,17 @@ public class ManageAgencyServiceImpl implements IManageAgencyService {
     }
 
     @Override
+    public Map<String, ManageAgencyDto> getMapByCode(List<String> agencyCodes) {
+        if(Objects.isNull(agencyCodes)){
+            throw new IllegalArgumentException("The agency code list must not be null");
+        }
+        List<ManageAgency> agencies = this.repositoryQuery.findByCodeIn(agencyCodes);
+        return agencies.stream()
+                .map(ManageAgency::toAggregate)
+                .collect(Collectors.toMap(ManageAgencyDto::getCode, manageAgencyDto -> manageAgencyDto));
+    }
+
+    @Override
     public Long countByCodeAndNotId(String code, UUID id) {
         return repositoryQuery.countByCodeAndNotId(code, id);
     }

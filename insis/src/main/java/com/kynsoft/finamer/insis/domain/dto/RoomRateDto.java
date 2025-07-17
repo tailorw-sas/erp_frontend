@@ -20,7 +20,8 @@ public class RoomRateDto {
     private RoomRateStatus status;
     private ManageHotelDto hotel;
     private LocalDateTime updatedAt;
-    private String agency;
+    private String agencyCode;
+    private ManageAgencyDto agency;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private int stayDays;
@@ -29,12 +30,14 @@ public class RoomRateDto {
     private String firstName;
     private String lastName;
     private Double amount;
-    private String roomType;
+    private String roomTypeCode;
+    private ManageRoomTypeDto roomType;
     private String couponNumber;
     private int totalNumberOfGuest;
     private int adults;
-    private int childrens;
-    private String ratePlan;
+    private int children;
+    private String ratePlanCode;
+    private ManageRatePlanDto ratePlan;
     private LocalDate invoicingDate;
     private LocalDate hotelCreationDate;
     private Double originalAmount;
@@ -49,5 +52,9 @@ public class RoomRateDto {
     private Double quote;
     private String renewalNumber;
     private String hash;
-    private BookingDto booking;
+    private String roomCategoryCode;
+    private ManageRoomCategoryDto roomCategory;
+    private String message;
+    private UUID invoiceId;
+    private UUID bookingId;
 }

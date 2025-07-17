@@ -19,19 +19,23 @@ public class ManageHotel implements Serializable {
     @Id
     private UUID id;
 
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "status")
     private String status;
 
+    @Column(name = "deleted")
     private boolean deleted;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -47,6 +51,16 @@ public class ManageHotel implements Serializable {
         this.status = dto.getStatus();
         this.updatedAt = dto.getUpdatedAt();
         this.manageTradingCompany = new ManageTradingCompany(dto.getManageTradingCompany());
+    }
+
+    public ManageHotel(UUID id,
+                       String code,
+                       String name,
+                       String status){
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.status = status;
     }
 
     public ManageHotelDto toAggregate(){

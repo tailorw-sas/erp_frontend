@@ -84,7 +84,7 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
 
     @Override
     public ManageRoomTypeDto findByCodeAndHotel(String code, UUID hotel) {
-        Optional<ManageRoomType> roomType = readRepository.findByCodeAndManageHotel_Id(code, hotel);
+        Optional<ManageRoomType> roomType = readRepository.findByCodeAndHotel_Id(code, hotel);
         return roomType.
                 map(ManageRoomType::toAggregate)
                 .orElse(null);
@@ -98,13 +98,23 @@ public class ManageRoomTypeServiceImpl implements IManageRoomTypeService {
     }
 
     @Override
-    public Map<String, UUID> findIdsByCodes(UUID hotelCode, List<String> codes) {
+    public Map<String, UUID> findIdsByCodes(List<String> codes, UUID hotelCode) {
         return readRepository.findRoomTypeIdsByCodesAndHotel(codes, hotelCode)
                 .stream()
                 .collect(Collectors.toMap(
                         row -> (String)row[0],
                         row -> (UUID)row[1]
                 ));
+    }
+
+    @Override
+    public List<ManageRoomTypeDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId) {
+        if(Objects.nonNull(hotelId)){
+            return readRepository.findByCodeInAndHotel_Id(codes, hotelId).stream()
+                    .map(ManageRoomType::toAggregate)
+                    .toList();
+        }
+        throw new IllegalArgumentException("Hotel Id must not be null");
     }
 
     @Override

@@ -23,4 +23,6 @@ public class CreateBusinessProcessSchedulerRequest {
     private String params;
     private UUID process;
     private boolean allowsQueueing;
+    private String startTime;
+    private String endTime;
 }

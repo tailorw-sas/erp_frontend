@@ -17,7 +17,7 @@ public class InnsistConnectionParamsDto {
     private UUID id;
     private String hostName;
     private int portNumber;
-    private String dataBaseName;
+    private String databaseName;
     private String userName;
     private String password;
     private String description;

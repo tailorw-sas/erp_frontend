@@ -28,4 +28,5 @@ public class BatchProcessLogDto {
     private int totalRecordsRead;
     private int totalRecordsProcessed;
     private UUID processId;
+    private String errorMessage;
 }

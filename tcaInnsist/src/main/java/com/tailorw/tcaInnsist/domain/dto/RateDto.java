@@ -23,7 +23,7 @@ public class RateDto {
     private String lastName;
     private int totalNumberOfGuest;
     private int adults;
-    private int childrens;
+    private int children;
     private Double amount;
     private String roomTypeCode;
     private String ratePlanCode;

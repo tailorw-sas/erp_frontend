@@ -16,6 +16,6 @@ public class GetManageRoomTypeIdsByCodesQueryHandler implements IQueryHandler<Ge
 
     @Override
     public ManageRoomTypeIdsResponse handle(GetManageRoomTypeIdsByCodesQuery query) {
-        return new ManageRoomTypeIdsResponse(service.findIdsByCodes(query.getHotel(), query.getCodes()));
+        return new ManageRoomTypeIdsResponse(service.findIdsByCodes(query.getCodes(), query.getHotel()));
     }
 }

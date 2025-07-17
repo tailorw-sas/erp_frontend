@@ -1,7 +1,10 @@
 package com.kynsoft.finamer.invoicing.infrastructure.excel.validators.importbooking;
 
 import com.kynsoft.finamer.invoicing.application.excel.ValidatorFactory;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByCoupon;
+import com.kynsoft.finamer.invoicing.domain.excel.bean.GroupByHotelBookingNumber;
 import com.kynsoft.finamer.invoicing.domain.services.IInvoiceCloseOperationService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageAgencyService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
@@ -89,28 +92,76 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     @Override
     public boolean validateInsist(List<BookingImportCache> list) {
         ImportInsistAdultsValidator adultsValidator = new ImportInsistAdultsValidator();
-        Map<String, List<BookingImportCache>> map = this.groupByInsistImportProcessBookingId(list);
+        //Map<String, List<BookingImportCache>> map = this.groupByInsistImportProcessBookingId(list);
+        Map<GroupByCoupon, List<BookingImportCache>> mapByCoupon = this.groupInnsistByCoupon(list);
+        Map<GroupByHotelBookingNumber, List<BookingImportCache>> mapByHotelBookingNumber = this.groupInnsistByHotelBookingNumber(list);
 
-        map.forEach((key, values) -> {
-            BookingRow bookingRow = values.get(0).toAggregateImportInsistValidate();
-            bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
-            if (this.checkAdultsCount(values) == 0) {
-                adultsValidator.validate(bookingRow, errorFieldList);
-                this.sendErrorEvent(bookingRow);
+        mapByCoupon.forEach((key, values) -> {
+            if(this.checkAdultsCount(values) == 0){
+                values.forEach(bookingImportCache -> {
+                    if(bookingImportCache.getAdults() == 0){
+                        BookingRow bookingRow = bookingImportCache.toAggregateImportInsistValidate();
+                        bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
+                        adultsValidator.validate(bookingRow, errorFieldList);
+                        this.sendErrorEvent(bookingRow);
+                    }
+                });
             }
         });
+
+        mapByHotelBookingNumber.forEach((key, values) -> {
+            if(this.checkAdultsCount(values) == 0){
+                values.forEach(bookingImportCache -> {
+                    if(bookingImportCache.getAdults() == 0){
+                        BookingRow bookingRow = bookingImportCache.toAggregateImportInsistValidate();
+                        bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
+                        adultsValidator.validate(bookingRow, errorFieldList);
+                        this.sendErrorEvent(bookingRow);
+                    }
+                });
+            }
+        });
+
+//        map.forEach((key, values) -> {
+//            BookingRow bookingRow = values.get(0).toAggregateImportInsistValidate();
+//            bookingRow.setImportProcessId(bookingRow.getInsistImportProcessId());
+//            if (this.checkAdultsCount(values) == 0) {
+//                adultsValidator.validate(bookingRow, errorFieldList);
+//                this.sendErrorEvent(bookingRow);
+//            }
+//        });
 
        return errorFieldList.isEmpty();
     }
 
+//    private Map<String, List<BookingImportCache>> groupByInsistImportProcessBookingId(List<BookingImportCache> list) {
+//        return list.stream()
+//                .collect(Collectors.groupingBy(
+//                        BookingImportCache::getInsistImportProcessBookingId,
+//                        Collectors.toList()
+//                ));
+//    }
 
-
-    private Map<String, List<BookingImportCache>> groupByInsistImportProcessBookingId(List<BookingImportCache> list) {
+    private Map<GroupByCoupon, List<BookingImportCache>> groupInnsistByCoupon(List<BookingImportCache> list){
         return list.stream()
-                .collect(Collectors.groupingBy(
-                        BookingImportCache::getInsistImportProcessBookingId,
-                        Collectors.toList()
-                ));
+                .filter(bookingImportCache -> bookingImportCache.getGenerationType().equals(EGenerationType.ByCoupon.name()))
+                .collect(Collectors.groupingBy(bookingImportCache -> new GroupByCoupon(
+                        bookingImportCache.getTransactionDate(),
+                        bookingImportCache.getManageAgencyCode(),
+                        bookingImportCache.getHotelBookingNumber(),
+                        bookingImportCache.getCoupon()
+                )));
+    }
+
+    private Map<GroupByHotelBookingNumber, List<BookingImportCache>> groupInnsistByHotelBookingNumber(List<BookingImportCache> importCaches){
+        return importCaches.stream()
+                .filter(bookingImportCache -> bookingImportCache.getGenerationType() == EGenerationType.ByBooking.name())
+                .collect(Collectors.groupingBy(bookingImportCache -> new GroupByHotelBookingNumber(
+                        bookingImportCache.getHotelBookingNumber(),
+                        bookingImportCache.getManageAgencyCode(),
+                        bookingImportCache.getManageHotelCode(),
+                        bookingImportCache.getTransactionDate()
+                )));
     }
 
     private double checkAdultsCount(List<BookingImportCache> values) {

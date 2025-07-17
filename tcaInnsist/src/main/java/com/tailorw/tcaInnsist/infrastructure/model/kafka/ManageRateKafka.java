@@ -57,7 +57,7 @@ public class ManageRateKafka implements Serializable {
         this.lastName = dto.getLastName();
         this.totalNumberOfGuest = dto.getTotalNumberOfGuest();
         this.adults = dto.getAdults();
-        this.childrens = dto.getChildrens();
+        this.childrens = dto.getChildren();
         this.amount = dto.getAmount();
         this.roomTypeCode = dto.getRoomTypeCode();
         this.ratePlanCode = dto.getRatePlanCode();
