@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -52,18 +53,26 @@ public class SearchRoomRatesService {
         //if(response.getData().isEmpty()){
         try{
             InvoiceDateRange invoiceDateRange = this.extractInvoiceDateFilter(filter);
-            //TODO Implementar una validacion de que si hay algunos dias en el rango de fechas lance un error de que solo se puede sincronizar un dia
-
             ManageHotelDto hotelDto = this.getManageHotel(invoiceDateRange.getHotel());
-            before = Instant.now();
-            List<ExternalRoomRateDto> externalRoomRateDtos = this.searchExternalRoomRatesService.getExternalRoomRates(invoiceDateRange.getFrom(), hotelDto);
-            after = Instant.now();
-            System.out.println("*********** External Search de room rates: " + Duration.between(before, after).toMillis());
 
-            before = Instant.now();
-            this.createImportedRoomRates(hotelDto, invoiceDateRange.getFrom(), externalRoomRateDtos);
-            after = Instant.now();
-            System.out.println("*********** Create room rates: " + Duration.between(before, after).toMillis());
+            if(isRangeEqual(invoiceDateRange)){
+                before = Instant.now();
+                List<ExternalRoomRateDto> externalRoomRateDtos = this.searchExternalRoomRatesService.getExternalRoomRates(invoiceDateRange.getFrom(), hotelDto);
+                after = Instant.now();
+                System.out.println("*********** External Search de room rates: " + Duration.between(before, after).toMillis());
+
+                before = Instant.now();
+                this.createImportedRoomRates(hotelDto, invoiceDateRange.getFrom(), externalRoomRateDtos);
+                after = Instant.now();
+                System.out.println("*********** Create room rates: " + Duration.between(before, after).toMillis());
+            }else{
+                Map<LocalDate, List<ExternalRoomRateDto>> externalRoomRateMap = this.searchExternalRoomRatesService.getExternalRoomRates(hotelDto,
+                        invoiceDateRange.getFrom(),
+                        invoiceDateRange.getTo());
+                for(Map.Entry<LocalDate, List<ExternalRoomRateDto>> rateGroup: externalRoomRateMap.entrySet()){
+                    this.createImportedRoomRates(hotelDto, rateGroup.getKey(), rateGroup.getValue());
+                }
+            }
 
             return this.searchRoomRates(pageable, filter);
         }catch (Exception ex){
@@ -74,6 +83,11 @@ public class SearchRoomRatesService {
 
         //return response;
     }
+
+    public boolean isRangeEqual(InvoiceDateRange invoiceDateRange) {
+        return invoiceDateRange.getFrom().equals(invoiceDateRange.getTo());
+    }
+
 
     private PaginatedResponse searchRoomRates(Pageable pageable,
                                               List<FilterCriteria> filter){
@@ -117,7 +131,7 @@ public class SearchRoomRatesService {
                 .map(this::convertToRoomRateRequest)
                 .collect(Collectors.toList());
 
-        this.createRoomRatesService.createRoomRates(processId, hotel.getCode(), invoiceDate, BatchType.MANUAL, createRoomRateRequests);
+        this.createRoomRatesService.createRoomRates(processId, hotel, invoiceDate, BatchType.MANUAL, createRoomRateRequests);
     }
 
     private CreateRoomRateRequest convertToRoomRateRequest(ExternalRoomRateDto externalRoomRate){

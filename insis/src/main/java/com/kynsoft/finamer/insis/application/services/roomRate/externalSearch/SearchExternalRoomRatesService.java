@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,6 +28,19 @@ public class SearchExternalRoomRatesService {
 
         return externalRoomRateService.getTcaRoomRatesByInvoiceDateAndHotel(UUID.randomUUID(),
                 invoiceDate,
+                hotelDto.getCode());
+    }
+
+    public Map<LocalDate, List<ExternalRoomRateDto>> getExternalRoomRates(ManageHotelDto hotelDto,
+                                                                          LocalDate fromInvoiceDate,
+                                                                          LocalDate toInvoiceDate){
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(hotelDto, "Manage Hotel Dto", "The Hotel must not be null"));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(fromInvoiceDate, "From Invoice Date", "The from invoice date must not be null"));
+        RulesChecker.checkRule(new ValidateObjectNotNullRule<>(toInvoiceDate, "To Invoice Date", "The to invoice date must not be null"));
+
+        return externalRoomRateService.getTcaRoomRatesBetweenInvoiceDateAndHotel(UUID.randomUUID(),
+                fromInvoiceDate,
+                toInvoiceDate,
                 hotelDto.getCode());
     }
 }

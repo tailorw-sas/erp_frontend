@@ -4,7 +4,9 @@ import com.kynsof.share.utils.DateConvert;
 import com.kynsoft.finamer.insis.domain.dto.ExternalRoomRateDto;
 import com.kynsoft.finamer.insis.domain.services.IExternalRoomRateService;
 import com.kynsoft.finamer.insis.infrastructure.services.http.SyncRoomRateHttpService;
+import com.kynsoft.finamer.insis.infrastructure.services.http.entities.response.RateByInvoiceDateResponse;
 import com.kynsoft.finamer.insis.infrastructure.services.http.entities.response.RateResponse;
+import com.kynsoft.finamer.insis.infrastructure.services.http.entities.response.SearchRateBetweenInvoiceDateResponse;
 import com.kynsoft.finamer.insis.infrastructure.services.http.entities.response.SyncRateByInvoiceDateMessage;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,22 @@ public class ExternalRoomRateServiceImpl implements IExternalRoomRateService {
         return message.getRateResponses().stream()
                 .map(this::convertToExternalRoomRate)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<LocalDate, List<ExternalRoomRateDto>> getTcaRoomRatesBetweenInvoiceDateAndHotel(UUID processId,
+                                                                                               LocalDate fromInvoiceDate,
+                                                                                               LocalDate toInvoiceDate,
+                                                                                               String hotel) {
+        //SearchRateBetweenInvoiceDateResponse
+        SearchRateBetweenInvoiceDateResponse message = this.rateHttpService.syncRoomRatesFromTca(processId, hotel, fromInvoiceDate, toInvoiceDate);
+        if(Objects.isNull(message) || Objects.isNull(message.getRateByInvoiceDateResponses()) || message.getRateByInvoiceDateResponses().isEmpty()){
+            return Collections.emptyMap();
+        }
+
+        return message.getRateByInvoiceDateResponses().stream()
+                .collect(Collectors.toMap(rateGroupedList -> DateConvert.convertStringToLocalDate(rateGroupedList.getInvoiceDate(), DateConvert.getIsoLocalDateFormatter()),
+                        rateGroupedList -> rateGroupedList.getRateResponses().stream().map(this::convertToExternalRoomRate).toList()));
     }
 
     private ExternalRoomRateDto convertToExternalRoomRate(RateResponse rateResponse){
