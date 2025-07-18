@@ -1,6 +1,27 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import type { AutoCompleteChangeEvent, AutoCompleteItemSelectEvent } from 'primevue/autocomplete'
+import MultiSelect from 'primevue/multiselect'
+
+interface OptionItem {
+  id: string | number;
+  name: string;
+  code?: string;
+  [key: string]: any;
+}
+interface SelectionModal {
+  open: (options: {
+    items: OptionItem[],
+    selectedIds?: Array<string | number>,
+    title?: string,
+    multiple?: boolean
+  }) => Promise<Array<string | number>>
+}
+const selectionModal = inject('selectionModal') as SelectionModal
+const focusManager = inject('focusManager') as { setFocusedComponent: (c: string | null) => void }
+
+if (!selectionModal) {
+  console.warn('[DebouncedAutoCompleteComponent] No se encontró el modal inyectado.')
+}
 
 const props = defineProps({
   suggestions: {
@@ -8,7 +29,7 @@ const props = defineProps({
     required: true
   },
   model: {
-    type: Object,
+    type: Array, // Ahora model será un Array directamente para reflejar las selecciones múltiples
     required: true
   },
   field: {
@@ -25,11 +46,11 @@ const props = defineProps({
   },
   id: {
     type: String,
-    default: 'autocomplete'
+    default: 'multiselect'
   },
-  tabindex: {
+  maxSelectedLabels: {
     type: Number,
-    default: 0
+    default: 2
   },
   debounceTimeMs: {
     type: Number,
@@ -39,96 +60,155 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  multiple: {
+  loading: {
     type: Boolean,
-    default: false,
-    required: false
+    default: false
   }
 })
 
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
-
-const localModelValue = ref(props.model)
-const instance = ref()
-const shouldReopen = ref(true)
-
-// Watch for changes in props.model and update localModelValue accordingly
-watch(() => props.model, (newValue) => {
-  localModelValue.value = newValue
-}, { immediate: true })
+const allSuggestions = ref<any[]>(props.suggestions)
 
 const debouncedComplete = useDebounceFn((event: any) => {
-  emit('load', event.query)
-}, props.debounceTimeMs, { maxWait: 2000 })
+  emit('load', event.value)
+}, props.debounceTimeMs, { maxWait: 5000 })
 
-const openDropdown = () => instance.value?.show()
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-function toggleSelection(item: any) {
-  const index = localModelValue.value.findIndex((selectedItem: any) => selectedItem[props.itemValue] === item[props.itemValue])
-  if (index !== -1) {
-    localModelValue.value.splice(index, 1) // Remover el elemento si ya está seleccionado
+function removeItem(item: any) {
+  const updatedModel = props.model.filter(
+    (selectedItem: any) => selectedItem[props.itemValue] !== item[props.itemValue]
+  )
+  emit('change', updatedModel)
+}
+
+
+const wrapper = ref<HTMLElement | null>(null)
+const hasFocus = ref(false)
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.key === 'F2' && hasFocus.value) {
+    e.preventDefault()
+    openSelectionModal()
   }
 }
 
-function onItemSelect(event: AutoCompleteItemSelectEvent) {
-  if (props.multiple) {
-    toggleSelection(event.value)
-    shouldReopen.value = true
+const setupFocusHandlers = () => {
+  if (wrapper.value) {
+    wrapper.value.addEventListener('focusin', () => {
+      hasFocus.value = true
+      window.addEventListener('keydown', handleKeyDown)
+      focusManager?.setFocusedComponent('debounced-autocomplete')
+    })
+    wrapper.value.addEventListener('focusout', () => {
+      hasFocus.value = false
+      window.removeEventListener('keydown', handleKeyDown)
+      focusManager?.setFocusedComponent(null)
+    })
   }
 }
 
-function onHide() {
-  if (shouldReopen.value && props.multiple) {
-    openDropdown()
-    shouldReopen.value = false
-  }
+onMounted(setupFocusHandlers)
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  focusManager?.setFocusedComponent(null)
+})
+
+
+function castToTypedItems(rawItems: any[]): OptionItem[] {
+  return rawItems.map((item) => ({
+    ...item,
+    name: item[props.field] ?? item.name ?? 'Sin nombre',
+  }))
 }
 
-function wait(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+const openSelectionModal = async () => {
+  if (!selectionModal) return
+
+  const typedSuggestions = castToTypedItems(props.suggestions)
+const selectedIds = Array.isArray(props.model)
+  ? props.model.map((item: any) => item[props.itemValue])
+  : props.model
+    ? [props.model[props.itemValue]]
+    : []
+
+  const newSelectedIds = await selectionModal.open({
+    items: typedSuggestions,
+    selectedIds,
+    title: 'Seleccionar',
+    multiple: true
+  })
+
+  const selectedItems = typedSuggestions.filter(item =>
+    (newSelectedIds as (string | number)[]).includes(item[props.itemValue])
+  )
+
+  emit('change', selectedItems)
 }
+
+
+watch(() => props.suggestions, (newSuggestions) => {
+  const selectedItems = [...props.model]
+
+  // Filtra los elementos de selectedItems que no están en newSuggestions
+  const filteredSelectedItems = selectedItems.filter(
+    (item: any) => !newSuggestions.some((suggestion: any) => suggestion[props.itemValue] === item[props.itemValue])
+  )
+
+  // Agrega los elementos seleccionados al final de la lista de sugerencias
+  allSuggestions.value = [...newSuggestions, ...filteredSelectedItems]
+})
 </script>
 
 <template>
-  <AutoComplete
+    <div ref="wrapper" class="multiselect-wrapper">
+
+  <MultiSelect
     :id="props.id"
-    ref="instance"
-    v-model="localModelValue"
-    :suggestions="props.suggestions"
-    :field="props.field"
-    :item-value="props.itemValue"
+    class="w-full"
+    style="overflow: hidden"
+    :model-value="props.model"
+    :options="allSuggestions"
+    :option-label="props.field"
     :placeholder="props.placeholder"
     :disabled="props.disabled"
-    :tabindex="props.tabindex"
-    force-selection
-    dropdown
-    :multiple="props.multiple"
-    @complete="debouncedComplete"
-    @item-select="onItemSelect"
-    @change="async ($event: AutoCompleteChangeEvent) => {
-      const ev = JSON.parse(JSON.stringify($event.value));
+    :filter="true"
+    :loading="props.loading"
+    :max-selected-labels="props.maxSelectedLabels"
+    @filter="debouncedComplete"
+    @change="async ($event) => {
+      const ev = JSON.parse(JSON.stringify($event.value))
       await wait(50) // Espera 50ms
-      if (typeof ev === 'object') {
-        emit('change', ev)
-      }
+      emit('change', ev)
     }"
-    @hide="onHide"
+    @before-show="($event) => {
+      emit('load', '')
+    }"
   >
-    <template #option="props">
-      <slot name="option" :item="props.option" />
+    <template #value>
+      <slot name="custom-value" :value="props.model" :remove-item="removeItem" class="custom-chip">
+        <span v-for="(item, index) in (Array.isArray(props.model) ? props.model : []).slice(0, props.maxSelectedLabels)" :key="index" class="custom-chip">
+          <span class="chip-label" :style="{ color: item.status === 'INACTIVE' ? 'red' : '' }">{{ item[props.field] }}</span>
+          <button class="remove-button" aria-label="Remove" @click.stop="removeItem(item)"><i class="pi pi-times-circle" /></button>
+        </span>
+        <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
+        <span v-if="Array.isArray(props.model) && props.model.length > props.maxSelectedLabels"
+ class="custom-chip">
+         <span>{{ props.model.length - props.maxSelectedLabels }}</span>
+         </span>
+      </slot>
     </template>
-    <template #chip="props">
-      <slot name="chip" :value="props.value">
+    <template #option="slotProps">
+      <slot name="option" :item="slotProps.option">
         <div
-          :style="{
-            color: (Object.prototype.hasOwnProperty.call(props.value, 'status') && props.value.status === 'INACTIVE') ? 'red' : '',
-          }"
+          :style="{ color: slotProps.option.status === 'INACTIVE' ? 'red' : '' }"
         >
-          {{ props.value[field] }}
+          {{ slotProps.option[props.field] }}
         </div>
       </slot>
     </template>
-  </AutoComplete>
+  </MultiSelect>
+  </div>
 </template>
 
 <style>

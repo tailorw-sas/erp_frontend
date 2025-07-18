@@ -1,6 +1,6 @@
 <!-- LocalSelectField.vue - REFACTORED TO USE BaseField -->
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch,  inject, onMounted, onUnmounted  } from 'vue'
 import Dropdown from 'primevue/dropdown'
 import type { FormFieldProps, ValidationError } from '../../types/form'
 import BaseField from './BaseField.vue'
@@ -41,7 +41,87 @@ const emit = defineEmits<{
   'change': [value: any]
 }>()
 
+interface OptionItem {
+  id: string | number;
+  name: string;
+  [key: string]: any;
+}
+
+interface SelectionModal {
+  open: (params: {
+    items: OptionItem[]
+    selectedIds?: Array<string | number>
+    title?: string
+    multiple?: boolean
+  }) => Promise<Array<string | number>>
+}
+
+const selectionModal = inject('selectionModal') as SelectionModal
+const focusManager = inject('focusManager') as { setFocusedComponent: (c: string | null) => void }
+
+if (!selectionModal) {
+  console.warn('[LocalSelectField] ❌ selectionModal no disponible.')
+}
+
 const internalValue = ref(props.value)
+
+const wrapper = ref<HTMLElement | null>(null)
+const hasFocus = ref(false)
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.key === 'F2' && hasFocus.value) {
+    e.preventDefault()
+    openSelectionModal()
+  }
+}
+
+const setupFocusListeners = () => {
+  if (!wrapper.value) return
+
+  wrapper.value.addEventListener('focusin', () => {
+    hasFocus.value = true
+    focusManager?.setFocusedComponent('local-select-field')
+    window.addEventListener('keydown', handleKeyDown)
+  })
+
+  wrapper.value.addEventListener('focusout', () => {
+    hasFocus.value = false
+    focusManager?.setFocusedComponent(null)
+    window.removeEventListener('keydown', handleKeyDown)
+  })
+}
+
+onMounted(setupFocusListeners)
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  focusManager?.setFocusedComponent(null)
+})
+
+
+const openSelectionModal = async () => {
+  if (!selectionModal) return
+
+ const options = normalizedOptions.value.map(opt => ({
+  ...opt,
+  id: opt.value,
+  name: opt.name
+}))
+  const selectedValue = internalValue.value
+  const selectedIds = selectedValue !== null && selectedValue !== undefined ? [selectedValue] : []
+
+  const newSelectedIds = await selectionModal.open({
+    items: options,
+    selectedIds,
+    title: 'Select',
+    multiple: false
+  })
+
+  if (newSelectedIds.length > 0) {
+    internalValue.value = newSelectedIds[0]
+  }
+}
+
+
 
 // 🔄 WATCH BIDIRECCIONAL - CRÍTICO PARA SINCRONIZACIÓN
 watch(() => props.value, (newValue) => {
@@ -272,6 +352,7 @@ defineExpose({
 
 <template>
   <!-- ✅ USANDO BaseField COMO DateField Y SelectField -->
+  <div ref="wrapper">
   <BaseField
     v-if="field?.dataType === 'localselect'"
     v-bind="baseFieldProps"
@@ -374,6 +455,7 @@ defineExpose({
     Internal Value: {{ internalValue }}<br>
     Props Value: {{ props.value }}<br>
     Display Label: {{ getDisplayLabel(internalValue) }}
+  </div>
   </div>
 </template>
 

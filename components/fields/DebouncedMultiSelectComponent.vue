@@ -1,6 +1,25 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import MultiSelect from 'primevue/multiselect'
+import { ref, inject, onMounted, onUnmounted, watch} from 'vue'
+
+interface OptionItem {
+  id: string | number;
+  name: string;
+  code?: string;
+  [key: string]: any;
+}
+
+
+interface SelectionModal {
+  open: (options: {
+    items: OptionItem[],
+    selectedIds?: Array<string | number>,
+    title?: string,
+    multiple?: boolean
+  }) => Promise<Array<string | number>>
+}
+
 
 const props = defineProps({
   suggestions: {
@@ -8,7 +27,7 @@ const props = defineProps({
     required: true
   },
   model: {
-    type: Array, // Ahora `model` será un Array directamente para reflejar las selecciones múltiples
+    type: Array, // Ahora model será un Array directamente para reflejar las selecciones múltiples
     required: true
   },
   field: {
@@ -42,39 +61,126 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
-  }
+  },
+  contextLabel: {
+  type: String,
+  default: ''
+}
 })
+
+const wrapper = ref<HTMLElement | null>(null)
 
 const emit = defineEmits(['load', 'update:modelValue', 'change'])
 const allSuggestions = ref<any[]>(props.suggestions)
+const hasFocus = ref(false)
+
+const selectionModal = inject('selectionModal') as SelectionModal
+const focusManager = inject('focusManager') as { setFocusedComponent: (c: string | null) => void }
+
+
+if (!selectionModal) {
+  console.warn('[DebouncedMultiSelectComponent] No se encontró el modal inyectado (selectionModal).')
+}
+
+const typedSuggestions = computed(() => props.suggestions as OptionItem[])
+const typedModel = computed(() => props.model as OptionItem[])
+
+function castToTypedItems(rawItems: any[]): OptionItem[] {
+  return rawItems.map((item) => ({
+    ...item,
+    name: item[props.field] ?? item.name ?? 'Sin nombre',
+  }))
+}
+
+const openSelectionModal = async () => {
+  if (!selectionModal) return
+
+  const typedSuggestions = castToTypedItems(props.suggestions)
+
+  const selectedIds = (props.model as OptionItem[]).map(item => item[props.itemValue])
+
+  const newSelectedIds = await selectionModal.open({
+    items: typedSuggestions,
+    selectedIds,
+    title: 'Seleccionar',
+    multiple: true
+  })
+
+  const selectedItems = typedSuggestions.filter(item =>
+    (newSelectedIds as (string | number)[]).includes(item[props.itemValue])
+  )
+
+  emit('change', selectedItems)
+}
+
+
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.key === 'F2' && hasFocus.value) {
+    e.preventDefault()
+    openSelectionModal()
+  }
+}
+
+
+
+
+const setupFocusHandlers = () => {
+  if (wrapper.value) {
+    wrapper.value.addEventListener('focusin', () => {
+        console.log('[AutoComplete] Focus IN')
+
+      hasFocus.value = true
+      window.addEventListener('keydown', handleKeyDown)
+      focusManager?.setFocusedComponent('debounced-multiselect')
+    })
+    wrapper.value.addEventListener('focusout', () => {
+      hasFocus.value = false
+      window.removeEventListener('keydown', handleKeyDown)
+      focusManager?.setFocusedComponent(null)
+    })
+  }
+}
+
+
+onMounted(setupFocusHandlers)
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+  focusManager?.setFocusedComponent(null)
+})
+
 
 const debouncedComplete = useDebounceFn((event: any) => {
   emit('load', event.value)
 }, props.debounceTimeMs, { maxWait: 5000 })
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+function removeItem(item: OptionItem) {
+ const updatedModel = (props.model as OptionItem[]).filter(
+  (selectedItem) => selectedItem[props.itemValue] !== item[props.itemValue]
+)
 
-function removeItem(item: any) {
-  const updatedModel = props.model.filter(
-    (selectedItem: any) => selectedItem[props.itemValue] !== item[props.itemValue]
-  )
   emit('change', updatedModel)
 }
 
-watch(() => props.suggestions, (newSuggestions) => {
-  const selectedItems = [...props.model]
 
-  // Filtra los elementos de selectedItems que no están en newSuggestions
+watch(() => props.suggestions, (newSuggestions) => {
+  const suggestions = newSuggestions as OptionItem[]
+  const selectedItems = props.model as OptionItem[]
+
   const filteredSelectedItems = selectedItems.filter(
-    (item: any) => !newSuggestions.some((suggestion: any) => suggestion[props.itemValue] === item[props.itemValue])
+    item => !suggestions.some(suggestion =>
+      suggestion[props.itemValue] === item[props.itemValue]
+    )
   )
 
-  // Agrega los elementos seleccionados al final de la lista de sugerencias
-  allSuggestions.value = [...newSuggestions, ...filteredSelectedItems]
-})
+  allSuggestions.value = [...suggestions, ...filteredSelectedItems]
+}, { deep: true })
+
 </script>
 
 <template>
+ <div 
+   ref="wrapper" class="multiselect-wrapper" tabindex="0">
   <MultiSelect
     :id="props.id"
     class="w-full"
@@ -105,7 +211,7 @@ watch(() => props.suggestions, (newSuggestions) => {
         </span>
         <!-- Mostrar un chip adicional con la cantidad restante si se excede el límite -->
         <span v-if="props.model && props.model.length > props.maxSelectedLabels" class="custom-chip">
-          <span>{{ `+${props.model.length - props.maxSelectedLabels}` }}</span>
+        <span>{{ props.model.length - props.maxSelectedLabels }}</span>
         </span>
       </slot>
     </template>
@@ -119,6 +225,7 @@ watch(() => props.suggestions, (newSuggestions) => {
       </slot>
     </template>
   </MultiSelect>
+  </div>
 </template>
 
 <style>
