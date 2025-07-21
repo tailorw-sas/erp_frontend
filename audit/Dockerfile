@@ -45,4 +45,4 @@ EXPOSE 9909
 EXPOSE 9904
 
 # Comando de inicio de la aplicación
-ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/audit-1.0.0.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/audit-1.0.0.jar"]
