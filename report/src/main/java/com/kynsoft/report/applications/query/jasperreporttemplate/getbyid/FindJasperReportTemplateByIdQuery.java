@@ -9,9 +9,11 @@ import java.util.UUID;
 public class FindJasperReportTemplateByIdQuery implements IQuery {
 
     private final UUID id;
+    private final boolean includeParameters;
 
-    public FindJasperReportTemplateByIdQuery(UUID id) {
+    public FindJasperReportTemplateByIdQuery(UUID id, boolean includeParameters) {
         this.id = id;
+        this.includeParameters = includeParameters;
     }
 
 }

@@ -100,4 +100,4 @@ COPY --from=builder /build/target/cloudBridges-1.0.0.jar .
 RUN wget -O /app/jmx_prometheus_javaagent-0.20.0.jar https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
-ENTRYPOINT [ "java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/cloudBridges-1.0.0.jar" ]
+ENTRYPOINT [ "java", "-XX:MaxRAMPercentage=75.0", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/cloudBridges-1.0.0.jar" ]

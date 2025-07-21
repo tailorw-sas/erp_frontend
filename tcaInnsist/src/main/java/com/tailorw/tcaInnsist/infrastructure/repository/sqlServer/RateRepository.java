@@ -202,7 +202,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
                     "   ) AS RegistroHash " +
                     " FROM hottfr tbd1_0 " +
                     " JOIN hotdfc tdb2_0 ON tbd1_0.r_num_fac = tdb2_0.d_factura and tdb2_0.d_fecha_reg = tbd1_0.r_fec_fac and tbd1_0.r_cod_age = tdb2_0.d_cod_age " +
-                    " WHERE CONVERT(DATE, tbd1_0.r_fec_fac, 112) BETWEEN ? AND ? ";
+                    //" WHERE CONVERT(DATE, tbd1_0.r_fec_fac, 112) BETWEEN ? AND ? ";
+                    " WHERE tbd1_0.r_fec_fac >= ? AND tbd1_0.r_fec_fac < ? ";
             if(roomType != null){
                 query += " AND tbd1_0.r_tpo_hab LIKE ? ";
             }
@@ -211,8 +212,8 @@ public class RateRepository extends SQLServerDBConfiguration implements IRateRep
             PreparedStatement preparedStatement = connection.prepareStatement(query);
 
             int index = 1;
-            preparedStatement.setDate(index++, Date.valueOf(invoiceDateStart));
-            preparedStatement.setDate(index++, Date.valueOf(invoiceDateEnd));
+            preparedStatement.setString(index++, invoiceDateStart.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+            preparedStatement.setString(index++, invoiceDateEnd.plusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd")));
             if(roomType != null){
                 preparedStatement.setString(index, roomType + "%");
             }

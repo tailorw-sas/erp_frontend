@@ -26,7 +26,9 @@ public interface IManageRoomTypeService {
 
     List<ManageRoomTypeDto> findAll();
 
-    Map<String, UUID> findIdsByCodes(UUID hotelCode, List<String> codes);
+    Map<String, UUID> findIdsByCodes(List<String> codes, UUID hotelCode);
+
+    List<ManageRoomTypeDto> findAllByCodesAndHotel(List<String> codes, UUID hotelId);
 
     PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria);
 }

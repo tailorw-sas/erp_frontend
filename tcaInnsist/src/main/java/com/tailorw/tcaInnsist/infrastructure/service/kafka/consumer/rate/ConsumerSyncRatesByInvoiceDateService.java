@@ -39,7 +39,8 @@ public class ConsumerSyncRatesByInvoiceDateService {
             SycnRateByInvoiceDateCommand command = new SycnRateByInvoiceDateCommand(
                     objKafka.getProcessId(),
                     objKafka.getHotels(),
-                    LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER)
+                    LocalDate.parse(objKafka.getInvoiceDate(), DATE_FORMATTER),
+                    false
             );
             mediator.send(command);
         }catch (Exception ex){

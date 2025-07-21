@@ -71,4 +71,4 @@ COPY --from=builder /build/jmx_prometheus_javaagent.jar /app/jmx_prometheus_java
 COPY jmx_exporter_config.yaml /app/jmx_exporter_config.yaml
 
 # Comando de inicio de la aplicación
-ENTRYPOINT ["java", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/invoicing-1.0.0.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-javaagent:/app/jmx_prometheus_javaagent-0.20.0.jar=9904:/app/jmx_exporter_config.yaml", "-jar", "/app/invoicing-1.0.0.jar"]

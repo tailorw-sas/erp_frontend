@@ -2,6 +2,7 @@ package com.tailorw.tcaInnsist.application.command.rate.sycnRateByInvoiceDate;
 
 import com.kynsof.share.core.domain.bus.command.ICommandHandler;
 import com.kynsof.share.core.domain.kafka.entity.scheduler.UpdateSchedulerProcessKafka;
+import com.tailorw.tcaInnsist.application.query.objectResponse.RateResponse;
 import com.tailorw.tcaInnsist.domain.dto.ManageHotelDto;
 import com.tailorw.tcaInnsist.domain.dto.ManageTradingCompanyDto;
 import com.tailorw.tcaInnsist.domain.dto.RateDto;
@@ -10,8 +11,7 @@ import com.tailorw.tcaInnsist.domain.services.IManageHotelService;
 import com.tailorw.tcaInnsist.domain.services.IManageTradingCompanyService;
 import com.tailorw.tcaInnsist.domain.services.IRateService;
 import com.tailorw.tcaInnsist.domain.services.IManageConnectionService;
-import com.tailorw.tcaInnsist.infrastructure.model.kafka.BookingKafka;
-import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedBookingKafka;
+import com.tailorw.tcaInnsist.infrastructure.model.kafka.GroupedRatesKafka;
 import com.tailorw.tcaInnsist.infrastructure.model.kafka.ManageRateKafka;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerReplicateGroupedRatesService;
 import com.tailorw.tcaInnsist.infrastructure.service.kafka.producer.ProducerUpdateSchedulerLogService;
@@ -24,7 +24,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
@@ -44,18 +43,25 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
 
         for(String hotelCode : command.getHotelList()){
             try{
-                ManageHotelDto hotelDto = validateHotel(hotelCode);
-                ManageTradingCompanyDto tradingCompanyDto = validateTradingCompany(hotelDto);
-                ManageConnectionDto connection = validateConnection(tradingCompanyDto);
+                ManageHotelDto hotelDto = this.validateHotel(hotelCode);
+                ManageTradingCompanyDto tradingCompanyDto = this.validateTradingCompany(hotelDto);
+                ManageConnectionDto connection = this.validateConnection(tradingCompanyDto);
 
-                Map<String, List<RateDto>> groupedRates = getGroupedRoomRates(hotelDto, connection, command.getInvoiceDate());
-                syncRoomRates(command.getProcessId(), command.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")), hotelCode, groupedRates);
+                List<RateDto> rateDtos = this.getRoomRates(hotelDto, connection, command.getInvoiceDate());
+                if(command.getManual()){
+                    List<RateResponse> rateResponses = this.prepareResponse(rateDtos);
+                    command.setRateResponses(rateResponses);
+                }else{
+                    this.syncRoomRates(command.getProcessId(), command.getInvoiceDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")), hotelCode, rateDtos);
+                }
             }catch (IllegalArgumentException ex) {
                 logWarningAndAppend(additionDetails, ex.getMessage());
             }
         }
 
-        setLogProcessAsCompleted(command.getProcessId(), additionDetails.toString());
+        if(!command.getManual()){
+            setLogProcessAsCompleted(command.getProcessId(), additionDetails.toString());
+        }
 
         logError("Sync Rate Process End.", Level.INFO, null);
         logError("**************************************************************", Level.INFO, null);
@@ -96,7 +102,7 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
         return connection;
     }
 
-    private Map<String, List<RateDto>> getGroupedRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
+    private List<RateDto> getRoomRates(ManageHotelDto hotel, ManageConnectionDto configuration, LocalDate invoiceDate){
         List<RateDto> rateDtos = new ArrayList<>();
         try{
             rateDtos = service.findByInvoiceDate(hotel, configuration, invoiceDate);
@@ -111,34 +117,25 @@ public class SycnRateByInvoiceDateCommandHandler implements ICommandHandler<Sycn
             throw new IllegalArgumentException(String.format("The hotel %s does not contain room rates for %s invoice date", hotel.getCode(), invoiceDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))));
         }
 
-        return rateDtos.stream()
-                .collect(Collectors.groupingBy(r -> r.getReservationCode() + "|" + r.getCouponNumber()));
+        return rateDtos;
     }
 
-    private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, Map<String, List<RateDto>> groupedRates){
+    private void syncRoomRates(UUID processId, String invoiceDate, String hotelCode, List<RateDto> rates){
         UUID idLog = UUID.randomUUID();
-        List<BookingKafka> bookingKafkaList = new ArrayList<>();
-        for(Map.Entry<String, List<RateDto>> entry : groupedRates.entrySet()){
-            String[] parts = entry.getKey().split("\\|");
-            String reservationCode = parts.length > 0 ? parts[0] : "";
-            String couponNumber = parts.length > 1 ? parts[1].trim() : "";
 
-            BookingKafka bookingKafka = new BookingKafka(
-                    reservationCode,
-                    couponNumber,
-                    entry.getValue().stream()
-                            .map(ManageRateKafka::new)
-                            .collect(Collectors.toList())
-            );
-            bookingKafkaList.add(bookingKafka);
-        }
-        GroupedBookingKafka groupedRatesKafka = new GroupedBookingKafka(idLog,
+        GroupedRatesKafka groupedRatesKafka = new GroupedRatesKafka(idLog,
                 processId,
                 invoiceDate,
                 hotelCode,
-                bookingKafkaList
+                rates.stream().map(ManageRateKafka::new).toList()
         );
         producerReplicateGroupedRatesService.create(groupedRatesKafka);
+    }
+
+    private List<RateResponse> prepareResponse(List<RateDto> rates){
+        return rates.stream()
+                .map(RateResponse::new)
+                .toList();
     }
 
     private void setLogProcessAsCompleted(UUID processId, String message){

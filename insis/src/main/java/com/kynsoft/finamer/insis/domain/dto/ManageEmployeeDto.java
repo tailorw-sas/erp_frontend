@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -19,4 +20,6 @@ public class ManageEmployeeDto {
     private String lastName;
     private String email;
     public LocalDateTime updatedAt;
+    private List<ManageHotelDto> manageHotelList;
+    private List<ManageAgencyDto> manageAgencyList;
 }

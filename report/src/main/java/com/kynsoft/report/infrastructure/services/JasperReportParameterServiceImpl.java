@@ -65,12 +65,25 @@ public class JasperReportParameterServiceImpl implements IReportParameterService
 
     @Override
     public JasperReportParameterDto findById(UUID id) {
-        Optional<JasperReportParameter> dbConection = this.repositoryQuery.findById(id);
-        if (dbConection.isPresent()) {
-            return dbConection.get().toAggregate();
+        Optional<JasperReportParameter> parameter = this.repositoryQuery.findById(id);
+        if (parameter.isPresent()) {
+            return parameter.get().toAggregate();
         }
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_FOUND,
                 new ErrorField("id",  DomainErrorMessage.NOT_FOUND.getReasonPhrase())));
+    }
+
+    @Override
+    public List<JasperReportParameterDto> findByTemplateId(UUID id) {
+        List<JasperReportParameter> parameterList = this.repositoryQuery.findByTemplateId(id);
+        List<JasperReportParameterDto> dtoList = new ArrayList<>();
+
+        if (parameterList != null) {
+            for (JasperReportParameter parameter : parameterList) {
+                dtoList.add(parameter.toAggregate());
+            }
+        }
+        return dtoList;
     }
 
 

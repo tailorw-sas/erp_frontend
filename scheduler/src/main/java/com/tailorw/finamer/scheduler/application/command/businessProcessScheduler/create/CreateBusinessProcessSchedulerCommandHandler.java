@@ -27,6 +27,7 @@ public class CreateBusinessProcessSchedulerCommandHandler implements ICommandHan
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter FULL_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public CreateBusinessProcessSchedulerCommandHandler(IFrecuencyService frecuencyService,
                                                         IIntervalTypeService intervalTypeService,
@@ -59,6 +60,9 @@ public class CreateBusinessProcessSchedulerCommandHandler implements ICommandHan
         RulesChecker.checkRule(new BusinessProcessSchedulerProcessingDateCodeRule(command.getProcessingDateType(), processingDateTypeService));
         RulesChecker.checkRule(new BusinessProcessInactiveRule(businessProcessDto));
 
+        RulesChecker.checkRule(new BusinessProcessSchedulerTimeFormatRule(command.getStartTime()));
+        RulesChecker.checkRule(new BusinessProcessSchedulerTimeFormatRule(command.getEndTime()));
+
         ExecutionDateTypeDto executionDateTypeDto = getExecutionDateType(command.getExecutionDateType(), frequencyDto.getCode());
         ProcessingDateTypeDto processingDateTypeDto = processingDateTypeService.getById(command.getProcessingDateType());
 
@@ -82,8 +86,8 @@ public class CreateBusinessProcessSchedulerCommandHandler implements ICommandHan
                 null,
                 null,
                 command.isAllowsQueueing(),
-                LocalTime.MIDNIGHT,
-                LocalTime.of(23, 59, 59)
+                convertToTime(command.getStartTime(), LocalTime.MIDNIGHT),
+                convertToTime(command.getEndTime(), LocalTime.of(23, 59, 59))
         );
 
         service.create(dto);
@@ -108,5 +112,13 @@ public class CreateBusinessProcessSchedulerCommandHandler implements ICommandHan
             return null;
         }
         return LocalTime.parse(time, TIME_FORMATTER);
+    }
+
+    private LocalTime convertToTime(String time, LocalTime defaultTime){
+        if(time == null || time.isEmpty()){
+            return defaultTime;
+        }
+
+        return LocalTime.parse(time, FULL_TIME_FORMATTER);
     }
 }

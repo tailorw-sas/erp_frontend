@@ -22,24 +22,30 @@ import java.util.UUID;
 @Entity
 @Table(name = "manage_agency")
 public class ManageAgency implements Serializable {
+
     @Id
     private UUID id;
 
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "agency_alias")
     private String agencyAlias;
 
+    @Column(name = "status")
     private String status;
 
+    @Column(name = "deleted")
     private boolean deleted;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
     public ManageAgency(ManageAgencyDto dto){

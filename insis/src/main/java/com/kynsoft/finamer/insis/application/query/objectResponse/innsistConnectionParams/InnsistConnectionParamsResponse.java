@@ -27,7 +27,7 @@ public class InnsistConnectionParamsResponse implements IResponse {
     {
         this.id = dto.getId();
         this.hostName = dto.getHostName();
-        this.dataBaseName = dto.getDataBaseName();
+        this.dataBaseName = dto.getDatabaseName();
         this.portNumber = dto.getPortNumber();
         this.userName = dto.getUserName();
         this.password = dto.getPassword();

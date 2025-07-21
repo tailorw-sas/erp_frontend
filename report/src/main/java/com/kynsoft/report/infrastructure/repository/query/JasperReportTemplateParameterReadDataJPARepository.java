@@ -16,4 +16,7 @@ import java.util.UUID;
 public interface JasperReportTemplateParameterReadDataJPARepository extends JpaRepository<JasperReportParameter, UUID>, JpaSpecificationExecutor<JasperReportParameter> {
     Page<JasperReportParameter> findAll(Specification specification, Pageable pageable);
 
+    @Query("SELECT p FROM JasperReportParameter p WHERE p.jasperReportTemplate.id = :templateId")
+    java.util.List<JasperReportParameter> findByTemplateId(@Param("templateId") UUID templateId);
+
 }

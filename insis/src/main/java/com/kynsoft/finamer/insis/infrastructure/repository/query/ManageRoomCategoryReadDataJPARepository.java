@@ -16,4 +16,6 @@ public interface ManageRoomCategoryReadDataJPARepository extends JpaRepository<M
 
     @Query("SELECT m.code, m.id FROM ManageRoomCategory m WHERE m.code IN :codes")
     List<Object[]> findIdsByCodes(@Param("codes") List<String> codes);
+
+    List<ManageRoomCategory> findByCodeIn(List<String> codes);
 }

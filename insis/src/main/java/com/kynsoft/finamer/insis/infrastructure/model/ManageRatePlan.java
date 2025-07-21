@@ -22,24 +22,28 @@ public class ManageRatePlan implements Serializable {
     @Id
     private UUID id;
 
+    @Column(name = "code")
     private String code;
 
+    @Column(name = "name")
     private String name;
 
+    @Column(name = "status")
     private String status;
 
+    @Column(name = "deleted")
     private boolean deleted;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = true, updatable = true)
+    @Column(name = "updated_at", nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "hotel_id")
-    private ManageHotel manageHotel;
+    private ManageHotel hotel;
 
     public ManageRatePlan(ManageRatePlanDto dto){
         this.id = dto.getId();
@@ -48,7 +52,7 @@ public class ManageRatePlan implements Serializable {
         this.status = dto.getStatus();
         this.deleted = dto.isDeleted();
         this.updatedAt = dto.getUpdatedAt();
-        this.manageHotel = new ManageHotel(dto.getManageHotel());
+        this.hotel = new ManageHotel(dto.getHotel());
     }
 
     public ManageRatePlanDto toAggregate(){
@@ -59,7 +63,7 @@ public class ManageRatePlan implements Serializable {
                 status,
                 deleted,
                 updatedAt,
-                manageHotel!= null ? manageHotel.toAggregate() : null
+                hotel!= null ? hotel.toAggregate() : null
         );
     }
 }
