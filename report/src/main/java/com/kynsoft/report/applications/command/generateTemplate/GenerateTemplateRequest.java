@@ -15,4 +15,15 @@ public class GenerateTemplateRequest {
         private String jasperReportCode;
         private String reportFormatType;
         private Map<String, Object> parameters;
+        private String requestId;
+        private Metadata metadata;
+
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class Metadata {
+                private String timestamp;
+                private String userAgent;
+        }
 }

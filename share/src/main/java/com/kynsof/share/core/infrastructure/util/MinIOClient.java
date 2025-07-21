@@ -63,6 +63,10 @@ public class MinIOClient implements IAmazonClient {
     public MinIOClient() {
     }
 
+    public MinioClient getMinioClient() {
+        return this.minioClient;
+    }
+
     @PostConstruct
     private void initializeMinIO() {
         logger.info(" Initializing MinIO connection...");
@@ -92,7 +96,7 @@ public class MinIOClient implements IAmazonClient {
         return objectKey;
     }
 
-    private void ensureBucketExists(String bucketName) throws IOException {
+    public void ensureBucketExists(String bucketName) throws IOException {
         try {
             boolean bucketExists = this.minioClient.bucketExists(BucketExistsArgs.builder()
                     .bucket(bucketName)

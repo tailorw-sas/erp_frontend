@@ -24,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -63,7 +62,6 @@ public class PaymentImportBankHelperServiceImpl extends AbstractPaymentImportHel
     public PaymentImportBankHelperServiceImpl(PaymentImportCacheRepository paymentImportCacheRepository,
             PaymentImportBankErrorRepository paymentImportErrorRepository,
             PaymentBankValidatorFactory paymentBankValidatorFactory,
-            RedisTemplate<String, String> redisTemplate,
             IPaymentService paymentService,
             IManageAgencyService manageAgencyService,
             IManageHotelService manageHotelService,

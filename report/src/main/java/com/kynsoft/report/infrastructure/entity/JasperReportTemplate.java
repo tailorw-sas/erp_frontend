@@ -45,7 +45,7 @@ public class JasperReportTemplate extends BaseEntity {
     @JoinColumn(name = "db_conection_id", nullable = true)
     private DBConection dbConection;
 
-    @OneToMany(mappedBy = "jasperReportTemplate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "jasperReportTemplate", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<JasperReportParameter> parametersList;
 
     @CreationTimestamp

@@ -1,5 +1,6 @@
 package com.kynsoft.report.domain.dto;
 
+import com.kynsoft.report.infrastructure.enums.JasperParameterCategory;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,11 +22,12 @@ public class JasperReportParameterDto {
     private String label;
     private String componentType;
     private JasperReportTemplateDto jasperReportTemplate;
-    private String reportClass;
-    private String reportValidation;
     private int parameterPosition;
     private String dependentField;
     private String filterKeyValue;
     private String dataValueStatic;
-
+    /**
+     * Category of the parameter: REPORT or COMPLEMENTARY
+     */
+    private JasperParameterCategory parameterCategory;
 }

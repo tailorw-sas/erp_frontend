@@ -81,7 +81,10 @@ public class ManageInvoiceResponse implements IResponse {
     }
 
     private String deleteHotelInfo(String input) {
-        return input.replaceAll("-(.*?)-", "-");
+        if(input != null && !input.isEmpty()){
+            return input.replaceAll("-(.*?)-", "-");
+        }
+        return "";
     }
 
 }
