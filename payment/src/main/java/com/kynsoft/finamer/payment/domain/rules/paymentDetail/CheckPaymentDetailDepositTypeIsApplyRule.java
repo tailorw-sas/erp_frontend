@@ -22,7 +22,7 @@ public class CheckPaymentDetailDepositTypeIsApplyRule extends BusinessRule {
      */
     @Override
     public boolean isBroken() {
-        return !this.children.isEmpty();
+        return this.children != null && !this.children.isEmpty();
     }
 
 }
