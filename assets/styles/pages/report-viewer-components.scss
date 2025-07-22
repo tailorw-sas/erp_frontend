@@ -1,0 +1,960 @@
+/* ===================================================================
+   REPORT VIEWER - COMPONENT STYLES - PROFESSIONAL ENTERPRISE GRADE
+   Form fields, buttons, interactions, and component-specific styling
+   Compatible with PrimeVue + PrimeFlex + Design System
+   (DateField styles extracted - component is now autonomous)
+   =================================================================== */
+
+// ===============================
+// IMPORTS & COMPONENT VARIABLES
+// ===============================
+
+@import '../../../node_modules/primeflex/primeflex.scss';
+@import '../variables';
+
+// Component-specific variables
+$report-viewer-field-height: 2.75rem;
+$report-viewer-field-height-mobile: 3rem;
+
+// Status colors
+$status-loading: #3b82f6 !default;
+$status-success: $success-color;
+$status-warning: $warning-color;
+$status-error: $error-color;
+
+// ===============================
+// COMPONENT MIXINS
+// ===============================
+
+@mixin format-option {
+  padding: $spacing-lg;
+  border: 2px solid $gray-200;
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: $transition;
+  background: white;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover {
+    border-color: $primary-color;
+    background: $gray-50;
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &--selected {
+    border-color: $primary-color;
+    background: linear-gradient(135deg, $primary-light 0%, rgba(255,255,255,0.95) 100%);
+    box-shadow: 0 4px 20px rgba(71, 85, 105, 0.2);
+    transform: translateY(-1px);
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      background: $primary-color;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+}
+
+@mixin progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  
+  .p-progressspinner {
+    width: 24px !important;
+    height: 24px !important;
+    
+    .p-progressspinner-circle {
+      stroke: $primary-color;
+      stroke-width: 3;
+    }
+  }
+}
+
+// ===============================
+// COMPONENT STYLES
+// ===============================
+
+.report-viewer {
+  
+  // ===============================
+  // CSS VARIABLES FOR ENHANCED FORMS
+  // ===============================
+  
+  --enhanced-form-field-height: #{$report-viewer-field-height};
+  --enhanced-form-field-height-mobile: #{$report-viewer-field-height-mobile};
+  --enhanced-form-field-height-compact: 2.25rem;
+  --enhanced-form-font-size-compact: #{$font-size-small};
+  --enhanced-form-border-radius: #{$border-radius-lg};
+  --enhanced-form-border-radius-small: #{$border-radius};
+  --enhanced-form-border-width: 2px;
+  --enhanced-form-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --enhanced-form-transition-fast: all 0.15s ease;
+  --enhanced-form-shadow: #{$shadow-sm};
+  --enhanced-form-shadow-lg: #{$shadow-lg};
+  --enhanced-form-focus-border: #{$primary-color};
+  --enhanced-form-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --enhanced-form-error-border: #{$error-color};
+  --enhanced-form-error-shadow: 0 0 0 1px #{$error-color};
+  --enhanced-form-error-shadow-hover: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  
+  // ===============================
+  // STATUS PROGRESS COMPONENTS
+  // ===============================
+  
+  &__status {
+    &-progress {
+      @include progress-indicator;
+      
+      &-details {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-xs;
+        min-width: 140px;
+      }
+      
+      &-text {
+        font-size: $font-size-tiny;
+        color: $gray-600;
+        text-align: center;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+  
+  // ===============================
+  // 🎯 ENHANCED FORMS - ENTERPRISE PROFESSIONAL LEVEL
+  // ===============================
+  
+  &__parameters-content {
+    
+    // ===============================
+    // ESTRUCTURA UNIFICADA - TODOS LOS COMPONENTES USAN BaseField
+    // ===============================
+    .form-field {
+      margin-bottom: 0 !important;
+      
+      .form-field__label {
+        display: block !important;
+        font-weight: 600 !important;
+        color: $gray-800 !important;
+        margin: 0 0 0.375rem 0 !important; // 6px exactos - UNIFICADO TOTAL
+        padding: 0 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.4 !important;
+        
+        // Required indicator
+        &::after {
+          content: ' *' !important;
+          color: $error-color !important;
+          font-weight: bold !important;
+          margin-left: 0.125rem !important;
+          display: none !important; // Hidden by default
+        }
+        
+        // Show asterisk only when field is required
+        .form-field[required="true"] &::after,
+        .form-field--required &::after {
+          display: inline !important;
+        }
+      }
+      
+      .form-field__input-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        
+        .form-field__input-wrapper {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+      }
+    }
+    
+    // DEEP SELECTORS para máxima compatibilidad
+    :deep(.form-field) {
+      margin-bottom: 0 !important;
+      
+      .form-field__label {
+        margin: 0 0 0.375rem 0 !important;
+        padding: 0 !important;
+        font-weight: 600 !important;
+        color: $gray-800 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.4 !important;
+      }
+    }
+    
+    :deep(.form-field__label) {
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
+      padding: 0 !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+    }
+    
+    // GRID SPACING OPTIMIZADO
+    .grid {
+      margin: 0 !important;
+      row-gap: 1.25rem !important; // Compensado para el spacing reducido
+      column-gap: 1rem !important;
+    }
+    
+    // ELIMINAR MARGINS EXTRA DE CONTAINERS
+    > .col-12,
+    > div,
+    .col-12 {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+      
+      &:last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+    
+    // ===============================
+    // 🎯 ENHANCED FORM FIELDS - ENTERPRISE LEVEL
+    // ===============================
+    
+    // CONTAINER STYLING
+    :deep(.col-12) {
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+    
+    // UNIVERSAL FIELD SIZING
+    :deep(.p-inputtext),
+    :deep(.p-inputnumber),
+    :deep(.p-password) {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      height: var(--enhanced-form-field-height) !important;
+      min-height: var(--enhanced-form-field-height) !important;
+    }
+    
+    // ===============================
+    // UNIVERSAL FORM LABELS - BEAUTIFUL UX
+    // ===============================
+    :deep(.form-field__label) {
+      font-weight: 600 !important;
+      color: $gray-800 !important;
+      margin: 0 0 0.375rem 0 !important; // SPACING UNIFORME TOTAL
+      padding: 0 !important;
+      font-size: 0.9rem !important;
+      letter-spacing: 0.02em !important;
+      line-height: 1.4 !important;
+    }
+    
+    :deep(.form-field--required .form-field__label::after) {
+      content: ' *' !important;
+      color: $error-color !important;
+      font-weight: bold !important;
+      margin-left: 0.125rem !important;
+    }
+    
+    // WRAPPER CONTAINERS
+    :deep(.form-field__input-container),
+    :deep(.form-field__input-wrapper) {
+      width: 100% !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+    }
+    
+    // FOCUS STATES
+    :deep(.form-field:focus-within) {
+      animation: field-focus 0.3s ease-out !important;
+    }
+  }
+  
+  // ===============================
+  // 📝 LOCAL SELECT FIELD STYLES - SIMPLIFICADO
+  // ===============================
+  
+  .local-select-field {
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    animation: fadeInUp 0.3s ease-out !important;
+    
+    // SOLO PARA COMPATIBILIDAD LEGACY
+    // (El nuevo SelectField usa BaseField y no necesita estos estilos)
+    
+    .form-field__input-wrapper {
+      width: 100% !important;
+      position: relative !important;
+      display: flex !important;
+      align-items: stretch !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .form-field__error-messages {
+      margin-top: 0.5rem !important;
+      
+      .form-field__error-message {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.375rem !important;
+        color: $error-color !important;
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.25rem !important;
+        
+        &:last-child {
+          margin-bottom: 0 !important;
+        }
+        
+        .pi {
+          font-size: 0.875rem !important;
+          flex-shrink: 0 !important;
+        }
+      }
+    }
+  }
+  
+  // ===============================
+  // FORMAT OPTIONS COMPONENTS
+  // ===============================
+  
+  &__format {
+    &-option {
+      @include format-option;
+      
+      &-header {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        margin-bottom: $spacing-sm;
+        
+        i {
+          font-size: $font-size-lg;
+        }
+      }
+      
+      &-name {
+        font-weight: $font-weight-bold;
+        color: $gray-900;
+        font-size: $font-size-base;
+      }
+      
+      &-description {
+        margin: 0;
+        font-size: $font-size-small;
+        color: $gray-600;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  // ===============================
+  // BUTTON COMPONENTS
+  // ===============================
+  
+  &__generate-btn {
+    @include button-base;
+    width: 100%;
+    height: $report-viewer-field-height !important;
+    min-height: $report-viewer-field-height !important;
+    background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: $font-weight-bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: $spacing-md;
+    border-radius: $border-radius-lg !important;
+    box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3) !important;
+    transition: $transition-slow !important;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, $primary-hover 0%, $gray-800 100%) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: $shadow-xl !important;
+      
+      &::before {
+        left: 100%;
+      }
+    }
+    
+    &:active {
+      transform: translateY(1px) !important;
+    }
+    
+    &:disabled {
+      background: linear-gradient(135deg, $gray-400, $gray-500) !important;
+      transform: none !important;
+      box-shadow: $shadow-sm !important;
+      cursor: not-allowed !important;
+      opacity: 0.7;
+    }
+  }
+  
+  // ===============================
+  // RESPONSIVE COMPONENT ADJUSTMENTS
+  // ===============================
+  
+  @media (max-width: $breakpoint-lg) {
+    --enhanced-form-field-height: 3rem;
+    
+    &__generate-btn {
+      height: 3rem !important;
+      min-height: 3rem !important;
+    }
+    
+    &__parameters-content {
+      .grid {
+        row-gap: 1.75rem !important;
+      }
+    }
+  }
+  
+  @media (max-width: $breakpoint-md) {
+    --enhanced-form-field-height: 3.25rem;
+    
+    &__generate-btn {
+      height: 3.25rem !important;
+      min-height: 3.25rem !important;
+      font-size: 1.1rem !important;
+    }
+    
+    .local-select-field {
+      .form-field__label {
+        font-size: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
+        padding: 0 !important;
+      }
+      
+      .form-field__error-message {
+        font-size: 0.9rem !important;
+        gap: 0.5rem !important;
+      }
+    }
+    
+    &__parameters-content {
+      .grid {
+        row-gap: 1.75rem !important;
+      }
+      
+      .form-field .form-field__label {
+        font-size: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
+        padding: 0 !important;
+      }
+      
+      :deep(.form-field__label) {
+        font-size: 1rem !important;
+        margin: 0 0 0.375rem 0 !important; // CONSISTENTE EN MOBILE
+        padding: 0 !important;
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    --enhanced-form-field-height: 3.5rem;
+  }
+}
+
+// ===============================
+// UTILITY CLASSES & ICONS
+// ===============================
+
+.pi-file-pdf { color: $error-color; }
+.pi-file-excel { color: $success-color; }
+.pi-table { color: #0369a1; }
+.pi-spin { animation: spin 1s linear infinite; }
+
+// ===============================
+// KEYFRAME ANIMATIONS
+// ===============================
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes field-focus {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1px) scale(1.001); }
+  100% { transform: translateY(-1px) scale(1); }
+}
+
+// ===============================
+// ANIMATION APPLICATIONS
+// ===============================
+
+.report-viewer__parameters,
+.report-viewer__preview {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.report-viewer__generate-btn {
+  position: relative !important;
+  overflow: hidden !important;
+  
+  &::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+    transition: left 0.5s ease !important;
+  }
+  
+  &:hover:not(:disabled)::before {
+    left: 100% !important;
+  }
+  
+  &:active {
+    transform: translateY(1px) !important;
+  }
+}
+
+// ===============================
+// ACCESSIBILITY ENHANCEMENTS
+// ===============================
+
+.report-viewer {
+  :deep(*:focus) {
+    outline: 2px solid rgba($primary-color, 0.5) !important;
+    outline-offset: 2px !important;
+  }
+  
+  @media (prefers-contrast: high) {
+    --enhanced-form-border-width: 3px;
+  }
+}
+
+
+// ===============================
+// 🎯 ENHANCED PROGRESS SYSTEM - ENTERPRISE LEVEL
+// ===============================
+
+.report-progress {
+  &-card {
+    @include card-base;
+    padding: $spacing-xl;
+    margin-bottom: $spacing-lg;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    border-radius: $border-radius-xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $primary-color 0%, $success-color 50%, $primary-color 100%);
+      animation: progress-shimmer 2s linear infinite;
+    }
+  }
+  
+  &-header {
+    @extend .flex, .align-items-center, .justify-content-between;
+    margin-bottom: $spacing-lg;
+    
+    h4 {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $gray-900;
+      @extend .flex, .align-items-center;
+      gap: $spacing-sm;
+      
+      .pi {
+        color: $primary-color;
+        animation: pulse 2s ease-in-out infinite;
+      }
+    }
+    
+    .elapsed-time {
+      font-size: $font-size-base;
+      color: $gray-600;
+      background: $gray-100;
+      padding: $spacing-sm $spacing-md;
+      border-radius: $border-radius;
+      font-weight: $font-weight-semibold;
+      border: 1px solid $gray-200;
+    }
+  }
+  
+  &-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-md;
+    margin-bottom: $spacing-xl;
+    
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+      gap: $spacing-sm;
+    }
+  }
+  
+  &-step {
+    @extend .flex, .flex-column, .align-items-center;
+    text-align: center;
+    padding: $spacing-lg $spacing-md;
+    border-radius: $border-radius-lg;
+    background: $gray-50;
+    border: 2px solid $gray-200;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: calc(-#{$spacing-md} - 1px);
+      width: $spacing-md;
+      height: 2px;
+      background: $gray-300;
+      z-index: 1;
+      
+      @media (max-width: $breakpoint-md) {
+        display: none;
+      }
+    }
+    
+    &:last-child::after {
+      display: none;
+    }
+    
+    &-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      @extend .flex, .align-items-center, .justify-content-center;
+      font-size: $font-size-xl;
+      margin-bottom: $spacing-sm;
+      background: $gray-200;
+      color: $gray-500;
+      transition: all 0.3s ease;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+    }
+    
+    &-title {
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+      color: $gray-700;
+      margin: 0;
+      transition: color 0.3s ease;
+    }
+    
+    &-subtitle {
+      font-size: $font-size-small;
+      color: $gray-500;
+      margin: $spacing-xs 0 0 0;
+      transition: color 0.3s ease;
+    }
+    
+    // States
+    &--active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+      border-color: $primary-color;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+      
+      .report-progress-step-icon {
+        background: $primary-color;
+        color: white;
+        animation: bounce 1.5s ease-in-out infinite;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      .report-progress-step-title {
+        color: $primary-color;
+      }
+      
+      .report-progress-step-subtitle {
+        color: $gray-600;
+      }
+      
+      &::after {
+        background: $primary-color;
+      }
+    }
+    
+    &--completed {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+      border-color: $success-color;
+      
+      .report-progress-step-icon {
+        background: $success-color;
+        color: white;
+        
+        &::before {
+          opacity: 1;
+        }
+      }
+      
+      .report-progress-step-title {
+        color: $success-color;
+      }
+      
+      &::after {
+        background: $success-color;
+      }
+    }
+  }
+  
+  &-bar {
+    &-section {
+      margin-bottom: $spacing-lg;
+    }
+    
+    &-wrapper {
+      position: relative;
+      height: 12px;
+      background: $gray-200;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: $spacing-md;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0) 0%, 
+          rgba(255, 255, 255, 0.3) 50%, 
+          rgba(255, 255, 255, 0) 100%);
+        animation: progress-shine 2s linear infinite;
+      }
+    }
+    
+    &-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $primary-color 0%, $success-color 100%);
+      border-radius: 6px;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+        animation: progress-pulse 1.5s ease-in-out infinite;
+      }
+    }
+    
+    &-details {
+      @extend .flex, .align-items-center, .justify-content-between;
+      
+      .progress-message {
+        font-size: $font-size-base;
+        color: $gray-700;
+        font-weight: $font-weight-medium;
+        @extend .flex, .align-items-center;
+        gap: $spacing-sm;
+        
+        .pi {
+          color: $primary-color;
+          animation: spin 1s linear infinite;
+        }
+      }
+      
+      .progress-percentage {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-bold;
+        color: $primary-color;
+        background: linear-gradient(135deg, $primary-color, $success-color);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: $spacing-md;
+      margin-top: $spacing-md;
+      
+      .stat-item {
+        text-align: center;
+        padding: $spacing-md;
+        background: $gray-50;
+        border-radius: $border-radius;
+        border: 1px solid $gray-200;
+        
+        .stat-value {
+          display: block;
+          font-size: $font-size-lg;
+          font-weight: $font-weight-bold;
+          color: $gray-900;
+          margin-bottom: $spacing-xs;
+        }
+        
+        .stat-label {
+          font-size: $font-size-small;
+          color: $gray-600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+  
+  &-actions {
+    @extend .flex, .align-items-center, .justify-content-center;
+    gap: $spacing-md;
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $gray-200;
+    
+    .p-button {
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+// ===============================
+// PROGRESS ANIMATIONS
+// ===============================
+
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes progress-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes progress-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translate3d(0, 0, 0); }
+  40%, 43% { transform: translate3d(0, -8px, 0); }
+  70% { transform: translate3d(0, -4px, 0); }
+  90% { transform: translate3d(0, -2px, 0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+// ===============================
+// ERROR/SUCCESS STATES
+// ===============================
+
+.report-progress-card {
+  &--error {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(220, 38, 38, 0.2);
+    
+    &::before {
+      background: $error-color;
+      animation: none;
+    }
+    
+    .report-progress-step--active .report-progress-step-icon {
+      background: $error-color;
+    }
+  }
+  
+  &--success {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.02) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(5, 150, 105, 0.2);
+    
+    &::before {
+      background: $success-color;
+      animation: none;
+    }
+  }
+}

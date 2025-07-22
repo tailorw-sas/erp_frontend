@@ -12,8 +12,6 @@ import type { GenericObject } from '~/types'
 import DialogPaymentDetailForm from '~/components/payment/DialogPaymentDetailForm.vue'
 import PaymentAttachmentDialog, { type FileObject } from '~/components/payment/PaymentAttachmentDialog.vue'
 import type { TransactionItem } from '~/components/payment/interfaces'
-import { generateStyledPDF } from '~/components/payment/utils'
-import ImportDetail from '~/pages/payment/import-detail.vue'
 import { copyListFromColumns } from '~/pages/payment/utils/clipboardUtilsList'
 import { copyTableToClipboard } from '~/pages/payment/utils/clipboardUtils'
 
@@ -50,7 +48,6 @@ const disabledBtnDelete = ref(true)
 const isExistPaymentDetail = ref(false)
 
 const forceSave = ref(false)
-const submitEvent = new Event('')
 const paymentSourceList = ref<any[]>([])
 const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
@@ -69,7 +66,6 @@ const showReverseTransaction = ref(false)
 const showCanceledDetails = ref(false)
 
 const showImportModal = ref(false)
-const loadingReverseTransaction = ref(false)
 
 const isApplyPaymentFromTheForm = ref(false)
 const payloadToApplyPayment = ref<GenericObject> ({
@@ -78,13 +74,6 @@ const payloadToApplyPayment = ref<GenericObject> ({
   amount: 0,
   invoiceNo: '',
 })
-
-const payloadToApplyPaymentTemp = {
-  applyPayment: false,
-  booking: '',
-  amount: 0,
-  invoiceNo: '',
-}
 
 interface SubTotals {
   depositAmount: number
@@ -122,7 +111,7 @@ const allMenuListItems = ref([
     label: 'Apply Deposit',
     icon: 'pi pi-dollar',
     iconSvg: '',
-    command: ($event: any) => openModalWithContentMenu($event),
+    command: () => openModalWithContentMenu(),
     disabled: true,
     visible: true,
   },
@@ -158,7 +147,7 @@ const allMenuListItems = ref([
     label: 'Navigate to Invoice',
     icon: 'pi pi-cog',
     iconSvg: '',
-    command: ($event: any) => navigateToInvoice($event),
+    command: () => navigateToInvoice(),
     disabled: true,
     visible: true,
   },
@@ -167,7 +156,7 @@ const allMenuListItems = ref([
     label: 'Print as Credit Note',
     icon: 'pi pi-print',
     iconSvg: '',
-    command: ($event: any) => {},
+    command: () => {},
     disabled: true,
     visible: false,
   },
@@ -176,7 +165,7 @@ const allMenuListItems = ref([
     label: 'Task',
     icon: '',
     iconSvg: 'M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z',
-    command: ($event: any) => {},
+    command: () => {},
     disabled: true,
     visible: false,
   },
@@ -232,7 +221,6 @@ const sClassMap: IStatusClass[] = [
 // History
 const openDialogHistory = ref(false)
 const historyList = ref<any[]>([])
-const employeeList = ref<any[]>([])
 const historyColumns = ref<IColumn[]>([
   { field: 'paymentHistoryId', header: 'Id', type: 'text', width: '90px', sortable: false, showFilter: false },
   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '90px', sortable: false, showFilter: false },
@@ -334,11 +322,6 @@ const itemTempPrint = ref<GenericObject>({
 const confApi = reactive({
   moduleApi: 'payment',
   uriApi: 'payment',
-})
-
-const confApiPaymentDetailUndoApplication = reactive({
-  moduleApi: 'payment',
-  uriApi: 'payment-detail/undo-application',
 })
 
 const confApiPaymentDetailReverseTransaction = reactive({
@@ -910,7 +893,7 @@ function clearFormDetailsForEdit() {
   actionOfModal.value = 'new-detail'
 }
 
-function openModalWithContentMenu($event) {
+function openModalWithContentMenu() {
   if (!isObjectEmpty(objItemSelectedForRightClick.value)) {
     openDialogPaymentDetailsByAction(objItemSelectedForRightClick.value.id, 'apply-deposit')
   }
@@ -1147,7 +1130,7 @@ async function goToList() {
   }
 }
 
-function navigateToInvoice($event: any) {
+function navigateToInvoice() {
   if (objItemSelectedForRightClickNavigateToInvoice.value?.transactionType?.cash) {
     if (objItemSelectedForRightClickNavigateToInvoice.value?.manageBooking.invoice?.id) {
       const url = `/invoice/edit/${objItemSelectedForRightClickNavigateToInvoice.value.manageBooking.invoice.id}`
@@ -1354,7 +1337,6 @@ async function getItemById(id: string) {
       identified,
       notIdentified,
       remark,
-      existDetails,
       client,
       agency,
       hotel,
@@ -1422,7 +1404,7 @@ async function getItemById(id: string) {
     // Llamar `getListPaymentDetail()` solo si es necesario
     // if (existDetails) { getListPaymentDetail() } // Sin await
   }
-  catch (error) {
+  catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Account type methods could not be loaded', life: 3000 })
   }
   finally {
@@ -1836,20 +1818,6 @@ async function saveAndReload(item: { [key: string]: any }) {
   }
 }
 
-function requireConfirmationToSave(item: any) {
-  confirm.require({
-    target: submitEvent.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: async () => {
-      await saveItem(item)
-    },
-    reject: () => {}
-  })
-}
 function requireConfirmationToDelete(event: any) {
   confirm.require({
     target: event.currentTarget,
@@ -2076,35 +2044,6 @@ async function getAttachmentStatusList(moduleApi: string, uriApi: string, queryO
   attachmentStatusList.value = await getDataList<DataListItemForAttachmentStatus, ListItemForAttachmentStatus>(moduleApi, uriApi, filter, queryObj, mapFunctionForAttachmentStatusList, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
 }
 
-interface DataListItemEmployee {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-}
-
-interface ListItemEmployee {
-  id: string
-  name: string
-  status: boolean | string
-}
-
-function mapFunctionEmployee(data: DataListItemEmployee): ListItemEmployee {
-  return {
-    id: data.id,
-    name: `${data.firstName} ${data.lastName}`,
-    status: 'Active'
-  }
-}
-
-async function getEmployeeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  employeeList.value = await getDataList<DataListItemEmployee, ListItemEmployee>(moduleApi, uriApi, filter, queryObj, mapFunctionEmployee)
-  const columnEmployee = historyColumns.value.find(item => item.field === 'employee')
-  if (columnEmployee) {
-    columnEmployee.localItems = [...JSON.parse(JSON.stringify(employeeList.value))]
-  }
-}
-
 // Attachments
 function handleAttachmentDialogOpen() {
   attachmentDialogOpen.value = true
@@ -2245,44 +2184,7 @@ async function handleSave(event: any) {
   }
 }
 
-function undoApplication(event: any) {
-  confirm.require({
-    message: 'Are you sure you want to revert the payment application?',
-    header: 'Question',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-danger p-button-outlined',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      applyUndoApplication(event)
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
-    }
-  })
-}
-
-async function applyUndoApplication(event: any) {
-  try {
-    if (objItemSelectedForRightClickUndoApplication.value?.id) {
-      const payload = {
-        paymentDetail: objItemSelectedForRightClickUndoApplication.value?.id || '',
-        employee: userData?.value?.user?.userId || ''
-      }
-      await GenericService.create(confApiPaymentDetailUndoApplication.moduleApi, confApiPaymentDetailUndoApplication.uriApi, payload)
-      if (route?.query?.id) {
-        const id = route.query.id.toString()
-        await getListPaymentDetail()
-        await getItemById(id)
-      }
-    }
-  }
-  catch (error) {
-    // console.log(error)
-  }
-}
-
-function reverseTransaction(event: any) {
+function reverseTransaction() {
   confirm.require({
     message: 'Are you sure you want to revert this transaction?',
     header: `Question | Payment Detail Id: ${objItemSelectedForRightClickReverseTransaction.value.paymentDetailId}`,
@@ -2291,7 +2193,7 @@ function reverseTransaction(event: any) {
     rejectLabel: 'Cancel',
     acceptLabel: 'Accept',
     accept: () => {
-      applyReverseTransaction(event)
+      applyReverseTransaction()
     },
     reject: () => {
       // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected the action', life: 3000 })
@@ -2299,7 +2201,7 @@ function reverseTransaction(event: any) {
   })
 }
 
-async function applyReverseTransaction(event: any) {
+async function applyReverseTransaction() {
   try {
     if (objItemSelectedForRightClickReverseTransaction.value?.id) {
       options.value.loading = true
@@ -2317,7 +2219,7 @@ async function applyReverseTransaction(event: any) {
       }
     }
   }
-  catch (error) {
+  catch {
     // console.log(error)
   }
 }
@@ -2663,82 +2565,6 @@ const filteredInvoices = computed(() => {
   )
 })
 
-async function onManualSearch() {
-  // 1. Construye tu filtro LIKE único (o varios términos con OR/AND)
-  const searchTerm = manualFilter.value.trim()
-  applyPaymentPayload.value.page = 0 // arrancas siempre en la primera página
-  applyPaymentPayload.value.filter = [
-    {
-      key: 'invoiceNo', // o el campo que quieras buscar
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'fullName', // o el campo que quieras buscar
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'invoiceId',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'bookingId',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'couponNumber',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'hotelBookingNumber',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'invoiceAmount',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    },
-    {
-      key: 'dueAmount',
-      operator: 'LIKE',
-      value: `%${searchTerm}%`,
-      logicalOperation: 'AND',
-      type: 'filterSearch'
-    }
-  ]
-
-  // 2. Pides al servidor sólo las filas que coinciden
-  const response = await GenericService.search(
-    applyPaymentOptions.value.moduleApi,
-    applyPaymentOptions.value.uriApi,
-    applyPaymentPayload.value
-  )
-
-  // 3. Actualizas tu lista (y la paginación vendrá ya acorde al total de coincidencias)
-  applyPaymentList.value = response.data
-  applyPaymentPagination.value.totalElements = response.totalElements
-  applyPaymentPagination.value.totalPages = response.totalPages
-}
-
 async function historyParseDataTableFilter(payloadFilter: any) {
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, historyColumns.value)
   if (parseFilter && parseFilter?.length > 0) {
@@ -2905,7 +2731,7 @@ async function paymentPrint(event: any) {
     document.body.removeChild(a)
     loadingPrintDetail.value = false
   }
-  catch (error) {
+  catch {
     loadingPrintDetail.value = false
     toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was failed', life: 3000 })
   }
@@ -3108,7 +2934,7 @@ async function onRowDoubleClickInDataTableApplyPayment(event: any) {
         }
       }
     }
-    catch (error) {
+    catch {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Payment could not be applied', life: 3000 })
     }
   }
@@ -3648,8 +3474,8 @@ onMounted(async () => {
                         :disabled="route?.query?.id ? false : true"
                         :binary="true"
                         :pt="{ box: { class: 'custom-checkbox' } }"
-                        @update:model-value="($event) => {
-                          getListPaymentDetail($event)
+                        @update:model-value="() => {
+                          getListPaymentDetail()
                         }"
                       />
                       <!-- :pt="{ root: { class: 'custom-checkbox' } }" -->
@@ -3662,8 +3488,8 @@ onMounted(async () => {
                         :disabled="route?.query?.id ? false : true"
                         :binary="true"
                         :pt="{ box: { class: 'custom-checkbox' } }"
-                        @update:model-value="($event) => {
-                          getListPaymentDetail($event)
+                        @update:model-value="() => {
+                          getListPaymentDetail()
                         }"
                       />
                       <label for="showCanceledDetails" class="ml-2 font-bold"> Show Canceled Details </label>

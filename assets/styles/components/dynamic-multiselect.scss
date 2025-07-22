@@ -1,0 +1,313 @@
+/* Dynamic MultiSelect Component Styles - UX Profesional */
+.dynamic-multiselect {
+  width: 100%;
+
+  &__field {
+    /* Aplicar estilos enhanced-form directamente SIN @extend */
+    min-height: var(--enhanced-form-field-height);
+    height: var(--enhanced-form-field-height);
+    transition: var(--enhanced-form-transition);
+    border-radius: var(--enhanced-form-border-radius);
+    
+    /* Específicos de multiselect */
+    :deep(.p-multiselect) {
+      width: 100%;
+      min-height: var(--enhanced-form-field-height);
+      height: var(--enhanced-form-field-height);
+      font-size: var(--enhanced-form-font-size);
+      border-radius: var(--enhanced-form-border-radius);
+      transition: var(--enhanced-form-transition);
+      border-width: var(--enhanced-form-border-width);
+    }
+
+    /* Container de labels mejorado */
+    :deep(.p-multiselect-label-container) {
+      height: calc(var(--enhanced-form-field-height) - 2px);
+      min-height: calc(var(--enhanced-form-field-height) - 2px);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      padding: 0.375rem 0.625rem;
+    }
+
+    /* Trigger styling */
+    :deep(.p-multiselect-trigger) {
+      width: var(--enhanced-form-field-height);
+      height: calc(var(--enhanced-form-field-height) - 2px);
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--surface-border);
+      border-radius: 0 var(--enhanced-form-border-radius) var(--enhanced-form-border-radius) 0;
+      transition: var(--enhanced-form-transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+
+      .p-icon {
+        color: var(--primary-color);
+        transition: var(--enhanced-form-transition);
+      }
+
+      &:hover .p-icon {
+        color: var(--primary-600);
+        transform: scale(1.1);
+      }
+    }
+
+    /* Panel styling */
+    :deep(.p-multiselect-panel) {
+      box-shadow: var(--enhanced-form-shadow-lg);
+      border-radius: var(--enhanced-form-border-radius);
+      margin-top: 0.125rem;
+      border: var(--enhanced-form-border-width) solid var(--surface-border);
+      z-index: var(--enhanced-form-dropdown-z);
+    }
+
+    /* Items del panel */
+    :deep(.p-multiselect-items) {
+      padding: 0.5rem 0;
+    }
+
+    :deep(.p-multiselect-item) {
+      padding: 0.625rem 1rem;
+      transition: var(--enhanced-form-transition-fast);
+      border-radius: 0;
+      margin: 0.125rem 0.5rem;
+
+      &:hover {
+        background: var(--surface-hover);
+        transform: translateX(2px);
+      }
+
+      &.p-highlight {
+        background: var(--primary-color);
+        color: var(--primary-color-text);
+        font-weight: 500;
+      }
+    }
+
+    /* Estados de validación */
+    &.p-invalid {
+      :deep(.p-multiselect) {
+        border-color: var(--enhanced-form-error-border);
+        box-shadow: var(--enhanced-form-error-shadow);
+
+        &:focus,
+        &:focus-within {
+          box-shadow: var(--enhanced-form-error-shadow-hover);
+        }
+      }
+
+      :deep(.p-multiselect-trigger .p-icon) {
+        color: var(--enhanced-form-error-border);
+      }
+    }
+
+    /* Estado disabled */
+    &.p-disabled {
+      opacity: 0.6;
+      pointer-events: none;
+      background: var(--surface-100);
+
+      :deep(.p-multiselect-trigger .p-icon) {
+        color: var(--surface-400);
+      }
+    }
+
+    /* Estado focus */
+    &:focus-within {
+      :deep(.p-multiselect) {
+        border-color: var(--enhanced-form-focus-border);
+        box-shadow: var(--enhanced-form-focus-shadow);
+      }
+
+      :deep(.p-multiselect-trigger .p-icon) {
+        color: var(--primary-600);
+      }
+    }
+
+    /* Loading state */
+    &.p-multiselect-loading {
+      :deep(.p-multiselect-trigger .p-icon) {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+
+  /* Value container profesional */
+  &__value-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  /* Chip styling profesional */
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    height: var(--enhanced-form-chip-height);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--enhanced-form-chip-border-radius);
+    font-size: var(--enhanced-form-chip-font-size);
+    font-weight: 500;
+    max-width: 12rem;
+    transition: var(--enhanced-form-transition);
+    background: var(--enhanced-form-chip-bg);
+    color: var(--enhanced-form-chip-color);
+    border: 1px solid transparent;
+
+    &:hover {
+      background: var(--primary-200);
+      transform: translateY(-1px);
+      box-shadow: var(--enhanced-form-shadow);
+    }
+
+    &--counter {
+      background: var(--surface-400);
+      color: var(--surface-0);
+      font-weight: 600;
+      min-width: 2.5rem;
+      justify-content: center;
+      max-width: none;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  /* Chip label */
+  &__chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 8rem;
+    color: inherit;
+  }
+
+  /* Chip remove button */
+  &__chip-remove {
+    margin-left: 0.375rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    width: 1rem;
+    height: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: inherit;
+    transition: var(--enhanced-form-transition);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.2);
+    }
+  }
+
+  /* Option styling */
+  &__option {
+    padding: 0.75rem 1rem;
+    transition: var(--enhanced-form-transition-fast);
+    border-radius: var(--enhanced-form-border-radius-small);
+    margin: 0.125rem 0.5rem;
+
+    &:hover {
+      background: var(--surface-hover);
+      transform: translateX(2px);
+    }
+
+    &--inactive {
+      color: var(--red-500);
+      opacity: 0.7;
+      font-style: italic;
+    }
+  }
+
+  /* Modo compact automático */
+  .enhanced-form--compact & {
+    &__field {
+      min-height: var(--enhanced-form-field-height-compact);
+      height: var(--enhanced-form-field-height-compact);
+
+      :deep(.p-multiselect) {
+        min-height: var(--enhanced-form-field-height-compact);
+        height: var(--enhanced-form-field-height-compact);
+        font-size: var(--enhanced-form-font-size-compact);
+      }
+
+      :deep(.p-multiselect-label-container) {
+        height: calc(var(--enhanced-form-field-height-compact) - 2px);
+        min-height: calc(var(--enhanced-form-field-height-compact) - 2px);
+        padding: 0.25rem 0.5rem;
+      }
+
+      :deep(.p-multiselect-trigger) {
+        width: var(--enhanced-form-field-height-compact);
+        height: calc(var(--enhanced-form-field-height-compact) - 2px);
+      }
+    }
+
+    &__chip {
+      height: var(--enhanced-form-chip-height-compact);
+      padding: 0.125rem 0.375rem;
+      font-size: var(--enhanced-form-chip-font-size-compact);
+      max-width: 8rem;
+    }
+
+    &__chip-label {
+      max-width: 6rem;
+    }
+  }
+
+  /* Mobile responsive */
+  @media screen and (max-width: 768px) {
+    &__field {
+      :deep(.p-multiselect) {
+        min-height: var(--enhanced-form-field-height-mobile);
+        height: var(--enhanced-form-field-height-mobile);
+        font-size: var(--enhanced-form-font-size-compact);
+      }
+
+      :deep(.p-multiselect-label-container) {
+        height: calc(var(--enhanced-form-field-height-mobile) - 2px);
+        min-height: calc(var(--enhanced-form-field-height-mobile) - 2px);
+      }
+
+      :deep(.p-multiselect-trigger) {
+        width: var(--enhanced-form-field-height-mobile);
+        height: calc(var(--enhanced-form-field-height-mobile) - 2px);
+      }
+    }
+
+    &__chip {
+      max-width: 8rem;
+      font-size: var(--enhanced-form-font-size-compact);
+    }
+
+    &__chip-label {
+      max-width: 6rem;
+    }
+  }
+}
+
+/* Pulse animation for counter */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Loading animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
