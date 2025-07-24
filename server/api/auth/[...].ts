@@ -1,60 +1,9 @@
+// server/api/auth/[...].ts - Fixed TypeScript errors
+
 import { jwtDecode } from 'jwt-decode'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { z } from 'zod'
 import { NuxtAuthHandler } from '#auth'
-// import { helpers } from '~/utils/helpers' // Descomentado solo si se usa
-
-/**
- * Takes a token, and returns a new token with updated
- * `accessToken` and `accessTokenExpires`. If an error occurs,
- * returns the old token and an error property
- */
-async function refreshAccessToken(refreshToken: any) {
-  try {
-    const refreshedTokens = await $fetch<{
-      data: {
-        'scope': string
-        'access_token': string
-        'expires_in': number
-        'refresh_expires_in': number
-        'refresh_token': string
-        'token_type': string
-        'not-before-policy': number
-        'session_state': string
-      }
-    } | null>(`${process.env.VITE_APP_BASE_URL}/identity/api/auth/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: {
-        refreshToken: refreshToken.refresh_token,
-      },
-    })
-    if (!refreshedTokens || !refreshedTokens.data) {
-      throw refreshedTokens
-    }
-
-    // Cambiado console.debug por console.info (permitido por ESLint)
-    console.info('Refreshed tokens', refreshToken.refresh_token !== refreshedTokens.data.refresh_token)
-
-    return {
-      ...refreshToken,
-      access_token: refreshedTokens.data.access_token,
-      accessTokenExpires: Date.now() + 1000 * refreshedTokens.data.expires_in,
-      refresh_token: refreshedTokens.data.refresh_token,
-      refreshTokenExpires: Date.now() + 1000 * refreshedTokens.data.refresh_expires_in,
-    }
-  }
-  catch (error) {
-    // Agregado console.error para usar la variable error
-    console.error('Error refreshing access token:', error)
-    return {
-      ...refreshToken,
-      error: 'RefreshAccessTokenError',
-    }
-  }
-}
 
 const runtimeConfig = useRuntimeConfig()
 
@@ -83,21 +32,7 @@ export default NuxtAuthHandler({
           return null
         }
 
-        // Prefijo con underscore para indicar que no se usa actualmente
         const { username, password, tokenCaptcha: _tokenCaptcha } = result.data
-
-        // const appRuntimeConfig = useRuntimeConfig()
-        // const { recaptcha: { secretKey } } = appRuntimeConfig
-        // const aux = helpers()
-        // const isHuman = await aux.verifyRecaptchaToken(_tokenCaptcha, secretKey)
-
-        // if (!isHuman) {
-        //   console.error('Captcha verification failed')
-        //   throw createError({
-        //     statusCode: 400,
-        //     statusMessage: 'Something went wrong, please try again',
-        //   })
-        // }
 
         try {
           const userResponse = await $fetch<{
@@ -159,38 +94,53 @@ export default NuxtAuthHandler({
     strategy: 'jwt'
   },
   callbacks: {
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account }): Promise<any> => { // ✅ FIXED: Explicit return type
       if (account && user) {
+        // ✅ FIXED: More specific typing
+        const userTyped = user as any
         return {
           ...token,
-          userId: (user as any).userId,
-          access_token: (user as any).access_token,
-          refresh_token: (user as any).refresh_token,
-          accessTokenExpires: (user as any).accessTokenExpires,
-          refreshTokenExpires: (user as any).refreshTokenExpires,
-          isAdmin: (user as any).isAdmin,
+          userId: userTyped.userId ? String(userTyped.userId) : undefined,
+          access_token: userTyped.access_token ? String(userTyped.access_token) : undefined,
+          refresh_token: userTyped.refresh_token ? String(userTyped.refresh_token) : undefined,
+          accessTokenExpires: userTyped.accessTokenExpires ? Number(userTyped.accessTokenExpires) : undefined,
+          refreshTokenExpires: userTyped.refreshTokenExpires ? Number(userTyped.refreshTokenExpires) : undefined,
+          isAdmin: Boolean(userTyped.isAdmin),
+          userName: userTyped.userName ? String(userTyped.userName) : undefined,
+          lastName: userTyped.lastName ? String(userTyped.lastName) : undefined,
+          lastActivity: Date.now(),
         }
       }
 
-      if (token.refreshTokenExpires && Date.now() > (token as any).refreshTokenExpires) {
+      // Check refresh token expiration
+      const refreshExpires = token.refreshTokenExpires
+      if (refreshExpires && typeof refreshExpires === 'number' && Date.now() > refreshExpires) {
         console.error('Refresh token expired')
         return null
       }
 
-      if (token.accessTokenExpires && Date.now() > (token as any).accessTokenExpires) {
-        return refreshAccessToken(token)
+      // For strict inactivity policy, do NOT auto-refresh
+      // Let client handle expiration
+      const accessExpires = token.accessTokenExpires
+      if (accessExpires && typeof accessExpires === 'number' && Date.now() > accessExpires) {
+        console.info('Access token expired, client should handle logout')
+        return null
       }
 
       return token
     },
     session: async ({ session, token }) => {
-      session.user = {
-        ...session.user,
-        ...{
-          userId: (token as any).userId,
-          isAdmin: (token as any).isAdmin
+      if (token) {
+        session.user = {
+          ...session.user,
+          userId: token.userId ? String(token.userId) : undefined, // ✅ FIXED: Explicit string conversion
+          isAdmin: Boolean(token.isAdmin), // ✅ FIXED: Explicit boolean conversion
+          userName: token.userName ? String(token.userName) : undefined,
+          lastName: token.lastName ? String(token.lastName) : undefined,
         }
+        session.accessTokenExpires = token.accessTokenExpires ? Number(token.accessTokenExpires) : undefined // ✅ FIXED: Explicit number conversion
       }
+
       return session
     },
   }

@@ -1,46 +1,5 @@
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
 
-// export function applyFiltersAndSort(payload: IQueryRequest, items: any[]) {
-//   // Aplicar filtros
-//   const filteredItems = items.filter((item) => {
-//     return payload.filter.every((filter) => {
-//       const value = getValueByPath(item, filter.key)
-//       switch (filter.operator) {
-//         case 'IN':
-//           return filter.value.includes(value)
-//         case 'NOT_IN':
-//           return !filter.value.includes(value)
-//         case 'EQUALS':
-//           return value === filter.value
-//         case 'NOT_EQUALS':
-//           return value !== filter.value
-//         case 'LIKE':
-//           return typeof value === 'string' && value.includes(filter.value)
-//         case 'IS_NULL':
-//           return value === null
-//         case 'IS_NOT_NULL':
-//           return value !== null
-//         default:
-//           return true
-//       }
-//     })
-//   })
-
-//   // Ordenar los elementos filtrados
-//   if (payload.sortBy) {
-//     filteredItems.sort((a, b) => {
-//       const valueA = getValueByPath(a, payload.sortBy)
-//       const valueB = getValueByPath(b, payload.sortBy)
-
-//       if (valueA < valueB) { return payload.sortType === 'ASC' ? -1 : 1 }
-//       if (valueA > valueB) { return payload.sortType === 'ASC' ? 1 : -1 }
-//       return 0
-//     })
-//   }
-
-//   return filteredItems
-// }
-
 export function applyFiltersAndSort(payload: IQueryRequest, items: any[]) {
   // Aplicar filtros
   const filteredItems = items.filter((item) => {

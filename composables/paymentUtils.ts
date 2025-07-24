@@ -1,9 +1,5 @@
 import { GenericService } from '~/services/generic-services'
-
-export interface IQueryToSearch {
-  query: string
-  keys: string[]
-}
+import type { IQueryToSearch } from '~/components/table/interfaces/ITableInterfaces'
 
 export interface IQueryToSort {
   query?: string

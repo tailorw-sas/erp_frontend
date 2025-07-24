@@ -1,4 +1,5 @@
 import type { CALENDAR_MODE } from '~/utils/Enums'
+import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 
 export interface IColumn {
   field: string
@@ -28,9 +29,7 @@ export interface IColumn {
     filter?: IFilter[]
     sortOption?: ISortOptions
   }
-  filter?: {
-    // Define aquí los campos de filtro según tu necesidad
-  }[]
+  filter?: IFilter[]
   localItems?: {
     id: string
     name: string
@@ -51,29 +50,73 @@ export interface IProps {
   maxDate?: Date
 }
 export interface PrintItem {
-  invoiceId: string;
-  invoiceAmount: string;
-  dueAmount: string;
-  loadingEdit: boolean;
-  loadingDelete: boolean;
-  agencyCd: string;
-  hasAttachments: boolean;
-  aging: number;
-  dueAmountFormatted: string;
-  invoiceAmountFormatted: string;
-  invoiceNumber: string;
+  invoiceId: string
+  invoiceAmount: string
+  dueAmount: string
+  loadingEdit: boolean
+  loadingDelete: boolean
+  agencyCd: string
+  hasAttachments: boolean
+  aging: number
+  dueAmountFormatted: string
+  invoiceAmountFormatted: string
+  invoiceNumber: string
   hotel: {
-    code: string;
-    name: string;
-  };
+    code: string
+    name: string
+  }
   manageInvoiceType: {
-    code: string;
-    name: string;
-  };
+    code: string
+    name: string
+  }
 }
-interface Item {
-  id: number; // Ajusta según la estructura de tus datos
-  name: string;
+
+export interface IColumnIconSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IColumnStatusSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IColumnTextSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IColumnSelectSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IColumnDateSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IColumnSlotProps {
+  data: any
+  column: IColumn
+}
+
+export interface IEditableSlotProps {
+  data: any
+  field: string
+  column: IColumn
+  onCellEditComplete: (event: any, data: any) => void
+  item: { // Agregar esta propiedad que faltaba
+    data: any
+    field: string
+    column: IColumn
+    onCellEditComplete: (event: any, data: any) => void
+  }
+}
+
+export interface IQueryToSearch {
+  query: string
+  keys: string[]
 }
 
 export interface IPagination {
@@ -83,7 +126,6 @@ export interface IPagination {
   totalPages: number
   search: string
 }
-
 
 declare global {
   interface GlobalComponents {
@@ -96,36 +138,21 @@ declare module '@vue/runtime-core' {
     totalItemsCount: Ref<number>
   }
 }
-interface PrintPayload {
-  invoiceIds: string[];
-  invoiceType: string[];
-  groupByClient: boolean;
-  metadata?: {
-    requestDate: string;
-    [key: string]: any;
-  }
-  
-}export interface IFilter {
-  key: string;
-  operator: string;
-  value: any;
-  logicalOperation: string;
-  type: string;
-}
-export interface IQueryRequest {
-  filter: IFilter[];
-  page?: number;
-  size?: number;
-  sort?: string;
-  [key: string]: any}
 
+export interface IQueryRequest {
+  filter: IFilter[]
+  page?: number
+  size?: number
+  sort?: string
+  [key: string]: any
+}
 
 export interface SearchResponse<T = any> {
-  data: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
+  data: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
 }
 export interface InvoicePayload {
   filter: IFilter[]
