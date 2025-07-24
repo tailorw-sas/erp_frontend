@@ -21,7 +21,7 @@ export function isValidUrl(urlString: string) {
   try {
     return new URL(urlString) // Solo se usa para la validación, no se asigna
   }
-  catch (e) {
+  catch {
     return false
   }
 }
@@ -53,7 +53,7 @@ export function formatSize(bytes: number) {
 }
 
 export function toNegative(number: number | string | any) {
-  if (!number || isNaN(number)) { return 0 }
+  if (!number || Number.isNaN(number)) { return 0 }
 
   if (Number(number) < 0) {
     return Number(number)
@@ -63,7 +63,7 @@ export function toNegative(number: number | string | any) {
 }
 
 export function toPositive(number: number | string | any) {
-  if (!number || isNaN(number)) { return 0 }
+  if (!number || Number.isNaN(number)) { return 0 }
 
   if (Number(number) > 0) {
     return Number(number)
@@ -353,56 +353,9 @@ export function isValidFormatDate(value: any) {
 
     return true
   }
-  catch (error) {
+  catch {
     return false
   }
-}
-
-function formatDate(value) {
-  // Helper function to check if a date is valid
-  function isValidDate(date) {
-    return date instanceof Date && !Number.isNaN(date.getTime())
-  }
-
-  // Helper function to parse and format date
-  function parseAndFormatDate(input) {
-    let date
-
-    // Handle formats like DD/MM/YYYY
-    const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/
-    // Handle formats like YYYYMMDD or YYYYMMDDHHmmss
-    const yyyymmdd = /^(\d{4})(\d{2})(\d{2})$/
-
-    if (ddmmyyyy.test(input)) {
-      const [, day, month, year] = input.match(ddmmyyyy)
-      date = new Date(`${year}-${month}-${day}`)
-      // date = dayjs(input).format('YYYY-MM-DD')
-    }
-    else if (yyyymmdd.test(input)) {
-      const [, year, month, day] = input.match(yyyymmdd)
-      date = new Date(`${year}-${month}-${day}`)
-      // date = dayjs(input).format('YYYY-MM-DD')
-    }
-    else {
-      // For other formats or invalid formats, just return the input
-      return input
-    }
-
-    if (isValidDate(date)) {
-      // Format date to YYYY-MM-DD
-      // const yearStr = date.getFullYear()
-      // const monthStr = (date.getMonth() + 1).toString().padStart(2, '0')
-      // const dayStr = date.getDate().toString().padStart(2, '0')
-      const temp = dayjs(date).format('YYYY-MM-DD')
-      return temp
-      // return `${yearStr}-${monthStr}-${dayStr}`
-    }
-    else {
-      return input
-    }
-  }
-
-  return parseAndFormatDate(value)
 }
 
 export function formatNumber(number: any, minDecimals: number = 2, maxDecimals: number = 4) {

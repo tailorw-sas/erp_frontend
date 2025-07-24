@@ -5,11 +5,11 @@ import BlockUI from 'primevue/blockui'
 import type { DataTableFilterMeta } from 'primevue/datatable'
 import type { PageState } from 'primevue/paginator'
 import type { PropType } from 'vue'
-import { getLastDayOfMonth } from '../../utils/helpers'
 import type { IFilter, IQueryRequest, IStandardObject } from '../fields/interfaces/IFieldInterfaces'
-import type { IColumn, ISortOptions } from './interfaces/ITableInterfaces'
-import DialogDelete from './components/DialogDelete.vue'
+import type { IColumn, IColumnSlotProps, IEditableSlotProps, IQueryToSearch, ISortOptions } from './interfaces/ITableInterfaces'
 import { ENUM_OPERATOR_DATE, ENUM_OPERATOR_NUMERIC, ENUM_OPERATOR_SELECT, ENUM_OPERATOR_STRING } from './enums'
+import DialogDelete from './components/DialogDelete.vue'
+import { formatNumber, getLastDayOfMonth, removeDuplicatesMap } from '~/utils/helpers'
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 
@@ -118,17 +118,13 @@ const emits = defineEmits<{
   (e: 'onExpandRow', value: any): void
 }>()
 
+// Composables y refs
 const menu = ref()
-// const menuFilter: { [key: string]: Ref<any> } = {
-//   code: ref(null),
-//   name: ref(null),
-//   description: ref(null),
-// }
+
 type FilterDisplayMode = 'row' | 'menu' | undefined
 
 const modeFilterDisplay: Ref<FilterDisplayMode> = ref('menu')
 const menuFilter: { [key: string]: Ref<any> } = {}
-const menuFilterForRowDisplay: Ref = ref()
 const objeto: { [key: string]: any } = {}
 // Asignar el objeto a objListData y hacerlo reactivo
 const objListData = reactive(objeto)
@@ -136,13 +132,9 @@ const objListData = reactive(objeto)
 // Iteramos sobre el array de campos y añadimos las propiedades a menuFilter
 props.columns.forEach((field) => {
   menuFilter[field.field] = ref(null)
-  // if (field.type === 'select' || field.type === 'slot-select' || field.type === 'local-select') {
-  //   objListData[field.field] = []
-  // }
 })
 
 const openDialogDelete = ref(false)
-// const clickedItem = ref<IData | undefined>([])
 const clickedItem = ref<any>([])
 const expandedRows = ref({})
 const metaKey = ref(false)
@@ -157,34 +149,7 @@ const objForValues = ref<Record<string, Array<{ [key: string]: any }>>>({})
 
 const objFilterToClear = ref()
 
-const filters1 = ref(objetoFilter
-//   {
-//         search: { value: null, matchMode: FilterMatchMode.CONTAINS },
-//         moduleName: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//         action: { value: null, matchMode: FilterMatchMode.IN },
-//         'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-//         representative: { value: null, matchMode: FilterMatchMode.IN },
-//         date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-//         balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-//         status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-//         activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-//         verified: { value: null, matchMode: FilterMatchMode.EQUALS }
-//    }
-)
-// const filtersReset = reactive(objetoFilter
-// {
-// search: { value: null, matchMode: FilterMatchMode.CONTAINS },
-// moduleName: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-// action: { value: null, matchMode: FilterMatchMode.IN },
-// 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-// representative: { value: null, matchMode: FilterMatchMode.IN },
-// date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-// balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-// status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-// activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-// verified: { value: null, matchMode: FilterMatchMode.EQUALS }
-// }
-// )
+const filters1 = ref(objetoFilter)
 
 const menuItems = ref([
   {
@@ -206,11 +171,12 @@ const menuItemsDate = ref(ENUM_OPERATOR_DATE)
 const menuItemsString = ref(ENUM_OPERATOR_STRING)
 const menuItemsSelect = ref(ENUM_OPERATOR_SELECT)
 const menuItemsNumeric = ref(ENUM_OPERATOR_NUMERIC)
-// const menuItemsBoolean = ref(ENUM_OPERATOR_BOOLEAN)
 
+// Funciones del componente
 async function onRowExpand({ data }: any) {
   emits('onExpandRow', data?.id)
 }
+
 function onRowCollapse(_event: { data: { name: any } }) {
   emits('onExpandRow', '')
 }
@@ -238,14 +204,6 @@ function clearIndividualFilter(param1: string) {
 function toggleMenu(event: Event) {
   menu.value.toggle(event)
 }
-function toggleMenuFilter(event: Event, i: number | string) {
-  if (modeFilterDisplay.value === 'menu') {
-    menuFilter[i].value[0].toggle(event)
-  }
-  else {
-    menuFilterForRowDisplay.value[i].toggle(event)
-  }
-}
 
 function onEdit(item: any) {
   emits('openEditDialog', item.id)
@@ -266,12 +224,15 @@ function onSelectItem(item: any) {
     }
     else {
       if (typeof item === 'object') {
-        emits('update:clickedItem', item.id)
+        // ✅ Emitir el objeto completo, no solo el ID
+        emits('update:clickedItem', item)
+        emits('update:selectedItems', [item])
       }
     }
   }
   else {
     emits('update:clickedItem', null)
+    emits('update:selectedItems', [])
   }
 }
 
@@ -318,7 +279,7 @@ async function deleteItem(id: string, isLocal = false) {
   }
   else {
     try {
-      await GenericService.deleteItem(props.options?.moduleApi || '', props.options?.uriApi || '', id)
+      await GenericService.delete(props.options?.moduleApi || '', props.options?.uriApi || '', id)
       closeDialogDelete()
       onListItem()
     }
@@ -340,17 +301,17 @@ async function getList(
   }
 ) {
   try {
-    let listItems: any[] = [] // Cambio el tipo de elementos a any
+    let listItems: any[] = []
     if (localItems.length === 0 && objApi?.moduleApi && objApi.uriApi) {
       // Nueva lógica para evitar duplicados en el filtro
       const mappedFilters = objToSearch && objToSearch.query !== ''
         ? objToSearch.keys.map<IFilter>(key => ({
-          key,
-          operator: 'LIKE',
-          value: objToSearch.query,
-          logicalOperation: 'OR',
-          type: 'filterSearch'
-        }))
+            key,
+            operator: 'LIKE',
+            value: objToSearch.query,
+            logicalOperation: 'OR',
+            type: 'filterSearch'
+          }))
         : []
       // Eliminar filtros duplicados por clave y tipo
       const uniqueFilters = [...new Map([...mappedFilters, ...filter].map(item => [`${item.key}_${item.type}`, item])).values()]
@@ -401,11 +362,9 @@ async function getOptionsList() {
           break
         case 'select':
           filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.IN }] }
-          // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
           break
         case 'local-select':
           filters1.value[iterator.field] = { constraints: [{ value: null, matchMode: FilterMatchMode.IN }] }
-          // filters1.value[iterator.field] = { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
           break
         case 'date':
         case 'date-editable':
@@ -460,14 +419,13 @@ async function getDataFromSelectors() {
               ...item,
               name: 'code' in item ? `${item.code} - ${item.name}` : item.name
             }
-            // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
           ]
         }
       }
     }
   }
   catch (error) {
-    Logger.log(error)
+    console.error(error)
   }
 }
 
@@ -494,7 +452,6 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
           ...item,
           name: 'code' in item ? `${item.code} - ${item.name}` : item.name
         }
-        // { id: item.id, name: iterator.keyValue ? item[iterator.keyValue] : item.name, code: item.code ? item.code : '' }
       ]
     }
 
@@ -502,7 +459,7 @@ async function getDataFromFiltersSelectors(column: IColumn, objToSearch: IQueryT
   }
   catch (error) {
     objForLoadings.value[column.field] = false
-    Logger.log(error)
+    console.error(error)
   }
 }
 
@@ -559,30 +516,39 @@ function clearSelectedItems() {
   clickedItem.value = []
 }
 
-watch(() => props.data, async (_newValue) => {
+// ✅ No usar defineSlots() para evitar conflictos de tipos con slots dinámicos
+// Los slots funcionarán perfectamente sin esta definición explícita
+
+// Watchers
+watch(() => props.data, async (newValue) => {
+  // ✅ Evitar acumulación de elementos, limpiar primero
   if (props.options?.selectAllItemByDefault) {
-    clickedItem.value = [...clickedItem.value, ...props.data]
-    // Delete item duplicated
-    clickedItem.value = [...removeDuplicatesMap(clickedItem.value, ['id'])]
+    clickedItem.value = [...newValue] // Reemplazar, no acumular
   }
   else {
     if ('selectFirstItemByDefault' in props.options) {
       if (props.options?.selectFirstItemByDefault) {
-        if (props.data.length > 0 && props.options?.selectionMode !== 'multiple') {
-          clickedItem.value = props.data[0]
+        if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
+          clickedItem.value = newValue[0]
         }
       }
     }
-    // else if (newValue.length > 0 && props.options?.selectionMode !== 'multiple') {
-    //   clickedItem.value = props.data[0]
-    // }
   }
 })
 
+// ✅ Evitar loop infinito usando nextTick y una bandera
+const isUpdatingSelection = ref(false)
+
 watch(clickedItem, async (newValue) => {
+  if (isUpdatingSelection.value) { return }
+
+  isUpdatingSelection.value = true
+  await nextTick()
   onSelectItem(newValue)
+  isUpdatingSelection.value = false
 })
 
+// Lifecycle hooks
 onMounted(() => {
   getDataFromSelectors()
   if (props.options?.selectAllItemByDefault) {
@@ -600,25 +566,31 @@ onMounted(() => {
   }
 })
 
+// Initialize options
 getOptionsList()
+
+// Expose functions
 defineExpose({ clearSelectedItems })
 </script>
 
 <template>
-  <slot v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false" name="datatable-toolbar">
-    <Toolbar class="mb-4">
-      <template #start>
-        <div class="my-2">
-          <h5 class="m-0">
-            {{ options?.tableName }}
-          </h5>
-        </div>
-      </template>
-      <template #end>
-        <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
-      </template>
-    </Toolbar>
-  </slot>
+  <div v-if="props.options?.hasOwnProperty('showTitleBar') ? props.options?.showTitleBar : false">
+    <slot name="datatable-toolbar">
+      <Toolbar class="mb-4">
+        <template #start>
+          <div class="my-2">
+            <h5 class="m-0">
+              {{ options?.tableName }}
+            </h5>
+          </div>
+        </template>
+        <template #end>
+          <FileUpload mode="basic" accept="image/*" :max-file-size="1000000" label="Importar" choose-label="Importar" class="mr-2 inline-block" />
+        </template>
+      </Toolbar>
+    </slot>
+  </div>
+
   <BlockUI :blocked="options?.loading || parentComponentLoading" class="block-ui-container">
     <div
       v-if="options?.loading"
@@ -626,13 +598,13 @@ defineExpose({ clearSelectedItems })
     >
       <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
     </div>
+
     <div class="card p-0 mb-0">
-      <!-- v-model:contextMenuSelection="clickedItem" Esto estaba puesto para el conten menu del click derecho, se quito porque no hace falta y daba conflicto -->
       <DataTable
         :id="'componentTableId' in props ? props.componentTableId : ''"
         v-model:filters="filters1"
         v-model:selection="clickedItem"
-        v-model:expandedRows="expandedRows"
+        v-model:expanded-rows="expandedRows"
         context-menu
         resizable-columns
         column-resize-mode="fit"
@@ -652,7 +624,11 @@ defineExpose({ clearSelectedItems })
         edit-mode="cell"
         style="border: 0"
         @sort="onSortField"
-        @update:selection="onSelectItem"
+        @update:selection="(selection) => {
+          isUpdatingSelection = true
+          clickedItem = selection
+
+        }"
         @update:filters="onChangeFilters"
         @row-dblclick="onRowDoubleClick"
         @row-contextmenu="onRowRightClick"
@@ -663,26 +639,14 @@ defineExpose({ clearSelectedItems })
           console.log('column-resize-end', $event);
         }"
       >
-        <!-- :virtual-scroller-options="{
-        lazy: true,
-        onLazyLoad: (event) => {
-        console.log('event', event);
-
-        },
-        itemSize: 20, // Altura estimada de cada fila en píxeles
-        }" -->
-        <!-- @row-select="onRowSelect"
-        @row-unselect="onRowUnselect"
-        @row-select-all="onRowSelectAll"
-        @row-unselect-all="onRowUnselectAll" -->
         <template #loading>
-          <!-- Loading customers data. Please wait. -->
           <div class="flex flex-column flex-wrap align-items-center justify-content-center py-8">
             <span class="flex flex-column align-items-center justify-content-center">
               <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
             </span>
           </div>
         </template>
+
         <template #empty>
           <div v-if="'showCustomEmptyTable' in props?.options ? props.options.showCustomEmptyTable : false">
             <slot name="emptyTable" :data="{ messageForEmptyTable }" />
@@ -696,24 +660,27 @@ defineExpose({ clearSelectedItems })
                 <p>{{ messageForEmptyTable }}</p>
               </div>
             </span>
-          <!-- <span v-else class="flex flex-column align-items-center justify-content-center">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2.6rem" />
-          </span> -->
           </div>
         </template>
-        <!-- :show-filter-match-modes="column.type !== 'bool' " -->
+
         <Column
-          v-if="options?.selectionMode" :selection-mode="options?.selectionMode ?? undefined"
+          v-if="options?.selectionMode"
+          :selection-mode="options?.selectionMode ?? undefined"
           header-style="width: 3rem"
         />
-        <Column v-if="options?.hasOwnProperty('expandableRows') ? options?.expandableRows : false" expander style="width: 2rem">
+
+        <Column
+          v-if="options?.hasOwnProperty('expandableRows') ? options?.expandableRows : false"
+          expander
+          style="width: 2rem"
+        >
           <template #rowtogglericon="{ rowExpanded }">
             <i :class="rowExpanded ? 'pi pi-minus' : 'pi pi-plus'" style="border: 1px solid #dee2e6; padding: 2px; border-radius: 10%;" />
           </template>
         </Column>
 
         <Column
-          v-for="(column, index) in columns"
+          v-for="(column) in columns"
           :key="column.field"
           :field="column.field"
           :show-filter-match-modes="false"
@@ -721,76 +688,85 @@ defineExpose({ clearSelectedItems })
           :filter-field="column.field"
           :frozen="column.frozen"
           align-frozen="right"
-          class="custom-table-head" :class="column.columnClass"
+          class="custom-table-head"
+          :class="column.columnClass"
           :style="{
-            // width: column.type === 'image' ? '80px' : column?.width ? column?.width : 'auto',
-            // minWidth: column?.minWidth ? column?.minWidth : 'auto',
-            // display: column?.hidden ? 'none' : 'table-cell',
             maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
-            // maxWidth: '20px !important',
             height: '20px',
           }"
         >
-          <!--  :style="{ width: column?.width ? column?.width : '100%', maxWidth: column?.width ? column?.width : '100%' }" -->
           <template #header>
             <span v-tooltip="column.tooltip">{{ column.header }}</span>
           </template>
-          <template #body="{ data }">
-            <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="data" :column="column" />
-            <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="data" :column="column" />
-            <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="data" :column="column" />
-            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="data" :column="column" />
-            <slot v-if="column.type === 'slot-bagde'" :name="`column-${column.field}`" :data="data" :column="column" />
+
+          <template #body="{ data: rowData }">
+            <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+            <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+            <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+            <slot v-if="column.type === 'slot-bagde'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
             </span>
-            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
-              <span v-if="column.props?.isRange">{{ formatRangeDate(data[column.field]) }}</span>
-              <span v-else>{{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
+
+            <span v-else-if="column.type === 'date-editable'" v-tooltip.top="rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD') : 'No date'" :class="rowData[column.field] ? '' : 'font-bold p-error'" class="truncate w-full">
+              <span v-if="column.props?.isRange">{{ formatRangeDate(rowData[column.field]) }}</span>
+              <span v-else>{{ rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD') : 'No date' }}</span>
             </span>
-            <span v-else-if="column.type === 'date'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : '' }}
+
+            <span v-else-if="column.type === 'date'" v-tooltip.top="rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD') : 'No date'" :class="rowData[column.field] ? '' : 'font-bold p-error'" class="truncate">
+              {{ rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD') : '' }}
             </span>
-            <span v-else-if="column.type === 'datetime'" v-tooltip.top="data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD') : 'No date'" :class="data[column.field] ? '' : 'font-bold p-error'" class="truncate">
-              {{ data[column.field] ? dayjs(data[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
+
+            <span v-else-if="column.type === 'datetime'" v-tooltip.top="rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD') : 'No date'" :class="rowData[column.field] ? '' : 'font-bold p-error'" class="truncate">
+              {{ rowData[column.field] ? dayjs(rowData[column.field]).format('YYYY-MM-DD hh:mm a') : 'No date' }}
             </span>
-            <span v-if="typeof data[column.field] === 'object' && data[column.field] !== null" v-tooltip.top="data[column.field].name" class="truncate">
+
+            <span v-if="typeof rowData[column.field] === 'object' && rowData[column.field] !== null" v-tooltip.top="rowData[column.field].name" class="truncate">
               <span v-if="column.type === 'select' || column.type === 'local-select'">
-                {{ data[column.field].name }}
+                {{ rowData[column.field].name }}
               </span>
             </span>
+
             <span v-else-if="column.type === 'image'">
-              <NuxtImg v-if="data[column.field]" :src="data[column.field]" alt="Avatar" class="avatar" />
+              <NuxtImg v-if="rowData[column.field]" :src="rowData[column.field]" alt="Avatar" class="avatar" />
               <div v-else>
                 <Avatar icon="pi pi-image" style="background-color: #dee9fc; color: #1a2551" shape="circle" size="large" />
               </div>
             </span>
+
             <span v-else-if="column.type === 'bool'">
-              <Badge v-tooltip.top="data[column.field] ? 'Active' : 'Inactive'" :value="data[column.field].toString().charAt(0).toUpperCase() + data[column.field].toString().slice(1)" :severity="data[column.field] ? 'success' : 'danger'" class="success" />
+              <Badge v-tooltip.top="rowData[column.field] ? 'Active' : 'Inactive'" :value="rowData[column.field].toString().charAt(0).toUpperCase() + rowData[column.field].toString().slice(1)" :severity="rowData[column.field] ? 'success' : 'danger'" class="success" />
             </span>
+
             <span v-else-if="column.type === 'number'">
-              {{ formatNumber(data[column.field]) }}
+              {{ formatNumber(rowData[column.field]) }}
             </span>
+
             <span v-else-if="column.type === 'custom-badge'">
               <Badge
-                v-tooltip.top="data[column.field].toString()" :value="data[column.field]"
-                :class="column.statusClassMap?.find(e => e.status === data[column.field])?.class"
+                v-tooltip.top="rowData[column.field].toString()"
+                :value="rowData[column.field]"
+                :class="column.statusClassMap?.find(e => e.status === rowData[column.field])?.class"
               />
             </span>
+
             <span v-else>
-              <span v-if="column.type === 'local-select'" v-tooltip.top="data[column.field].name" class="truncate">
-                {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(data[column.field], column.localItems) : '' }}
+              <span v-if="column.type === 'local-select'" v-tooltip.top="rowData[column.field].name" class="truncate">
+                {{ (column.hasOwnProperty('localItems') && column.localItems) ? getNameById(rowData[column.field], column.localItems) : '' }}
               </span>
-              <span v-else-if="column.type === 'text'" v-tooltip.top="data[column.field] ? data[column.field].toString() : ''" class="truncate">
-                <span v-if="column.badge && data[column.field]">
-                  <Badge v-tooltip.top="data[column.field]" :value="data[column.field] ? 'True' : 'False'" :severity="data[column.field] ? 'success' : 'danger'" class="}" />
+              <span v-else-if="column.type === 'text'" v-tooltip.top="rowData[column.field] ? rowData[column.field].toString() : ''" class="truncate">
+                <span v-if="column.badge && rowData[column.field]">
+                  <Badge v-tooltip.top="rowData[column.field]" :value="rowData[column.field] ? 'True' : 'False'" :severity="rowData[column.field] ? 'success' : 'danger'" class="}" />
                 </span>
                 <span v-else>
-                  {{ data[column.field] }}
+                  {{ rowData[column.field] }}
                 </span>
               </span>
             </span>
           </template>
+
           <template v-if="(column.type === 'image' || column.type === 'icon' || column.showFilter === false) ? false : options?.hasOwnProperty('showFilters') ? options?.showFilters : true" #filter="{ filterModel, filterCallback }">
             <div v-if="column.type === 'text' || column.type === 'slot-text'" class="flex flex-column">
               <Dropdown
@@ -806,16 +782,6 @@ defineExpose({ clearSelectedItems })
                 type="text"
                 class="p-column-filter w-full"
                 placeholder="Write a text"
-              />
-              <!-- @change="filterCallback()" -->
-              <Button
-                v-if="false"
-                type="button"
-                icon="pi pi-filter"
-                text
-                aria-haspopup="true"
-                :aria-controls="`overlayPanel_${index}`"
-                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
               />
 
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
@@ -865,7 +831,7 @@ defineExpose({ clearSelectedItems })
                 placeholder="Select a operator"
                 class="w-full mb-2"
               />
-              <!-- Es este -->
+
               <DebouncedMultiSelectComponent
                 id="autocomplete"
                 class="w-full h-2rem align-items-center"
@@ -888,29 +854,6 @@ defineExpose({ clearSelectedItems })
                 }"
               />
 
-              <!-- No Eliminar -->
-              <!-- <MultiSelect
-                v-model="filterModel.value"
-                :options="objListData[column.field]"
-                option-label="name"
-                placeholder="Select one or more"
-                class="p-column-filter w-full"
-                :max-selected-labels="2"
-              >
-                <template #option="slotProps">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ slotProps.option.name }}</span>
-                  </div>
-                </template>
-              </MultiSelect> -->
-              <Button
-                v-if="false"
-                type="button"
-                icon="pi pi-filter"
-                text aria-haspopup="true"
-                aria-controls="overlay_menu_filter"
-                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
-              />
               <Menu id="overlay_menu_filter" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsSelect" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props: menuProps }">
                   <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="filterModel.matchMode = item.id; filterCallback()">
@@ -944,6 +887,7 @@ defineExpose({ clearSelectedItems })
                 class="p-column-filter w-full"
               />
             </div>
+
             <div v-if="column.type === 'datetime' || column.type === 'datetime-editable'" class="flex flex-column">
               <Dropdown
                 v-if="true"
@@ -965,6 +909,7 @@ defineExpose({ clearSelectedItems })
               />
             </div>
           </template>
+
           <template #filtericon>
             <Button v-if="haveFilterApplay(filters1, column)" severity="secondary" type="button" class="bg-primary" style="position: relative;">
               <i class="pi pi-filter-fill text-white" />
@@ -972,47 +917,49 @@ defineExpose({ clearSelectedItems })
             </Button>
             <i v-else class="pi pi-filter text-white" />
           </template>
+
           <template #filterclear="{ field }">
             <Button type="button" label="Clear" severity="secondary" @click="clearIndividualFilter(field)" />
           </template>
-          <template #editor="{ data, field }">
+
+          <template #editor="{ data: editData, field }">
             <template v-if="column.type === 'date-editable'">
-              <slot :name="`column-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
+              <slot :name="`column-${column.field}`" :item="{ data: editData, field, column, onCellEditComplete }">
                 <Calendar
-                  v-model="data[field]"
+                  v-model="editData[field]"
                   :manual-input="false"
                   style="width: 100%"
                   :view="(column.props?.calendarMode as 'month' | 'date' | 'year') || 'month'"
                   date-format="yy-mm-dd"
                   :max-date="column.props?.maxDate"
-                  @update:model-value="onCellEditComplete($event, data)"
+                  @update:model-value="onCellEditComplete($event, editData)"
                 />
               </slot>
             </template>
             <template v-else-if="column.editable && (column.type === 'text' || column.type === 'number')">
-              <slot :name="`column-editable-${column.field}`" :item="{ data, field, column, onCellEditComplete }">
-                <InputText v-if="column.type === 'text'" v-model="data[field]" style="width: 100%" autofocus fluid />
-                <InputNumber v-if="column.type === 'number'" v-model="data[field]" style="width: 100%" autofocus fluid />
+              <slot :name="`column-editable-${column.field}`" :item="{ data: editData, field, column, onCellEditComplete }">
+                <InputText v-if="column.type === 'text'" v-model="editData[field]" style="width: 100%" autofocus fluid />
+                <InputNumber v-if="column.type === 'number'" v-model="editData[field]" style="width: 100%" autofocus fluid />
               </slot>
             </template>
           </template>
         </Column>
+
         <Column v-if="options?.hasOwnProperty('showAcctions') ? options?.showAcctions : false" field="action" header="" :style="{ 'width': `${props.actionsWidth}px`, 'text-align': 'center' }">
-          <template #body="{ data }">
+          <template #body="{ data: actionData }">
             <span v-if="options?.actionsAsMenu ? options?.actionsAsMenu : false">
               <Button type="button" icon="pi pi-ellipsis-v" severity="secondary" text aria-haspopup="true" aria-controls="overlay_menu" @click="toggleMenu($event)" />
-              <!-- <Menu v-if="true" ref="menu" id="overlay_menu" :model="menuItems" :popup="true" /> -->
 
               <Menu id="overlay_menu" ref="menu" :model="menuItems" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props: menuProps }">
-                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="handleAction(item.action, data)">
+                  <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="handleAction(item.action, actionData)">
                     <span :class="item.icon" />
                     <span class="ml-2">{{ item.label }}</span>
                   </a>
                 </template>
               </Menu>
-
             </span>
+
             <span v-else>
               <Button
                 v-if="options?.hasOwnProperty('showEdit') ? options?.showEdit : true"
@@ -1024,8 +971,8 @@ defineExpose({ clearSelectedItems })
                 text
                 aria-haspopup="true"
                 aria-controls="overlay_menu"
-                :loading="data.loadingEdit"
-                @click="onEdit(data)"
+                :loading="actionData.loadingEdit"
+                @click="onEdit(actionData)"
               />
               <Button
                 v-if="options?.hasOwnProperty('showDelete') ? options?.showDelete : true"
@@ -1037,11 +984,10 @@ defineExpose({ clearSelectedItems })
                 text
                 aria-haspopup="true"
                 aria-controls="overlay_menu"
-                :loading="data.loadingDelete"
-                @click="showConfirmDelete(data)"
+                :loading="actionData.loadingDelete"
+                @click="showConfirmDelete(actionData)"
               />
 
-              <!-- Local -->
               <Button
                 v-if="options?.hasOwnProperty('showLocalDelete') ? options?.showLocalDelete : false"
                 v-tooltip.left="'Delete'"
@@ -1052,12 +998,13 @@ defineExpose({ clearSelectedItems })
                 text
                 aria-haspopup="true"
                 aria-controls="overlay_menu"
-                :loading="data.loadingDelete"
-                @click="showConfirmDelete(data)"
+                :loading="actionData.loadingDelete"
+                @click="showConfirmDelete(actionData)"
               />
             </span>
           </template>
         </Column>
+
         <template #expansion="slotProps">
           <slot name="expansion" :data="slotProps.data" />
         </template>
@@ -1072,12 +1019,10 @@ defineExpose({ clearSelectedItems })
       <slot name="pagination" />
     </div>
     <div v-else class="flex justify-content-between align-items-center w-full">
-      <!-- cantidad de elementos seleccionados -->
       <div class="flex align-items-center w-15rem">
         <strong v-if="props.options.showSelectedItems">Selected Item: {{ clickedItem?.length || 0 }}</strong>
       </div>
-      <!-- paginacion -->
-      <!-- <Divider v-if="props.pagination" layout="vertical" /> -->
+
       <div class="flex align-items-center">
         <Paginator
           :rows="Number(props.pagination?.limit ?? 50)"
@@ -1086,9 +1031,7 @@ defineExpose({ clearSelectedItems })
           @page="onChangePageOrLimit($event)"
         />
         <Badge class="px-2 py-3 flex align-items-center" severity="secondary">
-          <span>
-            Total:
-          </span>
+          <span>Total:</span>
           <slot name="pagination-total" :total="props.pagination?.totalElements">
             <span class="font-bold">
               {{ props.pagination?.totalElements }}
@@ -1096,14 +1039,13 @@ defineExpose({ clearSelectedItems })
           </slot>
         </Badge>
       </div>
-      <!-- Other actions -->
+
       <div class="flex align-items-center w-15rem">
         <slot name="pagination-right" />
       </div>
     </div>
   </div>
 
-  <!-- Dialog Delete -->
   <DialogDelete
     v-if="clickedItem"
     :open-dialog="openDialogDelete"
@@ -1116,36 +1058,38 @@ defineExpose({ clearSelectedItems })
 
 <style lang="scss" scoped>
 .block-ui-container {
-  position: relative; /* Asegura que los hijos puedan posicionarse dentro del contenedor */
+  position: relative;
 }
 
 .full-size {
-  position: absolute; /* Permite ocupar todo el espacio del contenedor padre */
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
 }
+
 .truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
 }
+
 .rounded-border {
   border-radius: 10px;
 }
 
 .avatar {
-  width: 40px; /* Ancho del avatar */
-  height: 40px; /* Alto del avatar */
-  border-radius: 50%; /* Para hacerlo redondeado */
-  background-size: cover; /* Para ajustar el tamaño de la imagen de fondo */
-  background-position: center; /* Para centrar la imagen de fondo */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
 }
 
 :deep(.p-datatable-row-expansion > td) {
   padding: 0;
-  background-color: #F5F5F5
+  background-color: #F5F5F5;
 }
 </style>

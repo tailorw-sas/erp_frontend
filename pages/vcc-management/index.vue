@@ -5,13 +5,13 @@ import ContextMenu from 'primevue/contextmenu'
 import dayjs from 'dayjs'
 import { useToast } from 'primevue/usetoast'
 import type { IFilter, IQueryRequest } from '~/components/fields/interfaces/IFieldInterfaces'
-import type { IColumn, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
+import type { IColumn, IColumnIconSlotProps, IColumnStatusSlotProps, IPagination, IStatusClass } from '~/components/table/interfaces/ITableInterfaces'
 import { GenericService } from '~/services/generic-services'
 import type { IData } from '~/components/table/interfaces/IModelData'
 import { formatNumber } from '~/pages/payment/utils/helperFilters'
 import AttachmentTransactionDialog from '~/components/vcc/attachment/AttachmentTransactionDialog.vue'
-import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'// Karina
-import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'// Karina
+import BankReconciliation from '~/pages/vcc-management/bank-reconciliation/index.vue'
+import HotelPayment from '~/pages/vcc-management/hotel-payment/index.vue'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const toast = useToast()
@@ -127,6 +127,7 @@ const confStatusListApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'manage-transaction-status',
 })
+
 const confMerchantListApi = reactive({
   moduleApi: 'creditcard',
   uriApi: 'manage-merchant',
@@ -202,22 +203,10 @@ const sClassMap: IStatusClass[] = [
   { status: 'Received', class: 'vcc-text-received' },
   { status: 'Declined', class: 'vcc-text-declined' },
   { status: 'Paid', class: 'vcc-text-paid' },
-  { status: 'Cancelled', class: 'vcc-text-cancelled' },
   { status: 'Canceled', class: 'vcc-text-cancelled' }, // Se agrega porque esta viniendo asi del backend
   { status: 'Reconciled', class: 'vcc-text-reconciled' },
-  { status: 'Reconcilied', class: 'vcc-text-reconciled' },
   { status: 'Refund', class: 'vcc-text-refund' },
 ]
-////
-
-const computedShowMenuItemManualTransaction = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:MANUAL-TRANSACTION'])))
-})
-
-const computedShowMenuItemAdjustmentTransaction = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['VCC-MANAGEMENT:ADJUSTMENT-TRANSACTION'])))
-})
-
 // -------------------------------------------------------------------------------------------------------
 
 // TABLE COLUMNS -----------------------------------------------------------------------------------------
@@ -273,22 +262,14 @@ const pagination = ref<IPagination>({
   search: ''
 })
 
-// MODAL-Karina------------------------------------------------------------------------------------------------------
-
 function openBankReconciliation() {
   isBankReconciliationOpen.value = true
-}
-function closeBankReconciliation() {
-  isBankReconciliationOpen.value = false
 }
 
 function openHotelPayment() {
   isHotelPaymentOpen.value = true
 }
-function closeHotelPayment() {
-  isHotelPaymentOpen.value = false
-}
-// FUNCTIONS ---------------------------------------------------------------------------------------------
+
 async function getList() {
   if (options.value.loading) {
     // Si ya hay una solicitud en proceso, no hacer nada.
@@ -303,7 +284,7 @@ async function getList() {
     const newListItems = []
 
     const response = await GenericService.search(options.value.moduleApi, options.value.uriApi, payload.value)
-    console.log(response)
+
     const { transactionSearchResponse } = response
     const { data: dataList, page, size, totalElements, totalPages } = transactionSearchResponse
 
@@ -384,17 +365,9 @@ function searchAndFilter() {
   }
   else {
     newFilters = [...newFilters, ...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
-    // Filtro para no mostrar transacciones de ajuste
-    // newPayload.filter = [...newPayload.filter, {
-    //   key: 'adjustment',
-    //   operator: 'EQUALS',
-    //   value: false,
-    //   logicalOperation: 'AND',
-    // }]
-    // Date
     if (filterToSearch.value.from) {
       newFilters = [...newFilters, {
-        key: 'checkIn',
+        key: 'transactionDate',
         operator: 'GREATER_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.from).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -403,7 +376,7 @@ function searchAndFilter() {
     }
     if (filterToSearch.value.to) {
       newFilters = [...newFilters, {
-        key: 'checkIn',
+        key: 'transactionDate',
         operator: 'LESS_THAN_OR_EQUAL_TO',
         value: dayjs(filterToSearch.value.to).format('YYYY-MM-DD'),
         logicalOperation: 'AND',
@@ -907,14 +880,6 @@ function setRefundAvailable(isAvailable: boolean) {
     menuItem.disabled = !isAvailable
   }
 }
-
-// function openBankReconciliation() {
-//   window.open('/vcc-management/bank-reconciliation', '_blank')
-// }
-
-// function openHotelPayment() {
-//   window.open('/vcc-management/hotel-payment', '_blank')
-// }
 // -------------------------------------------------------------------------------------------------------
 
 // WATCH FUNCTIONS -------------------------------------------------------------------------------------
@@ -1135,25 +1100,23 @@ onMounted(() => {
           @on-row-right-click="onRowRightClick"
           @on-row-double-click="onDoubleClick($event)"
         >
-          <template #column-icon="{ data: objData, column }">
+          <template #column-icon="{ item }">
             <div class="flex align-items-center justify-content-center p-0 m-0">
               <!-- <pre>{{ objData }}</pre> -->
               <Button
-                v-if="objData.hasAttachments"
-                :icon="column.icon"
+                v-if="item.data.hasAttachments"
+                :icon="item.column.icon"
                 class="p-button-rounded p-button-text w-2rem h-2rem"
                 aria-label="Submit"
                 :style="{ color: '#000' }"
               />
             </div>
-          <!-- style="color: #616161;" -->
-          <!-- :style="{ 'background-color': '#00b816' }" -->
           </template>
-          <template #column-status="{ data, column }">
+          <template #column-status="{ item }">
             <Badge
-              v-tooltip.top="data.status.name.toString()"
-              :value="data.status.name"
-              :class="column.statusClassMap?.find((e: any) => e.status === data.status.name)?.class"
+              v-tooltip.top="item.data.status.name.toString()"
+              :value="item.data.status.name"
+              :class="item.column.statusClassMap?.find((e: any) => e.status === item.data.status.name)?.class"
             />
           </template>
           <template #datatable-footer>

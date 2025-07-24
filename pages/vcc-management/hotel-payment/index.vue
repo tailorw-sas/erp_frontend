@@ -803,19 +803,17 @@ onMounted(() => {
               }"
             />
           </template>
-          <template #column-icon="{ data: objData, column }">
+          <template #column-icon="slotProps: ISlotProps">
             <div class="flex align-items-center justify-content-center p-0 m-0">
               <!-- <pre>{{ objData }}</pre> -->
               <Button
-                v-if="objData.hasAttachments"
-                :icon="column.icon"
+                v-if="slotProps.data.hasAttachments"
+                :icon="slotProps.column.icon"
                 class="p-button-rounded p-button-text w-2rem h-2rem"
                 aria-label="Submit"
                 :style="{ color: '#000' }"
               />
             </div>
-          <!-- style="color: #616161;" -->
-          <!-- :style="{ 'background-color': '#00b816' }" -->
           </template>
           <template #column-status="{ data, column }">
             <Badge
