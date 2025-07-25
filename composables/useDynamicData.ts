@@ -1,52 +1,12 @@
+// composables/useDynamicData.ts
 import { ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { openDB } from 'idb'
+import { clearCache, getCachedDataWithTTL, setCachedDataWithTTL } from '~/utils/indexedDbClient' // ✅ Usar funciones corregidas
 import { GenericService } from '~/services/generic-services'
 import { ENUM_SHORT_TYPE } from '~/utils/Enums'
 import type { IFilter } from '~/components/fields/interfaces/IFieldInterfaces'
 import { useRuntimeConfig } from '#imports'
 import { useDynamicCacheStore } from '~/stores/useDynamicCacheStore'
-
-const DB_NAME = 'erp-cache'
-const DB_VERSION = 1
-const STORE_NAME = 'dynamicData'
-
-async function getDb() {
-  return await openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME)
-      }
-    }
-  })
-}
-
-async function getCachedData(key: string, ttlOverrideMs?: number): Promise<any[] | null> {
-  const db = await getDb()
-  const entry = await db.get(STORE_NAME, key)
-  if (!entry) { return null }
-
-  const { timestamp, data } = entry
-  const now = Date.now()
-  const defaultTtl = 1000 * 60 * 60 * 10 // 10 horas
-  const ttl = ttlOverrideMs ?? defaultTtl
-
-  if (now - timestamp >= ttl) {
-    await db.delete(STORE_NAME, key)
-    return null
-  }
-  return data
-}
-
-async function setCachedData(key: string, data: any[]): Promise<void> {
-  const db = await getDb()
-  await db.put(STORE_NAME, { timestamp: Date.now(), data }, key)
-}
-
-async function clearCache(): Promise<void> {
-  const db = await getDb()
-  await db.clear(STORE_NAME)
-}
 
 export function useDynamicData() {
   const suggestionsData = ref<any[]>([])
@@ -67,7 +27,7 @@ export function useDynamicData() {
     }
 
     if (USE_INDEXEDDB_CACHE) {
-      const cached = await getCachedData(cacheKey, ttlMs)
+      const cached = await getCachedDataWithTTL(cacheKey, ttlMs) // ✅ Usar función corregida
       if (cached) {
         suggestionsData.value = cached
         Logger.info('Data retrieved from IndexedDB:', cached)
@@ -97,7 +57,7 @@ export function useDynamicData() {
         suggestionsData.value = mapped
 
         if (USE_INDEXEDDB_CACHE) {
-          await setCachedData(cacheKey, mapped)
+          await setCachedDataWithTTL(cacheKey, mapped) // ✅ Usar función corregida
         }
         dynamicCache.set(cacheKey, mapped)
       }
@@ -157,7 +117,7 @@ export async function searchWithCache<T>(
   }
 
   if (USE_INDEXEDDB_CACHE) {
-    const cached = await getCachedData(key, ttl)
+    const cached = await getCachedDataWithTTL(key, ttl) // ✅ Usar función corregida
     if (cached) {
       Logger.info('searchWithCache: from IndexedDB', cached)
       dynamicCache.set(key, cached)
@@ -172,7 +132,7 @@ export async function searchWithCache<T>(
     const mapped = options.transform ? options.transform(rawData) : rawData
 
     if (USE_INDEXEDDB_CACHE) {
-      await setCachedData(key, mapped)
+      await setCachedDataWithTTL(key, mapped) // ✅ Usar función corregida
     }
 
     dynamicCache.set(key, mapped)

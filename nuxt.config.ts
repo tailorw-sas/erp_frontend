@@ -94,6 +94,7 @@ export default defineNuxtConfig({
     { src: '~/plugins/recaptcha.ts' },
     { src: '~/plugins/api.ts' },
     { src: '~/plugins/auth-interceptor.client.ts', mode: 'client' },
+    { src: '~/plugins/inactivity-auth.client.ts', mode: 'client' },
     { src: '~/plugins/inactivity-auth.client.ts', mode: 'client' }
   ],
 

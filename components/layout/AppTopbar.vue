@@ -1,10 +1,6 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { usePrimeVue } from 'primevue/config'
 import { useAuthStore } from '@/stores/authStore'
-import { useAuth } from '#imports'
-
-const { signOut, data } = useAuth()
 
 const $primevue = usePrimeVue()
 
@@ -36,6 +32,7 @@ const { $api } = useNuxtApp()
 const repo = repository($api)
 
 const searchActive = ref(true)
+const { logoutWithConfirmation } = useLogout()
 
 function onMenuButtonClick() {
   onMenuToggle()
@@ -112,18 +109,12 @@ async function openResetPassword() {
 }
 
 async function onConfirmSignOut() {
-  try {
-    loading.value = true
-    await signOut({ callbackUrl: '/auth/login' })
-    loading.value = false
-  }
-  catch {
-    // TODO: Show toast error if there is an error
-    // console.log(error)
-  }
-  finally {
-    dialogConfirmSingOut.value = false
-  }
+  // ✅ NUEVO: Una sola línea que maneja todo
+  await logoutWithConfirmation(
+    dialogConfirmSingOut,
+    loading,
+    { callbackUrl: '/auth/login', reason: 'manual' }
+  )
 }
 
 // // Código para el cierre de sesión automático =============
