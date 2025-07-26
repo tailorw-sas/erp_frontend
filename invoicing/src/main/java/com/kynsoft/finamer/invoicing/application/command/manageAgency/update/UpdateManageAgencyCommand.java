@@ -36,6 +36,7 @@ public class UpdateManageAgencyCommand implements ICommand {
     private Boolean validateCheckout;
     private EGenerationType generationType;
     private String bookingCouponFormat;
+    private String agencyAlias;
 
     @Override
     public ICommandMessage getMessage() {

@@ -33,7 +33,8 @@ public class ConsumerUpdateManageAgencyService {
                     objKafka.getAutoReconcile(),
                     objKafka.getValidateCheckout(),
                     EGenerationType.valueOf(objKafka.getGenerationType()),
-                    objKafka.getBookingCouponFormat()
+                    objKafka.getBookingCouponFormat(),
+                    objKafka.getAgencyAlias()
             );
             mediator.send(command);
         } catch (Exception ex) {
