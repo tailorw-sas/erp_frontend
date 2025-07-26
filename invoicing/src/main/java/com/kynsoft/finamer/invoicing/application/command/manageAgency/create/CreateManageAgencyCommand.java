@@ -30,11 +30,12 @@ public class CreateManageAgencyCommand implements ICommand {
     private Boolean autoReconcile;
     private Boolean validateCheckout;
     private String bookingCouponFormat;
+    private String agencyAlias;
 
     public CreateManageAgencyCommand(UUID id, String code, String name, UUID client, EGenerationType generationType,
             String status, String cif, String address, UUID sentB2BPartner, UUID cityState, UUID country,
             String mailingAddress, String zipCode, String city, Integer creditDay,
-            Boolean autoReconcile, Boolean validateCheckout, String bookingCouponFormat) {
+            Boolean autoReconcile, Boolean validateCheckout, String bookingCouponFormat, String agencyAlias) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -53,6 +54,7 @@ public class CreateManageAgencyCommand implements ICommand {
         this.autoReconcile = autoReconcile;
         this.validateCheckout = validateCheckout;
         this.bookingCouponFormat = bookingCouponFormat;
+        this.agencyAlias = agencyAlias;
     }
 
     @Override

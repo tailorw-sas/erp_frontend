@@ -370,7 +370,8 @@ public class CreateReplicateCommandHandler implements ICommandHandler<CreateRepl
                                 agencyDto.getCity(),
                                 agencyDto.getCreditDay(),
                                 agencyDto.getAutoReconcile(),
-                                agencyDto.getValidateCheckout()
+                                agencyDto.getValidateCheckout(),
+                                agencyDto.getAgencyAlias()
                         ));
                     }
                 }

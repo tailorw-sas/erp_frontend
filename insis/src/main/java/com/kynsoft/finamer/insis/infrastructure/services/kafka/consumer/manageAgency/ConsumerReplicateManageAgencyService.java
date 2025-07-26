@@ -24,7 +24,7 @@ public class ConsumerReplicateManageAgencyService {
                     objKafka.getId(),
                     objKafka.getCode(),
                     objKafka.getName(),
-                    objKafka.getName(),
+                    objKafka.getAgencyAlias(),
                     objKafka.getStatus()
             );
 

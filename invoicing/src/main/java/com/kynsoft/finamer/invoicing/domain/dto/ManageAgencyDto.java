@@ -33,4 +33,5 @@ public class ManageAgencyDto implements Serializable {
     private Boolean autoReconcile;
     private Boolean validateCheckout;
     private String bookingCouponFormat;
+    private String agencyAlias;
 }
