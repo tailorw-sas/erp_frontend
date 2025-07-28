@@ -9,6 +9,9 @@ import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsof.share.core.infrastructure.specifications.GenericSpecificationsBuilder;
 import com.kynsoft.finamer.invoicing.application.query.objectResponse.ManageBookingResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.DuplicateValidationResult;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelBookingCombinationDto;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelInvoiceCombinationDto;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
@@ -20,11 +23,16 @@ import com.kynsoft.finamer.invoicing.infrastructure.repository.query.ManageRoomR
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ManageBookingServiceImpl implements IManageBookingService {
 
@@ -161,15 +169,6 @@ public class ManageBookingServiceImpl implements IManageBookingService {
         return this.repositoryQuery.existsByExactLastChars(lastChars, hotelId);
     }
 
-    @Override
-    public Optional<ManageBookingDto> findManageBookingByBookingNumber(String bookingNumber) {
-        Optional<Booking> manageBooking= this.repositoryQuery.findManageBookingByHotelBookingNumber(bookingNumber);
-        if (manageBooking.isPresent()){
-            return manageBooking.map(Booking::toAggregate);
-        }
-        return Optional.empty();
-    }
-
     private PaginatedResponse getPaginatedResponse(Page<Booking> data) {
         List<ManageBookingResponse> responseList = new ArrayList<>();
         for (Booking entity : data.getContent()) {
@@ -190,28 +189,11 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     }
 
     @Override
-    public boolean existByBookingHotelNumber(String bookingHotelNumber) {
-        return repositoryQuery.existsByHotelBookingNumber(bookingHotelNumber);
-    }
-
-    @Override
     public ManageBookingDto findById(UUID id) {
         Optional<Booking> optionalEntity = repositoryQuery.findById(id);
 
         if (optionalEntity.isPresent()) {
             return optionalEntity.get().toAggregate();
-        }
-
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
-                new ErrorField("id", DomainErrorMessage.BOOKING_NOT_FOUND_.getReasonPhrase())));
-    }
-
-    @Override
-    public ManageBookingDto findByIdWithRates(UUID id) {
-        Optional<Booking> optionalEntity = repositoryQuery.findById(id);
-
-        if (optionalEntity.isPresent()) {
-            return optionalEntity.get().toAggregateWithRates();
         }
 
         throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.BOOKING_NOT_FOUND_,
@@ -356,6 +338,136 @@ public class ManageBookingServiceImpl implements IManageBookingService {
     public void insertAll(List<Booking> bookins) {
         for (Booking booking : bookins){
             this.insert(booking);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, String importType) {
+        if (combinations == null || combinations.isEmpty()) {
+            return DuplicateValidationResult.noDuplicates(0, importType);
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Preparar parámetros para la query bulk
+            List<String> hotelCodes = combinations.stream()
+                    .map(HotelBookingCombinationDto::getHotelCode)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            List<String> bookingNumbers = combinations.stream()
+                    .map(HotelBookingCombinationDto::getBookingNumber)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // Ejecutar query bulk optimizada
+            List<String> existingCombinationKeys = repositoryQuery.findExistingHotelBookingCombinations(hotelCodes, bookingNumbers);
+
+            long executionTime = System.currentTimeMillis() - startTime;
+
+            log.debug("Hotel booking validation completed in {}ms. Checked: {}, Found: {}",
+                    executionTime, combinations.size(), existingCombinationKeys.size());
+
+            if (existingCombinationKeys.isEmpty()) {
+                return DuplicateValidationResult.noDuplicates(combinations.size(), importType);
+            }
+
+            return DuplicateValidationResult.withDuplicates(
+                    new HashSet<>(existingCombinationKeys),
+                    combinations.size(),
+                    importType
+            );
+
+        } catch (Exception e) {
+            log.error("Error validating hotel booking combinations for importType: {}", importType, e);
+            // En caso de error, asumir que no hay duplicados para no bloquear el proceso
+            return DuplicateValidationResult.noDuplicates(combinations.size(), importType);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, String importType) {
+        if (combinations == null || combinations.isEmpty()) {
+            return DuplicateValidationResult.noDuplicates(0, importType);
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Preparar parámetros para la query bulk
+            List<String> hotelCodes = combinations.stream()
+                    .map(HotelInvoiceCombinationDto::getHotelCode)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            List<String> invoiceNumbers = combinations.stream()
+                    .map(HotelInvoiceCombinationDto::getInvoiceNumber)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            // Ejecutar query bulk optimizada (solo para hoteles virtuales)
+            List<String> existingCombinationKeys = repositoryQuery.findExistingHotelInvoiceCombinations(hotelCodes, invoiceNumbers);
+
+            long executionTime = System.currentTimeMillis() - startTime;
+
+            log.debug("Hotel invoice validation completed in {}ms. Checked: {}, Found: {}",
+                    executionTime, combinations.size(), existingCombinationKeys.size());
+
+            if (existingCombinationKeys.isEmpty()) {
+                return DuplicateValidationResult.noDuplicates(combinations.size(), importType);
+            }
+
+            return DuplicateValidationResult.withDuplicates(
+                    new HashSet<>(existingCombinationKeys),
+                    combinations.size(),
+                    importType
+            );
+
+        } catch (Exception e) {
+            log.error("Error validating hotel invoice combinations for importType: {}", importType, e);
+            // En caso de error, asumir que no hay duplicados para no bloquear el proceso
+            return DuplicateValidationResult.noDuplicates(combinations.size(), importType);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByHotelCodeAndBookingNumber(String hotelCode, String bookingNumber) {
+        if (hotelCode == null || hotelCode.trim().isEmpty() ||
+                bookingNumber == null || bookingNumber.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            return repositoryQuery.existsByHotelCodeAndBookingNumber(
+                    hotelCode.toUpperCase().trim(),
+                    bookingNumber.replaceAll("\\s+", " ").trim()
+            );
+        } catch (Exception e) {
+            log.error("Error checking existence for hotel {} and booking {}", hotelCode, bookingNumber, e);
+            return false; // En caso de error, asumir que no existe para no bloquear
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByHotelCodeAndInvoiceNumber(String hotelCode, String invoiceNumber) {
+        if (hotelCode == null || hotelCode.trim().isEmpty() ||
+                invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            return repositoryQuery.existsByHotelCodeAndInvoiceNumber(
+                    hotelCode.toUpperCase().trim(),
+                    invoiceNumber.trim()
+            );
+        } catch (Exception e) {
+            log.error("Error checking existence for hotel {} and invoice {}", hotelCode, invoiceNumber, e);
+            return false; // En caso de error, asumir que no existe para no bloquear
         }
     }
 }

@@ -25,4 +25,8 @@ public interface IManageEmployeeService {
     List<ManageEmployeeDto> findAllByIdsWithoutRelations(List<UUID> ids);
 
     Map<UUID, String> getEmployeeFullNameMapByIds(List<UUID> ids);
+
+    List<UUID> findHotelsIdsByEmployeeId(String _employee_id);
+
+    List<UUID> findAgencyIdsByEmployeeId(String _employee_id);
 }

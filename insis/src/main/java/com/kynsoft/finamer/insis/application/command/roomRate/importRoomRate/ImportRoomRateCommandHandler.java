@@ -124,7 +124,7 @@ public class ImportRoomRateCommandHandler implements ICommandHandler<ImportRoomR
     }
 
     private void sendRoomRatesToProcess(ImportProcessDto importProcess, ManageEmployeeDto employee, List<RoomRateDto> roomRates){
-        ImportInnsistKafka importInnsistKafka = new ImportInnsistKafka(
+        ImportInnsistKafka importInnsistKafka = new ImportInnsistKafka("INNSIST",
                 importProcess.getId(),
                 employee.getId().toString(),
                 roomRates.stream().map(this::roomRatesToKafkaBooking).toList()

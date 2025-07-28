@@ -30,15 +30,87 @@ public interface ManageBookingReadDataJPARepository extends JpaRepository<Bookin
             "THEN true ELSE false END", nativeQuery = true)
     boolean existsByHotelInvoiceNumber(@Param("hotelInvoiceNumber") String hotelInvoiceNumber, @Param("hotelId") UUID hotelId);
 
-    boolean existsByHotelBookingNumber(String bookingNumber);
-
-    Optional<Booking> findManageBookingByHotelBookingNumber(String hotelBookingNumber);
-
     Optional<Booking> findByBookingId(Long bookingId);
-
-    @Query(value = "SELECT * FROM booking mb JOIN invoice ON mb.manage_invoice = invoice.id WHERE invoice.id = :invoicingId", nativeQuery = true)
-    List<Booking> findByManageInvoicing(@Param("invoicingId") UUID invoicingId);
 
     @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.roomRates WHERE b.invoice.id IN :invoiceIds")
     List<Booking> findBookingsWithRoomRatesByInvoiceIds(@Param("invoiceIds") List<UUID> invoiceIds);
+
+    /**
+     * Busca combinaciones Hotel+BookingNumber existentes de forma optimizada
+     * Retorna las claves de las combinaciones que SÍ existen en BD
+     */
+    @Query(value = """
+    SELECT CONCAT(h.code, '|', mb.hotelbookingnumber) as combination_key 
+        FROM booking mb 
+        JOIN invoice inv ON mb.manage_invoice = inv.id
+        JOIN hotel h ON inv.manage_hotel = h.id
+    WHERE h.code IN :hotelCodes 
+      AND mb.hotelbookingnumber IN :bookingNumbers
+      AND inv.invoiceStatus != 'CANCELED'  """, nativeQuery = true)
+    List<String> findExistingHotelBookingCombinations(@Param("hotelCodes") List<String> hotelCodes, @Param("bookingNumbers") List<String> bookingNumbers);
+
+    /**
+     * Busca combinaciones Hotel+InvoiceNumber existentes de forma optimizada
+     * SOLO para hoteles virtuales. Retorna las claves de las combinaciones que SÍ existen en BD
+     */
+    @Query(value = """
+    SELECT CONCAT(h.code, '|', mb.hotelInvoiceNumber) as combination_key 
+        FROM booking mb 
+        JOIN invoice inv ON mb.manage_invoice = inv.id  
+        JOIN hotel h ON inv.manage_hotel = h.id
+    WHERE h.code IN :hotelCodes 
+        AND mb.hotelInvoiceNumber IN :invoiceNumbers
+        AND h.isVirtual = true
+        AND inv.invoiceStatus != 'CANCELED'
+    """, nativeQuery = true)
+    List<String> findExistingHotelInvoiceCombinations(@Param("hotelCodes") List<String> hotelCodes, @Param("invoiceNumbers") List<String> invoiceNumbers);
+
+    /**
+     * Query alternativa más específica que valida combinación exacta una por una
+     * (Para casos donde necesites validación individual)
+     */
+    @Query(value = """
+    SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM booking mb 
+        JOIN invoice inv ON mb.manage_invoice = inv.id  
+        JOIN hotel h ON inv.manage_hotel = h.id
+        WHERE h.code = :hotelCode 
+          AND mb.hotelbookingnumber = :bookingNumber
+          AND inv.invoiceStatus != 'CANCELED'
+    ) THEN true ELSE false END
+    """, nativeQuery = true)
+    boolean existsByHotelCodeAndBookingNumber(@Param("hotelCode") String hotelCode, @Param("bookingNumber") String bookingNumber);
+
+    /**
+     * Query específica para validar hotel invoice number en hoteles virtuales
+     */
+    @Query(value = """
+    SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM booking mb 
+        JOIN invoice inv ON mb.manage_invoice = inv.id  
+        JOIN hotel h ON inv.manage_hotel = h.id
+        WHERE h.code = :hotelCode 
+          AND mb.hotelInvoiceNumber = :invoiceNumber
+          AND h.isVirtual = true
+          AND inv.invoiceStatus != 'CANCELED'
+    ) THEN true ELSE false END
+    """, nativeQuery = true)
+    boolean existsByHotelCodeAndInvoiceNumber(@Param("hotelCode") String hotelCode, @Param("invoiceNumber") String invoiceNumber);
+
+    /**
+     * Query de estadísticas para debugging - cuenta duplicados por hotel
+     */
+    @Query(value = """
+    SELECT h.code as hotel_code, 
+           COUNT(DISTINCT mb.hotelbookingnumber) as unique_bookings,
+           COUNT(mb.hotelbookingnumber) as total_bookings,
+           COUNT(mb.hotelbookingnumber) - COUNT(DISTINCT mb.hotelbookingnumber) as duplicates
+    FROM booking mb 
+    JOIN invoice inv ON mb.manage_invoice = inv.id  
+    JOIN hotel h ON inv.manage_hotel = h.id
+    WHERE h.code IN :hotelCodes 
+      AND inv.invoiceStatus != 'CANCELED'
+    GROUP BY h.code
+    """, nativeQuery = true)
+    List<Object[]> getDuplicateStatsByHotel(@Param("hotelCodes") List<String> hotelCodes);
 }

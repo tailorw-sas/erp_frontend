@@ -120,6 +120,11 @@ public class ManageHotelServiceImpl implements IManageHotelService {
     }
 
     @Override
+    public List<ManageHotelDto> findByCodeIn(List<String> codes) {
+        return repositoryQuery.findByCodeIn(codes).stream().map(ManageHotel::toAggregate).toList();
+    }
+
+    @Override
     public PaginatedResponse search(Pageable pageable, List<FilterCriteria> filterCriteria) {
         filterCriteria(filterCriteria);
 

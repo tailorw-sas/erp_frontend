@@ -3,6 +3,9 @@ package com.kynsoft.finamer.invoicing.domain.services;
 import com.kynsof.share.core.domain.request.FilterCriteria;
 import com.kynsof.share.core.domain.response.PaginatedResponse;
 import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.DuplicateValidationResult;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelBookingCombinationDto;
+import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelInvoiceCombinationDto;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import org.springframework.data.domain.Pageable;
 
@@ -23,15 +26,10 @@ public interface IManageBookingService {
     void calculateInvoiceAmount(ManageBookingDto dto);
 
     void delete(ManageBookingDto dto);
-    boolean existByBookingHotelNumber(String bookingHotelNumber);
 
     ManageBookingDto findById(UUID id);
 
-    ManageBookingDto findByIdWithRates(UUID id);
-
     boolean existsByExactLastChars(String lastChars, UUID hotelId);
-
-    Optional<ManageBookingDto> findManageBookingByBookingNumber(String reservationNumber);
 
     void calculateHotelAmount(ManageBookingDto dto);
 
@@ -52,4 +50,43 @@ public interface IManageBookingService {
     void updateAll(List<ManageBookingDto> bookingList);
 
     void insertAll(List<Booking> bookins);
+
+    /**
+     * Valida combinaciones Hotel+BookingNumber de forma optimizada
+     *
+     * @param combinations Lista de combinaciones a validar
+     * @param importType Tipo de importación (VIRTUAL, NO_VIRTUAL, INNSIST)
+     * @return Resultado con información detallada de duplicados encontrados
+     */
+    DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, String importType);
+
+    /**
+     * Valida combinaciones Hotel+InvoiceNumber de forma optimizada
+     * SOLO aplica para hoteles virtuales
+     *
+     * @param combinations Lista de combinaciones a validar
+     * @param importType Tipo de importación (normalmente VIRTUAL)
+     * @return Resultado con información detallada de duplicados encontrados
+     */
+    DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, String importType);
+
+    /**
+     * Verifica si existe una combinación específica Hotel+BookingNumber
+     * Método de conveniencia para validaciones individuales
+     *
+     * @param hotelCode Código del hotel
+     * @param bookingNumber Número de booking
+     * @return true si la combinación ya existe en BD
+     */
+    boolean existsByHotelCodeAndBookingNumber(String hotelCode, String bookingNumber);
+
+    /**
+     * Verifica si existe una combinación específica Hotel+InvoiceNumber
+     * SOLO para hoteles virtuales
+     *
+     * @param hotelCode Código del hotel (debe ser virtual)
+     * @param invoiceNumber Número de invoice del hotel
+     * @return true si la combinación ya existe en BD
+     */
+    boolean existsByHotelCodeAndInvoiceNumber(String hotelCode, String invoiceNumber);
 }

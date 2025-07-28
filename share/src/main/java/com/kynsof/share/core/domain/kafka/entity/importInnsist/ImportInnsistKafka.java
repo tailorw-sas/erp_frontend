@@ -11,7 +11,8 @@ import java.util.UUID;
 @Setter
 @Getter
 public class ImportInnsistKafka implements Serializable {
-    private UUID importInnsitProcessId;
+    private String importType = "INNSIST";
+    private UUID importProcessId;
     private String employee;
     private List<ImportInnsistBookingKafka> importList;
 }

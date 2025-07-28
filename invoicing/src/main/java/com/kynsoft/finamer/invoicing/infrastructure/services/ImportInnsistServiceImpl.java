@@ -50,7 +50,7 @@ public class ImportInnsistServiceImpl {
     private void createCache(ImportInnsistKafka request) {
         try {
             //Genera el log del proceso en redis al inicio de todo.
-            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
+            BookingImportProcessDto start = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId().toString())
                     .status(EProcessStatus.RUNNING)
                     .total(0)
                     .build();
@@ -58,7 +58,7 @@ public class ImportInnsistServiceImpl {
 
             UUID insistImportProcessId = UUID.randomUUID();
             //Construye el objeto usado en el excel y guarda en cache.
-            List<BookingImportCache> bookingImportCacheList = this.create(request.getImportList(), request.getImportInnsitProcessId(), insistImportProcessId);
+            List<BookingImportCache> bookingImportCacheList = this.create(request.getImportList(), request.getImportProcessId(), insistImportProcessId);
 
             //Obtengo de cache
             //List<BookingImportCache> list = this.repository.findAllByImportProcessId(insistImportProcessId.toString());
@@ -89,17 +89,17 @@ public class ImportInnsistServiceImpl {
                 this.bookingImportHelperService.createInvoiceGroupingByBooking(insistImportProcessId.toString(), request.getEmployee(), true);
             }
             bookingImportCacheList.clear();
-            BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
+            BookingImportProcessDto end = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId().toString())
                     .status(EProcessStatus.FINISHED)
                     .total(bookingImportCacheList.size())
                     .build();
             applicationEventPublisher.publishEvent(new ImportBookingProcessEvent(this, end));
-            bookingImportHelperService.removeAllImportCache(request.getImportInnsitProcessId().toString());
+            bookingImportHelperService.removeAllImportCache(request.getImportProcessId().toString());
             bookingImportHelperService.removeAllImportCache(insistImportProcessId.toString());
             this.clearCache();
 
         } catch (Exception e) {
-            BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportInnsitProcessId().toString())
+            BookingImportProcessDto bookingImportProcessDto = BookingImportProcessDto.builder().importProcessId(request.getImportProcessId().toString())
                     .hasError(true)
                     .exceptionMessage(e.getMessage())
                     .status(EProcessStatus.FINISHED)

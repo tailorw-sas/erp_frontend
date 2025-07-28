@@ -50,7 +50,8 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         try{
             this.repositoryCommand.deleteById(dto.getId());
         } catch (Exception e){
-            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE, new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
+            throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.NOT_DELETE,
+                    new ErrorField("id", DomainErrorMessage.NOT_DELETE.getReasonPhrase())));
         }
     }
 
@@ -60,7 +61,8 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         if (userSystem.isPresent()) {
             return userSystem.get().toAggregate();
         }
-        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND, new ErrorField("id", DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND.getReasonPhrase())));
+        throw new BusinessNotFoundException(new GlobalBusinessException(DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND,
+                new ErrorField("id", DomainErrorMessage.MANAGE_EMPLOYEE_NOT_FOUND.getReasonPhrase())));
     }
 
     @Override
@@ -106,6 +108,24 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
                         manageEmployeeDto -> manageEmployeeDto.getFirstName() + " " + manageEmployeeDto.getLastName()));
     }
 
+    @Override
+    public List<UUID> findHotelsIdsByEmployeeId(String _employee_id) {
+        if(Objects.isNull(_employee_id) || _employee_id.isEmpty()){
+            throw new IllegalArgumentException("The employee ID must not be null or empty");
+        }
+
+        return repositoryQuery.findHotelsIdsByEmployeeId(UUID.fromString(_employee_id));
+    }
+
+    @Override
+    public List<UUID> findAgencyIdsByEmployeeId(String _employee_id) {
+        if(Objects.isNull(_employee_id) || _employee_id.isEmpty()){
+            throw new IllegalArgumentException("The employee ID must not be null or empty");
+        }
+
+        return repositoryQuery.findAgencyIdsByEmployeeId(UUID.fromString(_employee_id));
+    }
+
     private void filterCriteria(List<FilterCriteria> filterCriteria) {
         for (FilterCriteria filter : filterCriteria) {
 
@@ -128,5 +148,4 @@ public class ManageEmployeeServiceImpl implements IManageEmployeeService {
         return new PaginatedResponse(responses, data.getTotalPages(), data.getNumberOfElements(),
                 data.getTotalElements(), data.getSize(), data.getNumber());
     }
-
 }

@@ -56,10 +56,10 @@ public class BookingValidatorFactoryImp extends ValidatorFactory<BookingRow> {
     @Override
     public void createValidators(String importType) {
         if (validators.isEmpty()) {
-            validators.put(ImportBookingHotelValidator.class.getName(), new ImportBookingHotelValidator(manageHotelService));
+            validators.put(ImportBookingHotelValidator.class.getName(), new ImportBookingHotelValidator(manageHotelService));//se valida que es requerido
             validators.put(ImportBookingDuplicateValidator.class.getName(), new ImportBookingDuplicateValidator(manageBookingService, cacheRedisRepository, manageHotelService));
-            validators.put(ImportBookingTransactionDateValidator.class.getName(), new ImportBookingTransactionDateValidator(closeOperationService, manageHotelService));
-            validators.put(ImportBookingAgencyValidator.class.getName(), new ImportBookingAgencyValidator(manageAgencyService));
+            validators.put(ImportBookingTransactionDateValidator.class.getName(), new ImportBookingTransactionDateValidator(closeOperationService, manageHotelService));//se valida que es requerido
+            validators.put(ImportBookingAgencyValidator.class.getName(), new ImportBookingAgencyValidator(manageAgencyService));//se valida que es requerido
             validators.put(ImportBookingNameValidator.class.getName(), new ImportBookingNameValidator());
             validators.put(ImportBookingCheckInValidator.class.getName(), new ImportBookingCheckInValidator());
             validators.put(ImportBookingCheckOutValidator.class.getName(), new ImportBookingCheckOutValidator());

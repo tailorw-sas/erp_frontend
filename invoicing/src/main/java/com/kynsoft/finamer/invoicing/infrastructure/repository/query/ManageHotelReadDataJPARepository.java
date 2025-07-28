@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.infrastructure.repository.query;
 
+import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageAgency;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.ManageHotel;
 import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.data.domain.Page;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +28,6 @@ public interface ManageHotelReadDataJPARepository extends JpaRepository<ManageHo
     boolean existsManageHotelByCode(String code);
 
     Optional<ManageHotel> findManageHotelByCode(String code);
+
+    List<ManageHotel> findByCodeIn(List<String> codes);
 }
