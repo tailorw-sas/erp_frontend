@@ -236,7 +236,7 @@ async function handleMerchantRedirect(item: any) {
     },
     body: JSON.stringify(data),
   })
-  console.log(response)
+
   if (response.status === 200) {
     const jsonResponse = await response.json()
     const htmlBody = jsonResponse.result
