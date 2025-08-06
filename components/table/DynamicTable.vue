@@ -205,6 +205,15 @@ function toggleMenu(event: Event) {
   menu.value.toggle(event)
 }
 
+function toggleMenuFilter(event: Event, i: number | string) {
+  if (modeFilterDisplay.value === 'menu') {
+    menuFilter[i].value[0].toggle(event)
+  }
+  else {
+    menuFilterForRowDisplay.value[i].toggle(event)
+  }
+}
+
 function onEdit(item: any) {
   emits('openEditDialog', item.id)
 }
@@ -624,11 +633,7 @@ defineExpose({ clearSelectedItems })
         edit-mode="cell"
         style="border: 0"
         @sort="onSortField"
-        @update:selection="(selection) => {
-          isUpdatingSelection = true
-          clickedItem = selection
-
-        }"
+        @update:selection="onSelectItem"
         @update:filters="onChangeFilters"
         @row-dblclick="onRowDoubleClick"
         @row-contextmenu="onRowRightClick"
@@ -664,16 +669,11 @@ defineExpose({ clearSelectedItems })
         </template>
 
         <Column
-          v-if="options?.selectionMode"
-          :selection-mode="options?.selectionMode ?? undefined"
+          v-if="options?.selectionMode" :selection-mode="options?.selectionMode ?? undefined"
           header-style="width: 3rem"
         />
 
-        <Column
-          v-if="options?.hasOwnProperty('expandableRows') ? options?.expandableRows : false"
-          expander
-          style="width: 2rem"
-        >
+        <Column v-if="options?.hasOwnProperty('expandableRows') ? options?.expandableRows : false" expander style="width: 2rem">
           <template #rowtogglericon="{ rowExpanded }">
             <i :class="rowExpanded ? 'pi pi-minus' : 'pi pi-plus'" style="border: 1px solid #dee2e6; padding: 2px; border-radius: 10%;" />
           </template>
@@ -688,8 +688,7 @@ defineExpose({ clearSelectedItems })
           :filter-field="column.field"
           :frozen="column.frozen"
           align-frozen="right"
-          class="custom-table-head"
-          :class="column.columnClass"
+          class="custom-table-head" :class="column.columnClass"
           :style="{
             maxWidth: column?.maxWidth ? column?.maxWidth : 'auto',
             height: '20px',
@@ -700,11 +699,11 @@ defineExpose({ clearSelectedItems })
           </template>
 
           <template #body="{ data: rowData }">
-            <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
-            <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
-            <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
-            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
-            <slot v-if="column.type === 'slot-bagde'" :name="`column-${column.field}`" :item="{ data: rowData, column }" />
+            <slot v-if="column.type === 'slot-text'" :name="`column-${column.field}`" :data="rowData" :column="column" />
+            <slot v-if="column.type === 'slot-select'" :name="`column-${column.field}`" :data="rowData" :column="column" />
+            <slot v-if="column.type === 'slot-icon'" :name="`column-${column.field}`" :data="rowData" :column="column" />
+            <slot v-if="column.type === 'slot-date-editable'" :name="`column-${column.field}`" :data="rowData" :column="column" />
+            <slot v-if="column.type === 'slot-bagde'" :name="`column-${column.field}`" :data="rowData" :column="column" />
 
             <span v-if="column.type === 'icon' && column.icon">
               <Button :icon="column.icon" class="p-button-rounded p-button-text w-2rem h-2rem" aria-label="Submit" />
