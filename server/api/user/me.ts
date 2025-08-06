@@ -1,6 +1,6 @@
 import { getToken } from '#auth'
 
-// server/api/user/me.ts - MODIFICADO para manejar mejor errores
+// MODIFICADO para manejar mejor errores
 
 export default defineEventHandler(async (event) => {
   const token = await getToken({ event, secret: useRuntimeConfig().auth.secret })

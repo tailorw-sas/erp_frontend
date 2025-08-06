@@ -1,3 +1,4 @@
+// utils/indexedDbHelpers.ts
 import { getDb } from './indexedDbClient'
 
 export async function setCachedData(store: string, key: string, data: any) {

@@ -28,6 +28,28 @@ export default defineNuxtPlugin(() => {
     if (status.value === 'authenticated') {
       console.warn('Logging out due to inactivity')
 
+      // ✅ FIXED: Limpiar cache de usuario específicamente
+      try {
+        const { data: sessionData } = useAuth()
+        const userId = (sessionData.value as any)?.user?.userId
+
+        if (userId) {
+          // Limpiar IndexedDB
+          const { clearUserData } = await import('~/utils/indexedDbClient')
+          await clearUserData(userId)
+
+          // Limpiar cache en memoria
+          const { useDynamicCacheStore } = await import('~/stores/useDynamicCacheStore')
+          const dynamicCache = useDynamicCacheStore()
+          dynamicCache.delete(`userData_${userId}`)
+
+          console.info('User cache cleared on inactivity logout')
+        }
+      }
+      catch (error) {
+        console.error('Error clearing user cache on logout:', error)
+      }
+
       try {
         await signOut({
           callbackUrl: '/auth/login?reason=inactivity',
