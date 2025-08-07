@@ -113,6 +113,22 @@ const fieldsV2: Array<FieldDefinitionType> = [
     disabled: true
   },
   {
+    field: 'shareFileDay',
+    header: 'Day',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'shareFileTime',
+    header: 'Time',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
     field: 'hotel',
     header: 'Hotel Code',
     dataType: 'text',
@@ -128,14 +144,6 @@ const fieldsV2: Array<FieldDefinitionType> = [
     headerClass: 'mb-1',
     disabled: true,
   },
-  // {
-  //   field: 'employee',
-  //   header: 'Employee',
-  //   dataType: 'select',
-  //   class: 'field col-12',
-  //   headerClass: 'mb-1',
-  //   hidden: true,
-  // },
   {
     field: 'path',
     header: 'Path',
@@ -178,6 +186,22 @@ const fieldsV2ForCreate: Array<FieldDefinitionType> = [
   {
     field: 'shareFileMonth',
     header: 'Month',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'shareFileDay',
+    header: 'Day',
+    dataType: 'text',
+    class: 'field col-12 md: required',
+    headerClass: 'mb-1',
+    disabled: true
+  },
+  {
+    field: 'shareFileTime',
+    header: 'Time',
     dataType: 'text',
     class: 'field col-12 md: required',
     headerClass: 'mb-1',
@@ -238,6 +262,8 @@ const item = ref<GenericObject>({
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
+  shareFileDay: dayjs().format('D') || '',
+  shareFileTime: '',
   hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
   agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
   fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
@@ -248,47 +274,21 @@ const itemTemp = ref<GenericObject>({
   paymentId: externalProps.selectedPayment.id || '',
   shareFileYear: dayjs().format('YYYY') || '',
   shareFileMonth: dayjs().format('MMMM') || '',
+  shareFileDay: dayjs().format('D') || '',
+  shareFileTime: '',
   hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
   agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
   fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
   path: '',
 })
 
-// const itemForCreate = ref<GenericObject>({
-
-// paymentId: externalProps.selectedPayment.id || '',
-// shareFileYear: dayjs().format('YYYY') || '',
-// shareFileMonth: dayjs().format('MMMM') || '',
-// hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
-// agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
-// fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
-// path: '',
-// })
-
-// const itemTempForCreate = ref<GenericObject>({
-// paymentId: externalProps.selectedPayment.id || '',
-// shareFileYear: dayjs().format('YYYY') || '',
-// shareFileMonth: dayjs().format('MMMM') || '',
-// hotel: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.hotel.name}` || '',
-// agency: externalProps.isCreateOrEditPayment === 'create' ? '' : `${externalProps.selectedPayment.agency.name}` || '',
-// fileName: externalProps.isCreateOrEditPayment === 'create' ? '' : externalProps.selectedPayment.paymentAmount ? `${externalProps.selectedPayment.paymentAmount}_${listItems.value.length + 1}.pdf` : '',
-// path: '',
-// })
-
 const Columns: IColumn[] = [
   { field: 'shareFileYear', header: 'Year', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'shareFileMonth', header: 'Month', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'shareFileDay', header: 'Day', type: 'text', width: '100px', sortable: false, showFilter: false },
+  { field: 'shareFileTime', header: 'Time', type: 'text', width: '100px', sortable: false, showFilter: false },
   { field: 'fileName', header: 'Filename', type: 'text', width: '200px', },
-  { field: 'createdAt', header: 'Date', type: 'date', width: 'auto' },
 ]
-// const columnsAttachment: IColumn[] = [
-//   { field: 'attachmentId', header: 'Id', type: 'text', width: '100px', sortable: false, showFilter: false },
-//   { field: 'paymentId', header: 'Payment Id', type: 'text', width: '100px', sortable: false, showFilter: false },
-//   // { field: 'resourceType', header: 'Resource Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'resource-type' } },
-//   { field: 'attachmentType', header: 'Type', type: 'select', width: '200px', objApi: { moduleApi: 'payment', uriApi: 'attachment-type' } },
-//   { field: 'fileName', header: 'Filename', type: 'text', width: '200px' },
-//   { field: 'remark', header: 'Remark', width: '200px', type: 'text' },
-// ]
 
 const dialogVisible = ref(externalProps.openDialog)
 const options = ref({
@@ -377,16 +377,14 @@ async function getList() {
       shareFileList = [...shareFileList, {
         ...iterator,
         paymentId: iterator.resource?.paymentId || '',
-        shareFileMonth: iterator.shareFileMonth
-          ? dayjs(`2024-${iterator.shareFileMonth}-01`).format('MMMM')
+        shareFileMonth: (iterator.shareFileYear && iterator.shareFileMonth)
+          ? dayjs(`${iterator.shareFileYear}-${iterator.shareFileMonth}-${iterator.shareFileDay}`).format('MMMM')
           : '',
-        // <<< AÑADIDO: la fecha
-        createdAt: iterator.createdAt
-          ? dayjs(iterator.createdAt).format('DD/MM/YYYY')
-          : ''
+        shareFileDay: (iterator.shareFileYear && iterator.shareFileMonth && iterator.shareFileDay)
+          ? dayjs(`${iterator.shareFileYear}-${iterator.shareFileMonth}-${iterator.shareFileDay}`).format('D')
+          : '',
       }]
     }
-
     listItems.value = [...shareFileList]
     if (listItems.value.length > 0) {
       idItemToLoadFirstTime.value = listItems.value[0].id
@@ -479,7 +477,7 @@ async function deleteItem(id: string) {
 }
 
 async function saveItem(item: { [key: string]: any }) {
-  if (loadingSaveAll.value === true) { return } // Esto es para que no se ejecute dos veces el save
+  if (loadingSaveAll.value === true) { return }
   loadingSaveAll.value = true
   let successOperation = true
   if (idItem.value) {
@@ -622,14 +620,18 @@ async function getItemById(id: string) {
         item.value.id = response.payment.id
         item.value.paymentId = response.payment.paymentId
         item.value.shareFileYear = response.shareFileYear
-        item.value.shareFileMonth = response.shareFileMonth ? dayjs(`2024-${response.shareFileMonth}-01`).format('MMMM') || '' : ''
+        item.value.shareFileMonth = response.shareFileMonth ? dayjs(`${response.shareFileYear}-${response.shareFileMonth}-${response.shareFileDay}`).format('MMMM') || '' : ''
+        item.value.shareFileDay = response.shareFileDay ? dayjs(`${response.shareFileYear}-${response.shareFileMonth}-${response.shareFileDay}`).format('D') || '' : ''
+        item.value.shareFileTime = response.shareFileTime ? response.shareFileTime || '' : ''
         item.value.hotel = `${response.payment.hotel.code} - ${response.payment.hotel.name}`
         item.value.agency = `${response.payment.agency.code} - ${response.payment.agency.name}`
         item.value.fileName = response.fileName
-        item.value.path = response.fileUrl // `https://static.kynsoft.net/${response.fileUrl}`
+        item.value.path = response.fileUrl
         pathFileLocal.value = response.path
         updateFieldProperty(fieldsV2, 'shareFileYear', 'disabled', true)
         updateFieldProperty(fieldsV2, 'shareFileMonth', 'disabled', true)
+        updateFieldProperty(fieldsV2, 'shareFileDay', 'disabled', true)
+        updateFieldProperty(fieldsV2, 'shareFileTime', 'disabled', true)
         updateFieldProperty(fieldsV2, 'hotel', 'disabled', true)
         updateFieldProperty(fieldsV2, 'agency', 'disabled', true)
       }
