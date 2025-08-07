@@ -783,6 +783,16 @@ defineExpose({ clearSelectedItems })
                 placeholder="Write a text"
               />
 
+              <Button
+                v-if="false"
+                type="button"
+                icon="pi pi-filter"
+                text
+                aria-haspopup="true"
+                :aria-controls="`overlayPanel_${index}`"
+                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
+              />
+
               <Menu :id="column.field" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsString" :popup="true" class="w-full md:w-9rem">
                 <template #item="{ item, props: menuProps }">
                   <a v-ripple class="flex align-items-center" v-bind="menuProps.action" @click="filterModel.matchMode = item.id; filterCallback()">
@@ -851,6 +861,15 @@ defineExpose({ clearSelectedItems })
                   }
                   await getDataFromFiltersSelectors(column, objQueryToSearch)
                 }"
+              />
+
+              <Button
+                v-if="false"
+                type="button"
+                icon="pi pi-filter"
+                text aria-haspopup="true"
+                aria-controls="overlay_menu_filter"
+                @click="toggleMenuFilter($event, modeFilterDisplay === 'menu' ? column.field : index)"
               />
 
               <Menu id="overlay_menu_filter" :ref="modeFilterDisplay === 'row' ? 'menuFilterForRowDisplay' : menuFilter[column.field]" :model="menuItemsSelect" :popup="true" class="w-full md:w-9rem">
