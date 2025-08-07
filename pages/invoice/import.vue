@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import { v4 as uuidv4 } from 'uuid'
 import type { PageState } from 'primevue/paginator'
 import { GenericService } from '~/services/generic-services'

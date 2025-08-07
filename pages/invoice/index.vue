@@ -3,7 +3,6 @@ import { onMounted, ref, watch } from 'vue'
 import type { PageState } from 'primevue/paginator'
 import { z } from 'zod'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
 import Checkbox from 'primevue/checkbox'
 import ContextMenu from 'primevue/contextmenu'
@@ -12,9 +11,7 @@ import type { IColumn, IPagination } from '~/components/table/interfaces/ITableI
 import type { FieldDefinitionType } from '~/components/form/EditFormV2'
 import type { GenericObject } from '~/types'
 import { GenericService } from '~/services/generic-services'
-import { statusToString } from '~/utils/helpers'
 import type { IData } from '~/components/table/interfaces/IModelData'
-import getUrlByImage from '~/composables/files'
 import { ENUM_INVOICE_STATUS } from '~/utils/Enums'
 import type { UndoImportInvoiceResponse } from './undo-import.vue'
 import ImportVirtualDialog from '~/pages/invoice/import-virtual.vue'
@@ -29,10 +26,11 @@ import SendByEmailDialog from '~/pages/invoice/sendInvoice-email.vue'
 import SendByBavelDialog from '~/pages/invoice/sendInvoice-bavel.vue'
 import UndoImportDialog from '~/pages/invoice/undo-import.vue'
 import { copyPaymentsToClipboardPayMang } from '~/pages/payment/utils/clipboardUtilsListPayMang'
+import { ENUM_INVOICE_CRITERIA } from '~/utils/Enums'
+import { formatNumber } from '~/utils/helpers'
 
 // VARIABLES -----------------------------------------------------------------------------------------
 const authStore = useAuthStore()
-const route = useRoute()
 const { data: userData } = useAuth()
 
 const { status, data } = useAuth()
@@ -46,7 +44,6 @@ const menu_reconcile = ref()
 const toast = useToast()
 const entryCode = ref('')
 const randomCode = ref(generateRandomCode());
-const confirm = useConfirm()
 const listItems = ref<any[]>([])
 const listPrintItems = ref<any[]>([])
 const formReload = ref(0)
@@ -55,10 +52,7 @@ const openDialog = ref(false)
 
 const totalInvoiceAmount = ref(0)
 const totalDueAmount = ref(0)
-const totalAmount = ref(0)
-const totalHotelAmount = ref(0)
 const bookingDialogOpen = ref<boolean>(false)
-const idItemDetail = ref('')
 const loadingSaveAll = ref(false)
 const idItem = ref('')
 const idItemToLoadFirstTime = ref('')
@@ -85,14 +79,6 @@ const SendByEmailDialogVisible =ref(false)
 const SendByBavelDialogVisible =ref(false)
 const UndoImportDialogVisible =ref(false)
 
-const itemSend = ref<GenericObject>({
-  employee:userData?.value?.user?.userId,
-  invoice:null,
-})
-
-// const allDefaultItem = { id: 'All', name: 'All', status: 'ACTIVE' }
-const loadingDelete = ref(false)
-const statusListForFilter = ref<any[]>([])
 const filterToSearch = ref<IData>({
   criteria: ENUM_INVOICE_CRITERIA.find((i) => i.id === 'invoiceId'),
   search: '',
@@ -106,11 +92,6 @@ const filterToSearch = ref<IData>({
   includeInvoicePaid: null
 })
 
-const confApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice',
-})
-
 const objApis = ref({
   client: { moduleApi: 'settings', uriApi: 'manage-client' },
   agency: { moduleApi: 'settings', uriApi: 'manage-agency' },
@@ -119,24 +100,13 @@ const objApis = ref({
   invoiceType: { moduleApi: 'settings', uriApi: 'manage-invoice-type' },
 })
 
-const confAttachmentApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-attachment',
-})
-
-const confAdjustmentsApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-adjustment',
-})
 const confSendApi = reactive({
   moduleApi: 'invoicing',
   uriApi: 'manage-invoice/send',
 })
 
-
 const disableClient = ref<boolean>(false)
 const disableDates = ref<boolean>(false)
-
 
 const expandedInvoice = ref('')
 
@@ -147,16 +117,6 @@ const clientList = ref<any[]>([])
 const agencyList = ref<any[]>([])
 const maxSelectedLabels = ref<{agency: number, client: number, hotel: number}>({agency: 1, client: 2, hotel: 3})
 
-const confclientListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-client',
-})
-
-const confClonationApi = reactive({
-  moduleApi: 'invoicing',
-  uriApi: 'manage-invoice/total-clone-invoice',
-})
-
 const confhotelListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-hotel',
@@ -165,11 +125,6 @@ const confhotelListApi = reactive({
 const confagencyListApi = reactive({
   moduleApi: 'settings',
   uriApi: 'manage-agency',
-})
-
-const confinvoiceTypeListApi = reactive({
-  moduleApi: 'settings',
-  uriApi: 'manage-invoice-type',
 })
 
 const confApiApplyUndo = reactive({
@@ -184,12 +139,13 @@ function generateRandomCode() {
 const computedShowMenuItemNewCedit = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREDIT-CREATE'])))
 })
+
 const computedShowMenuItemShowHistory = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-SHOW-HISTORY'])))
 })
 
 const computedShowMenuItemAttachment = computed(() => {
-  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-CREATE']) || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-EDIT'])))
+  return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:ATTACHMENT-VIEW-FILE'])))
 })
 
 const computedShowMenuItemPrint = computed(() => {
@@ -199,6 +155,7 @@ const computedShowMenuItemPrint = computed(() => {
 const computedShowClone = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CLONE'])))
 })
+
 const computedShowCloneTotal = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CLONE-TOTAL'])))
 })
@@ -290,7 +247,7 @@ const invoiceAllContextMenuItems = ref([
       iconSvg:'',
       command: () => doubleFactor(),
       default: true,
-     // disabled: computedShowClone,
+      disabled: computedShowClone,
       showItem: false,
     },
     {
@@ -389,25 +346,14 @@ const invoiceContextMenuItems = ref<any[]>([])
 const exportDialogOpen = ref(false)
 const exportPdfDialogOpen = ref(false)
 const exportAttachmentsDialogOpen = ref(false)
-const exportBlob = ref<any>(null)
 
 // PRINT
-const messageForEmptyTable = ref('The data does not correspond to the selected criteria.')
 const loadingSavePrint = ref(false)
 const openDialogPrint = ref(false)
 const groupByClient = ref(false)
 const invoiceSupport = ref(false)
 const invoiceAndBookings = ref(true)
 const invoiceIdsListToPrint = ref<string[]>([])
-
-function savePrint() {
-  loadingSavePrint.value = true
-  setTimeout(() => {
-    loadingSavePrint.value = false
-  }, 3000)
-}
-
-
 
 async function invoicePrint() {
   try {
@@ -424,7 +370,6 @@ async function invoicePrint() {
     // En caso de que solo este marcado el paymentAndDetails
 
     nameOfPdf = invoiceSupport.value ? `invoice-support-${dayjs().format('YYYY-MM-DD')}.pdf` : `invoice-and-bookings-${dayjs().format('YYYY-MM-DD')}.pdf`
-    // nameOfPdf = `${props.invoice?.hotel?.code}-${props.invoice?.invoiceId}.pdf`
     
     const response: any = await GenericService.create('invoicing', 'manage-invoice/report', payloadTemp)
 
@@ -445,8 +390,6 @@ async function invoicePrint() {
     loadingSavePrint.value = false
     openDialogPrint.value = false
   }
-
-  // generateStyledPDF()
 }
 
 function closeModalPrint() {
@@ -457,12 +400,10 @@ function openDialogToPrint() {
   openDialogPrint.value = true
   getPrintList()
 }
+
 function Print() {
   InvoiceToPrintDialogVisible.value = true
 }
-
-
-
 
 async function SendInvoiceByType() {
   loadingSaveAll.value = true
@@ -504,30 +445,20 @@ async function onFromInvoice() {
   }
 }
 
-async function createSend() {
-   // Opcional: Puedes manejar el estado de carga aquí
-}
-
 const computedShowMenuItemInvoice = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:CREATE'])))
-})
-
-const computedShowMenuItemCredit = computed(() => {
-  if (!authStore.can(['INVOICE-MANAGEMENT:CREATE'])) {
-    return true
-  } else {
-    return expandedInvoice.value === ''
-  }
 })
 
 const computedShowMenuItemOldCredit = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:OLD-CREDIT-CREATE'])))
 })
+
 function handleDialogClose() {
     doubleFactorOpen.value = false;
     entryCode.value = '';
     randomCode.value = generateRandomCode();
 }
+
 function handleDialogCloseTotal() {
  
   doubleFactorTotalOpen.value = false;
@@ -535,81 +466,17 @@ function handleDialogCloseTotal() {
   randomCode.value = generateRandomCode();
 }
 
-
 async function handleApplyClick() {
-
-    // Captura el invoice ID desde props
-    const invoiceId = selectedInvoice;
     entryCode.value = '';
-    // Redirecciona a la nueva interfaz
     navigateTo(`invoice/clone-partial?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
-
-   
-   
-    // Cierra el diálogo
-    handleDialogClose();
-  
+    handleDialogClose();  
 }
-async function createClonation() {
-  try {
-    loadingSaveAll.value = true;
 
-    // Crear el payload con solo los datos necesarios
-    const payload = {
-      invoiceToClone: selectedInvoice, // ID del invoice seleccionado
-      employeeName: userData?.value?.user?.name // ID del empleado autenticado
-    };
-
-    // Realizar la llamada al servicio
-    return await GenericService.create(confClonationApi.moduleApi, confClonationApi.uriApi, payload);
-  } catch (error: any) {
-    console.error('Error en createClonation:', error?.data?.data?.error?.errorMessage);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Error', 
-      detail: error?.data?.data?.error?.errorMessage || error?.message, 
-      life: 10000 
-    });
-  } finally {
-    loadingSaveAll.value = false;
-  }
-}
 async function handleTotalApplyClick() {
   entryCode.value = '';
-
-  /*try {
-    const response: any = await createClonation();
-
-    if (response && response.clonedInvoice) {
-      const clonedInvoiceId = response.clonedInvoice; // Asegúrate de que el ID esté en esta propiedad
-      const clonedInvoiceNo=response.clonedInvoiceNo;
-      toast.add({
-        severity: 'info',
-        summary: 'Confirmed',
-        detail: `The clonation invoice ${clonedInvoiceNo} was created successfully`,
-        life: 10000
-      })
-      // Redirigir a la página de edición con el ID del invoice clonado
-      navigateTo({ path: `/invoice/edit/${clonedInvoiceId}` });
-    }
-  } catch (error: any) {
-    // Mostrar un toast con el mensaje de error
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Error in Clonation', 
-      detail: error?.data?.data?.error?.errorMessage || error?.message, 
-      life: 10000 
-    });
-  } finally {
-    handleDialogCloseTotal();
-  }
-
-  */
   navigateTo(`invoice/clone-total?type=${InvoiceType.INVOICE}&selected=${selectedInvoice}&invoiceId=${selectedInvoiceObj.value.invoiceId}`, { open: { target: '_blank' } });
-
   handleDialogCloseTotal();
 }
-
 
 const createItems = ref([
   {
@@ -617,16 +484,6 @@ const createItems = ref([
     command: () => navigateTo(`invoice/create?type=${InvoiceType.INVOICE}`, { open: { target: '_blank' } }),
     disabled: computedShowMenuItemInvoice
   },
-  // {
-  //   label: 'Credit',
-  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.CREDIT}&selected=${expandedInvoice.value}`),
-  //   disabled: computedShowMenuItemCredit
-  // },
-  // {
-  //   label: 'Old Credit',
-  //   command: () => navigateTo(`invoice/create?type=${InvoiceType.OLD_CREDIT}`, { open: { target: '_blank' } }),
-  //   disabled: computedShowMenuItemOldCredit
-  // },
   {
     label: 'Old Credit',
     command: () => navigateTo(`invoice/old-credit/create`, { open: { target: '_blank' } }),
@@ -638,23 +495,19 @@ const createReconcile = ref([
   {
     label: 'Automatic',
     command:()=> ReconcileAutomaticDialogVisible.value=true, 
-    //command: () => navigateTo('invoice/reconcile-automatic', { open: { target: '_blank' } }),
-   // disabled: computedShowMenuItemReconcile
+    disabled: false 
   },
    {
     label: 'Manual',
     command:()=> ReconcileManualDialogVisible.value=true, 
-    //command: () => navigateTo('invoice/reconcile-manual',{open:{target:'blank'}}),
-  //   disabled: computedShowMenuItemCredit
+    disabled: false 
    },
   {
     label: 'Reconcile from Files',
-    command:()=> ReconcileFilesDialogVisible.value=true, 
-    //command: () => navigateTo('invoice/reconcile-from-files', { open: { target: '_blank' } }),
-    
+    command:()=> ReconcileFilesDialogVisible.value=true,
+    disabled: false 
   },
 ])
-
 
 const fields: Array<FieldDefinitionType> = [
   {
@@ -713,9 +566,11 @@ const computedShowMenuItemImportBookingFromFile = computed(() => {
 const computedShowMenuItemImportBookingFromVirtual = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:IMPORT-BOOKING-FROM-VIRTUAL'])))
 })
+
 const computedShowMenuItemUndoImport = computed(() => {
   return !(status.value === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:UNDO-IMPORT'])))
 })
+
 const itemsMenuImport = ref([
   {
     label: 'Booking From File',
@@ -730,14 +585,12 @@ const itemsMenuImport = ref([
   {
     label: 'Import From Innsist',
     command:()=> ImportInssistDialogVisible.value=true,
-    // command: () => navigateTo('invoice/import-innsist',{ open: { target: '_blank' } }),
-    //disabled: computedShowMenuItemUndoImport
+    disabled: false,
   },
   {
     label: 'Undo Import',
     command:()=> UndoImportDialogVisible.value=true,
-    //command: () => navigateTo('invoice/undo-import',{ open: { target: '_blank' } }),
-    //disabled: computedShowMenuItemUndoImport
+    disabled: computedShowMenuItemUndoImport
   }
   
 ])
@@ -767,16 +620,18 @@ const closeReconcileFiles = () => {
   ReconcileFilesDialogVisible.value = false
 }
 
-
 const closeSendByBavel = () => {
   SendByBavelDialogVisible.value = false
 }
+
 const closeSendByEmail = () => {
   SendByEmailDialogVisible.value = false
 }
+
 const closeSendByFtp = () => {
   SendByFtpDialogVisible.value = false
 }
+
 const closeUndoImport = () => {
   UndoImportDialogVisible.value = false
 }
@@ -784,8 +639,6 @@ const closeUndoImport = () => {
 const closeInvoiceToPrint = () => {
   InvoiceToPrintDialogVisible.value = false
 }
-
-
 
 const itemsMenuSend = ref([
   {
@@ -826,9 +679,9 @@ const columnstoPrint: IColumn[] = [
   { field: 'aging', header: 'Aging', type: 'text' },
    { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'slot-select', localItems: ENUM_INVOICE_STATUS, sortable: true },
 ]
+
 const columns: IColumn[] = [
   { field: 'invoiceId', header: 'Id', type: 'text' },
-   //{ field: 'invoiceType', header: 'Type', type: 'select' },
   { field: 'hotel', header: 'Hotel', type: 'select', objApi: confhotelListApi },
   { field: 'agencyCd', header: 'Agency Cd',tooltip: 'Agency Code', type: 'text' },
   { field: 'agency', header: 'Agency', type: 'select', objApi: confagencyListApi },
@@ -837,9 +690,6 @@ const columns: IColumn[] = [
   { field: 'isManual', header: 'Manual', type: 'bool', tooltip: 'Manual' },
   { field: 'invoiceAmount', header: 'Invoice Amount', type: 'number' },
   { field: 'dueAmount', header: 'Invoice Balance', type: 'number' },
-  // { field: 'autoRec', header: 'Auto Rec', type: 'bool' },
-  // { field: 'status', header: 'Status', type: 'local-select', localItems: ENUM_INVOICE_STATUS },
-  // { field: 'status', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
   { field: 'invoiceStatus', header: 'Status', width: '100px', frozen: true, type: 'select', objApi: objApis.value.status, sortable: true },
 ]
 // -------------------------------------------------------------------------------------------------------
@@ -849,12 +699,6 @@ const ENUM_FILTER = [
   { id: 'invoiceAmount', name: 'Invoice Amount' },
 ]
 
-// const sClassMap: IStatusClass[] = [
-//   { status: 'Transit', class: 'text-transit' },
-//   { status: 'Cancelled', class: 'text-cancelled' },
-//   { status: 'Confirmed', class: 'text-confirmed' },
-//   { status: 'Applied', class: 'text-applied' },
-// ]
 // TABLE OPTIONS -----------------------------------------------------------------------------------------
 const options = ref({
   tableName: 'Invoice',
@@ -869,6 +713,7 @@ const options = ref({
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
+
 const optionsToPrint = ref({
   tableName: 'Invoice to Print',
   moduleApi: 'invoicing',
@@ -883,6 +728,7 @@ const optionsToPrint = ref({
   messageToDelete: 'Do you want to save the change?',
   showTitleBar: false
 })
+
 const payloadOnChangePage = ref<PageState>()
 const payloadPrintOnChangePage = ref<PageState>()
 const payload = ref<IQueryRequest>({
@@ -901,6 +747,7 @@ const pagination = ref<IPagination>({
   totalPages: 0,
   search: ''
 })
+
 const paginationPrint = ref<IPagination>({
   page: 0,
   limit: 50,
@@ -930,15 +777,12 @@ function clearForm() {
 function handleAttachmentHistoryDialogOpen() {
   attachmentHistoryDialogOpen.value = true
 }
+
 function doubleFactor() {
-   // Limpiar el campo entryCode
-
-
   doubleFactorOpen.value = true;
   entryCode.value = '';
   randomCode.value = generateRandomCode();
 }
-
 
 function doubleFactorTotal() {
   doubleFactorTotalOpen.value = true
@@ -952,40 +796,18 @@ function doubleFactorForUndo() {
   randomCode.value = generateRandomCode();
 }
 
-
-async function exportToPdf() {
-  exportPdfDialogOpen.value = true
-}
-
 async function exportAttachments() {
   exportAttachmentsDialogOpen.value = true
 }
 
 async function exportList() {
   try {
-    //   const response = await GenericService.export(options.value.moduleApi, options.value.uriApi, payload.value)
-    // exportBlob.value = response
-
     exportDialogOpen.value = true
-
-
-
-
-    // const url = window.URL.createObjectURL(response);
-    //       const link = document.createElement('a');
-    //       link.href = url;
-    //       link.setAttribute('download', 'invoice-list.xlsx'); 
-    //       document.body.appendChild(link);
-    //       link.click();
-    //       document.body.removeChild(link);
-    //       window.URL.revokeObjectURL(url);
 
   } catch (error) {
     console.log(error);
   }
-
 }
-
 
 async function getList() {
   if (options.value.loading) {
@@ -1029,8 +851,7 @@ async function getList() {
           loadingDelete: false, 
           invoiceDate: new Date(iterator?.invoiceDate), 
           agencyCd: iterator?.agency?.code, 
-          // dueAmount: iterator.dueAmount ? Number.parseFloat(iterator?.dueAmount).toFixed(2) : iterator?.dueAmount || 0, 
-          // invoiceAmount: iterator.invoiceAmount ? Number.parseFloat(iterator?.invoiceAmount).toFixed(2) : 0,
+
           invoiceNumber: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           invoiceNumberTemp: invoiceNumber ?  invoiceNumber.replace("OLD", "CRE") : '',
           hotel: { ...iterator?.hotel, name: `${iterator?.hotel?.code || ""}-${iterator?.hotel?.name || ""}` },
@@ -1062,7 +883,8 @@ async function getPrintList() {
     filter: [{
         key: 'invoiceStatus',
         operator: 'IN', // Cambia a 'IN' para incluir varios valores
-        value: ['RECONCILED', 'SENT'] // Lista de estados
+        value: ['RECONCILED', 'SENT'], // Lista de estados
+        logicalOperation: 'AND'
       }],
       query: '',
       pageSize: 10,
@@ -1130,29 +952,27 @@ async function getPrintList() {
     optionsToPrint.value.loading = false;
   }
 }
+
 function copiarDatos() {
   copyPaymentsToClipboardPayMang(columns, listItems.value, toast)
 }
 
-
-async function openEditDialog (item: any, type: string) {  
+async function openEditDialog (item: any, type: string) { 
+  var path = ''
   switch (type) {
-    case InvoiceType.INVOICE:
-      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
-      break
     case InvoiceType.CREDIT:
-      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
-      break
     case InvoiceType.OLD_CREDIT:
-      await navigateTo({ path: `invoice/credit/edit/${item}` }, { open: { target: '_blank' } })
+      path = `invoice/credit/edit/${item}`
       break
     case InvoiceType.INCOME:
-      await navigateTo({ path: `invoice/income/edit/${item}` }, { open: { target: '_blank' } })
+      path =  `invoice/income/edit/${item}`
       break
+    case InvoiceType.INVOICE:
     default:
-      await navigateTo({ path: `invoice/edit/${item}` }, { open: { target: '_blank' } })
+      path = `invoice/edit/${item}`     
       break
   }
+  await navigateTo({ path }, { open: { target: '_blank' } })
 }
 
 async function resetListItems() {
@@ -1166,20 +986,17 @@ async function searchAndFilter() {
   payload.value.filter = [...payload.value.filter.filter((item: IFilter) => item?.type !== 'filterSearch')]
 
   if (!filterToSearch.value.search) {
-    // if (isFirstTimeInOnMounted.value === false) {}
       
     const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
 
     switch (filterToSearch.value.includeInvoicePaid) {
       case true:
-        // Elimina el filtro de 'dueAmount' si existe, para que muestre todos
         if (filterObjIncludeInvoicePaid) {
           payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
         }
         break;
 
       case false:
-        // Solo muestra los que tienen dueAmount igual a 0
         if (filterObjIncludeInvoicePaid) {
           filterObjIncludeInvoicePaid.operator = 'EQUALS';
           filterObjIncludeInvoicePaid.value = 0;
@@ -1211,27 +1028,7 @@ async function searchAndFilter() {
         break;
     }
 
-      // const filterObjIncludeInvoicePaid = payload.value.filter.find((item: any) => item?.key === 'dueAmount');
-
-      // if (filterToSearch.value.includeInvoicePaid !== undefined && filterToSearch.value.includeInvoicePaid !== null) {
-      //   const operator = filterToSearch.value.includeInvoicePaid ? 'EQUALS' : 'NOT_EQUALS';
-      //   const filterValue = 0;
-
-      //   if (filterObjIncludeInvoicePaid) {
-      //     filterObjIncludeInvoicePaid.operator = operator;
-      //     filterObjIncludeInvoicePaid.value = filterValue;
-      //   } else {
-      //     payload.value.filter.push({
-      //       key: 'dueAmount',
-      //       operator,
-      //       value: filterValue,
-      //       logicalOperation: 'AND'
-      //     });
-      //   }
-      // } else if (filterObjIncludeInvoicePaid) {
-      //   payload.value.filter = payload.value.filter.filter((item: any) => item?.key !== 'dueAmount');
-      // }
-    if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find(item => item.id === 'All')) {
+    if (filterToSearch.value.client?.length > 0 && !filterToSearch.value.client.find((item :any) => item.id === 'All')) {
       const filteredItems = filterToSearch.value.client.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
 
@@ -1243,7 +1040,7 @@ async function searchAndFilter() {
         type: 'filterSearch'
       }]
     }
-    if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find(item => item.id === 'All')) {
+    if (filterToSearch.value.agency?.length > 0 && !filterToSearch.value.agency.find((item: any) => item?.id === 'All')) {
       const filteredItems = filterToSearch.value.agency.filter((item: any) => item?.id !== 'All')
       const itemIds = filteredItems?.map((item: any) => item?.id)
       payload.value.filter = [...payload.value.filter, {
@@ -1324,13 +1121,6 @@ async function searchAndFilter() {
       }]
     }
   }
-  // else {
-  //   const invoiceIdTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceId')?.id
-  //   const invoiceNumberTemp = ENUM_INVOICE_CRITERIA.find((item: any) => item?.id === 'invoiceNumberPrefix')?.id
-  //   if (filterToSearch.value.criteria?.id !== invoiceIdTemp && filterToSearch.value.criteria?.id !== invoiceNumberTemp) {
-  //     return hotelError.value = true
-  //   }
-  // }
   await getList()
 }
 
@@ -1357,6 +1147,7 @@ async function clearFilterToSearch() {
   await getStatusListTemp()
   await getList()
 }
+
 async function getItemById(data: { id: string, type: string, status: any }) {
   await openEditDialog(data?.id, data?.type)
 }
@@ -1364,171 +1155,6 @@ async function getItemById(data: { id: string, type: string, status: any }) {
 function handleDialogOpen() {
   bookingDialogOpen.value = true
 }
-
-async function createItem(item: { [key: string]: any }) {
-  if (item) {
-    loadingSaveAll.value = true
-    const payload: { [key: string]: any } = { ...item }
-    payload.status = statusToString(payload.status)
-    payload.image = typeof payload.image === 'object' ? await getUrlByImage(payload.image) : payload.image
-    await GenericService.create(confApi.moduleApi, confApi.uriApi, payload)
-  }
-}
-
-async function updateItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  const payload: { [key: string]: any } = { ...item }
-  payload.status = statusToString(payload.status)
-  payload.image = typeof payload.image === 'object' ? await getUrlByImage(payload.image) : payload.image
-  await GenericService.update(confApi.moduleApi, confApi.uriApi, idItem.value || '', payload)
-}
-
-async function deleteItem(id: string) {
-  try {
-    loadingDelete.value = true
-    await GenericService.deleteItem(options.value.moduleApi, options.value.uriApi, id)
-    clearForm()
-    getList()
-  }
-  catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Could not delete invoice', life: 3000 })
-    loadingDelete.value = false
-  }
-  finally {
-    loadingDelete.value = false
-  }
-}
-
-async function saveItem(item: { [key: string]: any }) {
-  loadingSaveAll.value = true
-  let successOperation = true
-  if (idItem.value) {
-    try {
-      await updateItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-    idItem.value = ''
-  }
-  else {
-    try {
-      await createItem(item)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 10000 })
-    }
-    catch (error: any) {
-      successOperation = false
-      toast.add({ severity: 'error', summary: 'Error', detail: error.data.data.error.errorMessage, life: 10000 })
-    }
-  }
-  loadingSaveAll.value = false
-  if (successOperation) {
-    clearForm()
-    getList()
-  }
-}
-
-function requireConfirmationToDelete(event: any) {
-  confirm.require({
-    target: event.currentTarget,
-    group: 'headless',
-    header: 'Save the record',
-    message: 'Do you want to save the change?',
-    acceptClass: 'p-button-danger',
-    rejectLabel: 'Cancel',
-    acceptLabel: 'Accept',
-    accept: () => {
-      deleteItem(idItem.value)
-      toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Transaction was successful', life: 3000 })
-    },
-    reject: () => {
-      // toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 })
-    }
-  })
-}
-
-// async function getHotelList(query = '') {
-//   try {
-//     const payload
-//       = {
-//       filter: [
-//         {
-//           key: 'name',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'code',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'status',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//           logicalOperation: 'AND'
-//         }
-//       ],
-//       query: '',
-//       pageSize: 200,
-//       page: 0,
-//       sortBy: 'name',
-//       sortType: ENUM_SHORT_TYPE.ASC
-//     }
-
-//     hotelList.value = [{ id: 'All', name: 'All', code: 'All' }]
-//     const response = await GenericService.search(confhotelListApi.moduleApi, confhotelListApi.uriApi, payload)
-//     const { data: dataList } = response
-//     for (const iterator of dataList) {
-//       hotelList.value = [...hotelList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-//     }
-//   }
-//   catch (error) {
-//     console.error('Error loading hotel list:', error)
-//   }
-// }
-
-// async function getClientList(query = '') {
-//   try {
-//     debugger
-//     const payload
-//       = {
-//       filter: [
-//         {
-//           key: 'name',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'status',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//           logicalOperation: 'AND'
-//         }
-//       ],
-//       query: '',
-//       pageSize: 200,
-//       page: 0,
-//       sortBy: 'name',
-//       sortType: ENUM_SHORT_TYPE.ASC
-//     }
-//     let clientTemp: any[] = []
-//     clientList.value = []
-//     const response = await GenericService.search(confclientListApi.moduleApi, confclientListApi.uriApi, payload)
-//      const { data: dataList } = response
-//     for (const iterator of dataList) {
-//        clientList.value = [...clientList.value, { id: iterator.id, name: iterator.name, status: iterator.status }]
-//      }
-//   }
-//   catch (error) {
-//     console.error('Error loading client list:', error)
-//   }
-// }
 
 interface DataListItem {
   id: string
@@ -1545,6 +1171,14 @@ interface ListItem {
   code?: string
   description?: string
 }
+
+// interface CustomProps {
+//   model: any[]
+//   maxSelectedLabels: number
+//   field: string
+// }
+
+// const props = defineProps<CustomProps>()
 
 function mapFunction(data: DataListItem): ListItem {
   return {
@@ -1566,46 +1200,6 @@ function mapFunction2(data: DataListItem): ListItem {
   }
 }
 
-interface DataListItemForStatus {
-  id: string
-  name: string
-  code: string
-  status: string
-  description?: string
-  invoiceStatus: {
-    sentStatus: boolean
-    reconciledStatus: boolean
-    canceledStatus: boolean
-    processStatus: boolean
-  }
-}
-
-interface ListItemForStatus {
-  id: string
-  name: string
-  status: boolean | string
-  code?: string
-  description?: string
-  sentStatus?: boolean
-  reconciledStatus?: boolean
-  canceledStatus?: boolean
-  processStatus?: boolean
-}
-
-function mapFunctionStatus(data: DataListItemForStatus): ListItemForStatus {  
-  return {
-    id: data.id,
-    name: `${data.name}`,
-    status: data.status,
-    code: data.code,
-    description: data.description,
-    sentStatus: data.invoiceStatus.sentStatus,
-    reconciledStatus: data.invoiceStatus.reconciledStatus,
-    canceledStatus: data.invoiceStatus.canceledStatus,
-    processStatus: data.invoiceStatus.processStatus
-  }
-}
-
 function mapFunctionForType(data: DataListItem): ListItem {
   return {
     id: data.id,
@@ -1623,6 +1217,7 @@ async function getClientList(moduleApi: string, uriApi: string, queryObj: { quer
   clientTemp = [...new Set(clientTemp)];
   clientList.value = [...clientTemp]
 }
+
 async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let agencyTemp: any[] = []
   agencyList.value = []
@@ -1631,9 +1226,7 @@ async function getAgencyList(moduleApi: string, uriApi: string, queryObj: { quer
   agencyList.value = [...agencyTemp]
   console.log(agencyList.value);
 }
-async function getAgencyListTemp(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-  return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-}
+
 async function getHotelList(query: string) {
   hotelList.value = []
   hotelList.value = hotelTemp.value.filter(item =>
@@ -1641,6 +1234,7 @@ async function getHotelList(query: string) {
     || item.name.toUpperCase().includes(query.toUpperCase())
   )
 }
+
 async function getHotelListTemp() {
   try {
      const payload = {
@@ -1677,10 +1271,6 @@ async function getStatusList(moduleApi: string, uriApi: string, queryObj: { quer
   statusTemp = [...new Set(statusTemp)];
   statusList.value = [...statusTemp]
 }
-
-// async function getStatusListLoadValuesByDefaults(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
-//   return await getDataList<DataListItem, ListItem>(moduleApi, uriApi, filter, queryObj, mapFunction, { sortBy: 'name', sortType: ENUM_SHORT_TYPE.ASC })
-// }
 
 async function getStatusListTemp() {
   try {
@@ -1744,27 +1334,6 @@ async function getStatusListTemp() {
   }
 }
 
-// {
-//   "id": "a2befe8a-d335-4be0-94be-a8ed38a6d4f2",
-//   "name": "Sent",
-//   "status": "ACTIVE",
-//   "code": "SENT",
-//   "description": ""
-// }
-
-// async function getStatusList(query = '') {
-//   try {
-//     statusList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_STATUS]
-
-//     if (query) {
-//       statusList.value = statusList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-//     }
-//   }
-//   catch (error) {
-//     console.error('Error loading hotel list:', error)
-//   }
-// }
-
 async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: { query: string, keys: string[] }, filter?: FilterCriteria[]) {
   let invoiceTypeListTemp: any[] = []
   invoiceTypeList.value = []
@@ -1773,121 +1342,7 @@ async function getInvoiceTypeList(moduleApi: string, uriApi: string, queryObj: {
   invoiceTypeList.value = [...invoiceTypeListTemp]
 }
 
-// async function getInvoiceTypeList(query = '') {
-//   try {
-
-//     const payload
-//       = {
-//       filter: [
-//         {
-//           key: 'name',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'code',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'status',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//           logicalOperation: 'AND'
-//         }
-//       ],
-//       query: '',
-//       pageSize: 200,
-//       page: 0,
-//       sortBy: 'name',
-//       sortType: ENUM_SHORT_TYPE.ASC
-//     }
-
-//     invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }]
-//     const response = await GenericService.search(confinvoiceTypeListApi.moduleApi, confinvoiceTypeListApi.uriApi, payload)
-//     const { data: dataList } = response
-//     for (const iterator of dataList) {
-//       invoiceTypeList.value = [...invoiceTypeList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-//     }
-
-//     // invoiceTypeList.value = [{ id: 'All', name: 'All', code: 'All' }, ...ENUM_INVOICE_TYPE]
-
-//     // if (query) {
-//     //   invoiceTypeList.value = invoiceTypeList.value.filter(inv => String(inv?.name).toLowerCase().includes(query.toLowerCase()))
-//     // }
-
-
-//   }
-//   catch (error) {
-//     console.error('Error loading invoice type list:', error)
-//   }
-// }
-
-// async function getAgencyList(query = '') {
-//   try {
-//     const payload
-//       = {
-//       filter: [
-//         {
-//           key: 'name',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'code',
-//           operator: 'LIKE',
-//           value: query,
-//           logicalOperation: 'OR'
-//         },
-//         {
-//           key: 'status',
-//           operator: 'EQUALS',
-//           value: 'ACTIVE',
-//           logicalOperation: 'AND'
-//         }
-//       ] as any,
-//       query: '',
-//       pageSize: 200,
-//       page: 0,
-//       sortBy: 'name',
-//       sortType: ENUM_SHORT_TYPE.ASC
-//     }
-
-//     agencyList.value = [{ id: 'All', name: 'All', code: 'All' }]
-
-//     if (filterToSearch.value.client?.length === 0) {
-//       return agencyList.value = []
-//     }
-//     const clientIds: any[] = []
-
-//     filterToSearch.value?.client?.forEach((client: any) => clientIds.push(client?.id))
-
-//     payload.filter.push({
-//       key: 'client.id',
-//       operator: 'IN',
-//       value: clientIds,
-//       logicalOperation: 'AND'
-//     })
-
-//     const response = await GenericService.search(confagencyListApi.moduleApi, confagencyListApi.uriApi, payload)
-//     const { data: dataList } = response
-//     for (const iterator of dataList) {
-//       agencyList.value = [...agencyList.value, { id: iterator.id, name: iterator.name, code: iterator.code }]
-//     }
-//   }
-//   catch (error) {
-//     console.error('Error loading agency list:', error)
-//   }
-// }
-
 async function parseDataTableFilter(payloadFilter: any) {
-  // if(payloadFilter?.agencyCd){
-  //   payloadFilter['agency.code'] = payloadFilter.agencyCd
-  //   delete payloadFilter.agencyCd
-  // }
 
   const parseFilter: IFilter[] | undefined = await getEventFromTable(payloadFilter, columns)  
 
@@ -1957,7 +1412,6 @@ const checkboxLabel = computed(() => {
   }
 });
 
-
 function getStatusBadgeBackgroundColor(code: string) {  
   switch (code) {
     case 'PROCESSED': return '#FF8D00'
@@ -1996,7 +1450,6 @@ interface InvoiceStatus {
   processStatus: boolean;
 }
 
-
 function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) { 
   if (!item) return
   if (item.processStatus) return '#FF8D00'
@@ -2005,43 +1458,24 @@ function getStatusBadgeBackgroundColorByItem(item: InvoiceStatus) {
   if (item.canceledStatus) return '#888888'
 }
 
-function getStatusNameByItem(item: InvoiceStatus) {
-
-
-  switch (code) {
-    case 'PROCESSED': return 'Processed'
-    case 'RECONCILED': return 'Reconciled'
-    case 'SENT': return 'Sent'
-    case 'CANCELLED': return 'Cancelled'
-    case 'PENDING': return 'Pending'
-
-    default:
-      return ''
-  }
-}
-
-
 const disabledSearch = computed(() => {
   // return !(filterToSearch.value.criterial && filterToSearch.value.search)
   return false
 })
 
-const disabledClearSearch = computed(() => {
-  return !(filterToSearch.value.criterial && filterToSearch.value.search)
-})
-
-function toggle(event) {
+function toggle(event:any) {
   menu.value.toggle(event)
 }
 
-function toggleReconcile(event) {
+function toggleReconcile(event:any) {
   menu_reconcile.value.toggle(event)
 }
-function toggleImport(event) {
+
+function toggleImport(event:any) {
   menu_import.value.toggle(event)
 }
 
-function toggleSend(event) {
+function toggleSend(event:any) {
   menu_send.value.toggle(event)
 }
 
@@ -2064,7 +1498,6 @@ async function onCloseChangeAgencyDialog(isCancel: boolean) {
 }
 
 function onRowRightClick(event: any) {
-
   selectedInvoice = event.data.id
   selectedInvoiceObj.value = event.data
   setMenuOptions()
@@ -2089,11 +1522,11 @@ function onRowRightClick(event: any) {
     // Mostrar Clone Complete solo para Reconciled,Sent y e iguales amounts. Debe estar en close operation el invoice date
     if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED].includes(event?.data?.status)
       && event?.data?.dueAmount === event?.data?.invoiceAmount) {  
-      if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
+      if (!event.data?.hotel?.virtual && (typeof event?.data?.dueAmount === 'number' && Number(event?.data?.dueAmount) > 0) 
+      || (typeof event?.data?.dueAmount === 'string' && Number(event?.data?.dueAmount.replace(/,/g, '')) > 0)) {
         findMenuItemByLabelSetShow('Clone Complete', invoiceContextMenuItems.value, true)
       }      
     }
-    console.log(invoiceContextMenuItems.value)
   }
 
   // Change Agency
@@ -2148,13 +1581,6 @@ if ([InvoiceStatus.SENT, InvoiceStatus.RECONCILED, InvoiceStatus.PROCESSED].incl
     findMenuItemByLabelSetShow('From Invoice', invoiceContextMenuItems.value, true)
   }
 
-  // Adjustment (Se comenta temporalmente, no borrar)
-  // if (event?.data?.status === InvoiceStatus.PROCESSED) {
-  //   findMenuItemByLabelSetShow('Adjustment', invoiceContextMenuItems.value, true)
-  // }
-
-
-
 
   invoiceContextMenuItems.value = [...invoiceContextMenuItems.value.filter((item: any) => item?.showItem)]
   // Mostrar solo si es para estos estados
@@ -2205,8 +1631,6 @@ function handleClose() {
 }
 
 async function openDialogChangeAgency() {
-  // Vamos a inyectarle la informacion del cliente de la agencia
-  // Porque se quito la informacion del cliente de la agencia y el componente Change Agency lo necesita
   try {
     const response = await GenericService.getById(confagencyListApi.moduleApi, confagencyListApi.uriApi, selectedInvoiceObj.value?.agency?.id)
     if (response && response.client) {
@@ -2221,7 +1645,7 @@ async function openDialogChangeAgency() {
       selectedInvoiceObj.value.agency.client = {...objClient}
       changeAgencyDialogOpen.value = true
     }
-  } catch (error) {    
+  } catch {    
     toast.add({ severity: 'error', summary: 'Error', detail: 'Error getting client', life: 10000 })
   }
 }
@@ -2235,14 +1659,15 @@ watch(payloadOnChangePage, async  (newValue) => {
 
   await getList()
 })
-watch(() => idItemToLoadFirstTime.value, async (newValue) => {
-  if (!newValue) {
-    clearForm()
-  }
-  else {
-    await getItemById(newValue)
-  }
-})
+
+// watch(() => idItemToLoadFirstTime.value, async (newValue) => {
+//   if (!newValue) {
+//     clearForm()
+//   }
+//   else {
+//     await getItemById({ id: newValue.Id, type: newValue.type, status: newValue.status })
+//   }
+// })
 
 watch(disableClient, () => {
   if (disableClient.value) {
@@ -2250,6 +1675,7 @@ watch(disableClient, () => {
     filterToSearch.value.agency = []
   }
 })
+
 watch(filterToSearch, () => {
   if (filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[3]?.id || filterToSearch.value.criteria?.id === ENUM_INVOICE_CRITERIA[1]?.id) {
     hotelError.value = false
@@ -2260,13 +1686,13 @@ watch(filterToSearch, () => {
 
 // TRIGGER FUNCTIONS -------------------------------------------------------------------------------------
 onMounted(async () => {
-  document.title = 'Invoice Management' 
-  isFirstTimeInOnMounted.value = true
-  filterToSearch.value.criterial = ENUM_FILTER[0]
-  await getStatusListTemp()
-  await getHotelListTemp()
-  searchAndFilter()
-})
+  document.title = 'Invoice Management';
+  isFirstTimeInOnMounted.value = true;
+  filterToSearch.value.criteria = ENUM_FILTER[0];
+  await getStatusListTemp();
+  await getHotelListTemp();
+  searchAndFilter();
+});
 
 const legend = ref(
   [
@@ -2297,8 +1723,6 @@ const legend = ref(
     },
   ]
 )
-
-// -------------------------------------------------------------------------------------------------------
 </script>
 <template>
   <div class=" col-1 align-items-center grid w-full">
@@ -2352,7 +1776,6 @@ const legend = ref(
           </template>
         </PopupNavigationMenu>
 
-
         <!-- <Button class="ml-2" icon="pi pi-envelope" label="Send"  @click="() => navigateTo(`invoice/sendInvoice`, { open: { target: '_blank' } })" /> -->
           <Button v-if="status === 'authenticated' && (isAdmin || authStore.can(['INVOICE-MANAGEMENT:SHOW-BTN-IMPORT']))"
           v-tooltip.left="'Send'" class="ml-2" label="Send" icon="pi pi-envelope" severity="primary"
@@ -2367,17 +1790,9 @@ const legend = ref(
             </button>
           </template>
         </PopupNavigationMenu>
-          <!-- <Button
-          class="ml-2" icon="pi pi-paperclip" :disabled="!attachmentInvoice" label="Document" @click="() => {
-            attachmentDialogOpen = true
-          }"
-        /> -->
-        <!-- <Button class="ml-2" icon="pi pi-file-plus" label="Process" /> -->
-        <!--  <Button class="ml-2" icon="pi pi-cog" label="Adjustment" disabled /> -->
         <Button class="ml-2" icon="pi pi-print" label="Print" :disabled="listItems.length === 0" @click="Print()" />
         <Button class="ml-2" icon="pi pi-download" label="Export" :disabled="listItems.length === 0"
           @click="() => exportList()" />
-        <!-- <Button class="ml-2" icon="pi pi-times" label="Exit" @click="() => { navigateTo('/') }" /> -->
       </div>   
     </div>
   </div>
@@ -2493,21 +1908,6 @@ const legend = ref(
                             operator: 'EQUALS',
                             value: 'ACTIVE',
                           });
-
-                          // const filter: FilterCriteria[] = [
-                          //   {
-                          //     key: 'client.id',
-                          //     logicalOperation: 'AND',
-                          //     operator: 'IN',
-                          //     value: ids,
-                          //   },
-                          //   {
-                          //     key: 'status',
-                          //     logicalOperation: 'AND',
-                          //     operator: 'EQUALS',
-                          //     value: 'ACTIVE',
-                          //   },
-                          // ]
                           await getAgencyList(objApis.agency.moduleApi, objApis.agency.uriApi, {
                             query: $event,
                             keys: ['name', 'code'],
@@ -2740,16 +2140,7 @@ const legend = ref(
                 <Button v-tooltip.top="'Clear'" outlined class="w-3rem" icon="pi pi-filter-slash"
                   :loading="loadingSearch" @click="clearFilterToSearch" />
               </div>
-              <Button
-                v-tooltip.top="'Copiar tabla'"
-                class="p-button-lg w-1rem h-2rem pt-2 -ml-3 mt-4" 
-                icon="pi pi-copy"
-                @click="copiarDatos"
-              />
-              <!-- <div class="col-12 md:col-3 sm:mb-2 flex align-items-center">
-            </div> -->
-              <!-- <div class="col-12 md:col-5 flex justify-content-end">
-            </div> -->
+              <Button v-tooltip.top="'Copiar tabla'" class="p-button-lg w-1rem h-2rem pt-2 -ml-3 mt-4" icon="pi pi-copy" @click="copiarDatos"/>
             </div>
           </AccordionTab>
         </Accordion>
@@ -2761,7 +2152,7 @@ const legend = ref(
         :options="options" 
         :pagination="pagination"
         @on-confirm-create="clearForm" 
-        @open-edit-dialog="openEditDialog($event)"
+        @open-edit-dialog="openEditDialog($event, '')"
         @on-change-pagination="payloadOnChangePage = $event" 
         @on-change-filter="parseDataTableFilter"
         @on-list-item="resetListItems" 
@@ -2790,21 +2181,10 @@ const legend = ref(
             :close-dialog="() => { bookingDialogOpen = false }" 
             :open-dialog="handleDialogOpen" 
             :active="active"
-            :set-active="($event) => { active = $event }" 
+            :set-active="($event:any) => { active = $event }" 
             :is-detail-view="true"  
           />
         </template>
-
-        <!-- <template #column-status="props">
-          <Badge :value="getStatusName(props.item)"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item)}`" />
-        </template> -->
-
-        <!-- Asi estaba antes -->
-        <!-- <template #column-invoiceStatus="props">
-          <Badge v-if="props.item" :value="getStatusName(props.item?.name?.toUpperCase())"
-            :style="`background-color: ${getStatusBadgeBackgroundColor(props?.item?.name?.toUpperCase())}`" />
-        </template> -->
 
         <template #column-invoiceStatus="props">
           <Badge v-if="props.item" :value="props.item?.name"
@@ -3035,168 +2415,60 @@ const legend = ref(
         @on-close-dialog="() => { paymentsDialogOpen = false }"
     />
   </div>
-
-  <Dialog
-      v-model:visible="openDialogPrint"
-      modal
-      class="mx-3 sm:mx-0"
-      content-class="border-round-bottom border-top-1 surface-border"
-      :style="{ width: '60%' }"
-      :pt="{
-        root: {
-          class: 'custom-dialog-history',
-        },
-        header: {
-          style: 'padding-top: 0.5rem; padding-bottom: 0.5rem',
-        },
-        // mask: {
-        //   style: 'backdrop-filter: blur(5px)',
-        // },
-      }"
-      @hide="closeModalPrint()"
-    >
-      <template #header>
-        <div class="flex align-items-center justify-content-between w-full">
-          <h5 class="m-0">
-            Invoices to Print
-          </h5>
-          <div class="flex align-items-center">
-            <h5 class="m-0 mr-2">
-              Invoice: {{ props.selectedInvoice.invoiceId }}
-            </h5>
-          </div>
-        </div>
-      </template>
-
-        <div class="p-fluid t-0">
-          <DynamicTable
-            class="card p-0"
-            :data="listPrintItems"
-            :columns="columnstoPrint"
-            :options="optionsToPrint"
-            :pagination="paginationPrint"
-            @on-change-pagination="payloadPrintOnChangePage = $event"
-            @update:clicked-item="invoiceIdsListToPrint=$event"
-            >
-            <!-- @update:clicked-item="invoiceSelectedListForApplyPayment = $event" -->
-            <template #column-status="{ data: item }">
-              <Badge
-                :value="getStatusName(item?.status)"
-                :style="`background-color: ${getStatusBadgeBackgroundColor(item.status)}`"
-              />
-            </template>
-          </DynamicTable>
-        </div>
-        <div class="flex justify-content-between">
-          <div class="flex align-items-center">
-            <div>
-              <Checkbox
-                id="invoiceAndBookings"
-                v-model="invoiceAndBookings"
-                :binary="true"
-                disabled
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="invoiceAndBookings" class="ml-2 font-bold">
-                Invoice And Bookings
-              </label>
-            </div>
-            <div class="mx-4">
-              <Checkbox
-                id="invoiceSupport"
-                v-model="invoiceSupport"
-                :binary="true"
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="invoiceSupport" class="ml-2 font-bold">
-                Invoice Supports
-              </label>
-            </div>
-            <div>
-              <Checkbox
-                id="groupByClient"
-                v-model="groupByClient"
-                :binary="true"
-                @update:model-value="($event) => {
-                  // changeValueByCheckApplyPaymentBalance($event);
-                }"
-              />
-              <label for="groupbyClient" class="ml-2 font-bold">
-                Group By Client
-              </label>
-            </div>
-          </div>
-          <div>
-            <Button
-              v-tooltip.top="'Print'"
-              class="w-3rem mx-1"
-              icon="pi pi-print"
-              :disabled="false"
-              :loading="loadingSavePrint"
-              @click="invoicePrint()"
-            />
-            <Button v-tooltip.top="'Cancel'" class="w-3rem" icon="pi pi-times" severity="secondary" @click="closeModalPrint()" />
-          </div>
-        </div>    
-    </Dialog>
     <DynamicContentModalImport
       :visible="ImportVirtualDialogVisible" :component="ImportVirtualDialog"
       header="Bookings Import From File (Virtual Hotels)" @close="closeBookingFromFileVirtual"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
     />
     <DynamicContentModalImport
       :visible="ImportManualDialogVisible" :component="ImportManualDialog"
       header="Bookings Import From File" @close="closeBookingFromFileManual"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="InvoiceToPrintDialogVisible" :component="InvoiceToPrintDialog"
       header="Invoices To Print" @close="closeInvoiceToPrint"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="ReconcileManualDialogVisible" :component="ReconcileManualDialog"
       header="Invoice To Reconcile Manual" @close="closeReconcileManual"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="ReconcileAutomaticDialogVisible" :component="ReconcileAutomaticDialog"
       header="Invoice To Reconcile Automatic" @close="closeReconcileAutomatic"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="ReconcileFilesDialogVisible" :component="ReconcileFilesDialog"
       header="Reconcile Invoice From files" @close="closeReconcileFiles"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="SendByBavelDialogVisible" :component="SendByBavelDialog"
       header="Invoice to Send by Bavel" @close="closeSendByBavel"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="SendByEmailDialogVisible" :component="SendByEmailDialog"
       header="Invoice to Send by Email" @close="closeSendByEmail"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="SendByFtpDialogVisible" :component="SendByFtpDialog"
       header="Invoice to Send by FTP" @close="closeSendByFtp"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
       <DynamicContentModalImport
       :visible="UndoImportDialogVisible" :component="UndoImportDialog"
       header="Bookings To Remove" @close="closeUndoImport"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
       />
     <DynamicContentModalImport
       :visible="ImportInssistDialogVisible" :component="ImportInssistDialog"
       header="Bookings From Innsist" @close="closeImportFromInssist"
-      :style="{ width, height, 'min-height': '98vh', 'min-width': '90vw'}"
+      :style="{ 'min-height': '98vh', 'min-width': '90vw'}"
     />
 </template>
 

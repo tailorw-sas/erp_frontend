@@ -61,6 +61,27 @@ export default defineNuxtConfig({
   nitro: {
     host: process.env.NITRO_HOST || '0.0.0.0',
     port: Number.parseInt(process.env.NITRO_PORT || '3000'),
+    // devProxy: {
+    //   // Proxy para API
+    //   '/api': {
+    //     target: 'http://192.168.86.70:9902',
+    //     changeOrigin: true,
+    //     prependPath: true,
+    //   },
+    //   // Proxy específico para Swagger
+    //   '/swagger': {
+    //     target: 'http://192.168.86.70:9902',
+    //     changeOrigin: true,
+    //     pathRewrite: {
+    //       '^/swagger': ''
+    //     }
+    //   },
+    //   // Proxy para docs OpenAPI
+    //   '/v3/api-docs': {
+    //     target: 'http://192.168.86.70:9902',
+    //     changeOrigin: true,
+    //   }
+    // }
   },
 
   appConfig: {
@@ -71,7 +92,10 @@ export default defineNuxtConfig({
 
   plugins: [
     { src: '~/plugins/recaptcha.ts' },
-    { src: '~/plugins/api.ts' }
+    { src: '~/plugins/api.ts' },
+    { src: '~/plugins/auth-interceptor.client.ts', mode: 'client' },
+    { src: '~/plugins/inactivity-auth.client.ts', mode: 'client' },
+    { src: '~/plugins/inactivity-auth.client.ts', mode: 'client' }
   ],
 
   components: [

@@ -952,7 +952,7 @@ async function checkProcessStatus(id: any) {
   })
 }
 
-/* async function getErrorList(processId: any) {
+/*async function getErrorList(processId: any) {
   try {
     optionsListErrors.value.loading = true
     payload.value = { ...payload.value, query: processId }
@@ -992,7 +992,7 @@ async function checkProcessStatus(id: any) {
   finally {
     optionsListErrors.value.loading = false
   }
-} */
+}*/
 
 async function getErrorList(processId: any) {
   try {
@@ -1053,13 +1053,13 @@ async function getErrorList(processId: any) {
           })
           existingIds.add(iterator.row?.insistImportProcessBookingId)
         }
-        /* else {
+        /*else {
           const booking = newListItems.filter(item => item.id === iterator.row?.insistImportProcessBookingId)
           if (booking.length > 0) {
             booking[0].amount = booking[0].amount + iterator.row?.invoiceAmount
             booking[0].hotelInvoiceAmount = booking[0].hotelInvoiceAmount + iterator.row?.hotelInvoiceAmount
           }
-        } */
+        }*/
       }
 
       paginationErroList.value.page = page

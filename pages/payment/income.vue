@@ -645,6 +645,8 @@ async function createItem(item: { [key: string]: any }) {
 
     // Asignación del invoiceAmount total al payload
     payload.incomeAmount = totalIncomeAmount
+
+    // Asignacion de los attachments al payload
     if (LocalAttachmentList.value.length > 0) {
       payload.attachments = LocalAttachmentList.value.map(item => ({
         filename: item.filename,
@@ -676,7 +678,6 @@ async function createItem(item: { [key: string]: any }) {
       setTimeout(() => {
         window.close()
       }, 1500)
-      // toast.add({ severity: 'info', summary: 'Confirmed', detail: `The invoice ${`${response?.invoiceNo?.split('-')[0]}-${response?.invoiceNo?.split('-')[2]}`} was created successfully`, life: 10000 })
     }
     else {
       toast.add({ severity: 'error', summary: 'Error', detail: 'Transaction was not successful', life: 10000 })
