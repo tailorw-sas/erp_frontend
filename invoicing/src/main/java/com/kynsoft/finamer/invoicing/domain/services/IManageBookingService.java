@@ -6,6 +6,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.DuplicateValidationResult;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelBookingCombinationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelInvoiceCombinationDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.infrastructure.identity.Booking;
 import org.springframework.data.domain.Pageable;
 
@@ -58,7 +59,7 @@ public interface IManageBookingService {
      * @param importType Tipo de importación (VIRTUAL, NO_VIRTUAL, INNSIST)
      * @return Resultado con información detallada de duplicados encontrados
      */
-    DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, String importType);
+    DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, ImportType importType);
 
     /**
      * Valida combinaciones Hotel+InvoiceNumber de forma optimizada
@@ -68,7 +69,7 @@ public interface IManageBookingService {
      * @param importType Tipo de importación (normalmente VIRTUAL)
      * @return Resultado con información detallada de duplicados encontrados
      */
-    DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, String importType);
+    DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, ImportType importType);
 
     /**
      * Verifica si existe una combinación específica Hotel+BookingNumber

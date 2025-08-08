@@ -13,10 +13,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Adaptador que convierte BookingRow (que en realidad son Room Rates del Excel)
- * al formato unificado UnifiedRoomRateDto.
+ * Adapter that converts BookingRow (which are actually Room Rates from Excel)
+ * to the unified UnifiedRoomRateDto format.
  *
- * Migra la lógica actual manteniendo compatibilidad con el sistema existente.
+ * Migrates the current logic while maintaining compatibility with the existing system.
  */
 @Component("excelRoomRateAdapter")
 @Slf4j
@@ -46,18 +46,18 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Convierte un BookingRow individual a UnifiedRoomRateDto
+     * Converts an individual BookingRow to UnifiedRoomRateDto
      */
     private UnifiedRoomRateDto adaptSingleRow(BookingRow bookingRow, String importProcessId) {
         try {
             return UnifiedRoomRateDto.builder()
-                // === Metadatos de Origen ===
+                // === Source Metadata ===
                 .importProcessId(importProcessId)
                 .sourceType(SOURCE_TYPE)
                 .sourceIdentifier("Row " + bookingRow.getRowNumber())
                 .rowReference(String.valueOf(bookingRow.getRowNumber()))
 
-                // === Datos del Room Rate (migrados desde BookingRow) ===
+                // === Room Rate data (migrated from BookingRow) ===
                 .transactionDate(cleanString(bookingRow.getTransactionDate()))
                 .hotelCode(cleanString(bookingRow.getManageHotelCode()))
                 .agencyCode(cleanString(bookingRow.getManageAgencyCode()))
@@ -82,20 +82,16 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
                 .hotelType(cleanString(bookingRow.getHotelType()))
                 .nightType(cleanString(bookingRow.getNightType()))
 
-                // === Datos Calculados ===
-                .bookingGroupKey(calculateBookingGroupKey(bookingRow))
-                .invoiceGroupKey(calculateInvoiceGroupKey(bookingRow))
-
                 .build();
 
         } catch (Exception e) {
             log.error("Error adapting row {}: {}", bookingRow.getRowNumber(), e.getMessage());
-            return null; // Filtrado en el stream principal
+            return null; // Filtering on the main stream
         }
     }
 
     /**
-     * Calcula la clave de agrupación para bookings basada en reglas de negocio actuales
+     * Calculates the grouping key for bookings based on current business rules
      */
     private String calculateBookingGroupKey(BookingRow bookingRow) {
         // Usar la misma lógica que el sistema actual
@@ -107,7 +103,7 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Calcula la clave de agrupación para invoices
+     * Calculate the grouping key for invoices
      */
     private String calculateInvoiceGroupKey(BookingRow bookingRow) {
         return String.format("%s|%s|%s",
@@ -117,7 +113,7 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Limpia strings removiendo espacios extra y manejando nulls
+     * Cleans strings by removing extra spaces and handling nulls
      */
     private String cleanString(String value) {
         if (value == null) {
@@ -144,10 +140,10 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
 
         List<?> list = (List<?>) source;
         if (list.isEmpty()) {
-            return true; // Lista vacía es válida
+            return true; // Empty List
         }
 
-        // Verificar que el primer elemento sea BookingRow
+        // Verify that the first element is BookingRow
         return list.get(0) instanceof BookingRow;
     }
 
@@ -156,7 +152,7 @@ public class ExcelRoomRateAdapter implements RoomRateSourceAdapter {
         return AdapterInfo.create(
                 SOURCE_TYPE,
                 "Adapter for Excel files containing room rate data (currently named BookingRow)",
-                List.class // Esperamos List<BookingRow>
+                List.class // We expect List<BookingRow>
         );
     }
 }

@@ -12,6 +12,7 @@ import com.kynsoft.finamer.invoicing.domain.dto.ManageBookingDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.DuplicateValidationResult;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelBookingCombinationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelInvoiceCombinationDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.dtoEnum.Status;
 import com.kynsoft.finamer.invoicing.domain.services.IManageBookingService;
 import com.kynsoft.finamer.invoicing.domain.services.IManageRoomRateService;
@@ -343,7 +344,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, String importType) {
+    public DuplicateValidationResult validateHotelBookingCombinations(List<HotelBookingCombinationDto> combinations, ImportType importType) {
         if (combinations == null || combinations.isEmpty()) {
             return DuplicateValidationResult.noDuplicates(0, importType);
         }
@@ -389,7 +390,7 @@ public class ManageBookingServiceImpl implements IManageBookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, String importType) {
+    public DuplicateValidationResult validateHotelInvoiceCombinations(List<HotelInvoiceCombinationDto> combinations, ImportType importType) {
         if (combinations == null || combinations.isEmpty()) {
             return DuplicateValidationResult.noDuplicates(0, importType);
         }

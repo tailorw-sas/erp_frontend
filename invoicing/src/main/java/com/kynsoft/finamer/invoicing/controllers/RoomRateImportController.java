@@ -5,8 +5,8 @@ import com.kynsof.share.core.application.excel.ExcelBean;
 import com.kynsof.share.core.infrastructure.excel.ExcelBeanReader;
 import com.kynsoft.finamer.invoicing.domain.dto.importresult.ImportProgress;
 import com.kynsoft.finamer.invoicing.domain.dto.importresult.ImportResult;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.excel.bean.BookingRow;
-import com.kynsoft.finamer.invoicing.infrastructure.identity.redis.excel.BookingImportCache;
 import com.kynsoft.finamer.invoicing.infrastructure.services.orchestrator.UnifiedRoomRateImportOrchestrator;
 import com.kynsoft.finamer.invoicing.infrastructure.services.progress.ImportProgressService;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controlador moderno para importación de Room Rates desde múltiples fuentes.
- * Reemplaza la funcionalidad del BookingController con arquitectura mejorada.
+ * Modern controller for importing Room Rates from multiple sources.
+ * Replaces the BookingController functionality with improved architecture.
  */
 @RestController
 @RequestMapping("/api/v1/room-rate-import")
@@ -39,13 +39,13 @@ public class RoomRateImportController {
     private final ImportProgressService progressService;
 
     /**
-     * Importa room rates desde archivo Excel
+     * Import room rates from an Excel file
      */
     @PostMapping(path = "/excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<ResponseEntity<ImportResult>> importFromExcel(
             @RequestPart("file") FilePart filePart,
             @RequestPart("importProcessId") String importProcessId,
-            @RequestPart("importType") String importType,
+            @RequestPart("importType") ImportType importType,
             @RequestPart("employee") String employee) {
 
         log.info("Starting Excel import - Process: {}, Type: {}, Employee: {}",
@@ -58,7 +58,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Obtiene el estado actual de un proceso de importación
+     * Gets the current status of an import process
      */
     @GetMapping("/status/{importProcessId}")
     public Mono<ResponseEntity<ImportProgress>> getImportStatus(@PathVariable String importProcessId) {
@@ -68,7 +68,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Lista adaptadores disponibles para diferentes fuentes
+     * List of adapters available for different sources
      */
     @GetMapping("/adapters")
     public ResponseEntity<Map<String, String>> getAvailableAdapters() {
@@ -77,18 +77,18 @@ public class RoomRateImportController {
     }
 
     /**
-     * Cancela un proceso de importación en curso
+     * Cancels an import process in progress
      */
     @PostMapping("/cancel/{importProcessId}")
     public Mono<ResponseEntity<String>> cancelImport(@PathVariable String importProcessId) {
-        // Implementar lógica de cancelación
+        // Implement cancellation logic
         return Mono.just(ResponseEntity.ok("Import cancellation requested for: " + importProcessId));
     }
 
-    // === MÉTODOS PRIVADOS ===
+    // === PRIVATE METHODS ===
 
     /**
-     * Valida la request de Excel
+     * Validate the Excel request
      */
     private Mono<Boolean> validateExcelRequest(FilePart filePart, String importProcessId, String employee) {
         return Mono.fromCallable(() -> {
@@ -106,26 +106,26 @@ public class RoomRateImportController {
     }
 
     /**
-     * Procesa la importación de Excel usando la infraestructura existente
+     * Process Excel import using existing infrastructure
      */
-    private Mono<ImportResult> processExcelImport(FilePart filePart, String importProcessId, String importType, String employee) {
+    private Mono<ImportResult> processExcelImport(FilePart filePart, String importProcessId, ImportType importType, String employee) {
 
         return readExcelFile(filePart)
                 .doOnNext(bookingRows ->
                         log.info("Successfully read {} rows from Excel for process: {}", bookingRows.size(), importProcessId))
                 .flatMap(bookingRows ->
-                        orchestrator.processImport(bookingRows, "EXCEL", importProcessId, employee, importType));
+                        orchestrator.processImport(bookingRows, "EXCEL", importType, importProcessId, employee));
     }
 
     /**
-     * Lee el archivo Excel de forma completamente reactiva
+     * Reads the Excel file completely reactively
      */
     private Mono<List<BookingRow>> readExcelFile(FilePart filePart) {
         return filePart.content()
             .collectList()
             .flatMap(dataBuffers -> {
                 try {
-                    // Convertir DataBuffers a byte array
+                    // Convert DataBuffers to byte array
                     int totalLength = dataBuffers.stream()
                             .mapToInt(dataBuffer -> dataBuffer.readableByteCount())
                             .sum();
@@ -140,7 +140,7 @@ public class RoomRateImportController {
                         org.springframework.core.io.buffer.DataBufferUtils.release(dataBuffer);
                     }
 
-                    // Ahora leer el Excel desde los bytes
+                    // Now read the Excel from the bytes
                     return readExcelFromBytes(bytes, filePart.filename());
 
                 } catch (Exception e) {
@@ -151,7 +151,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Lee Excel desde byte array usando ExcelBeanReader
+     * Read Excel from byte array using ExcelBeanReader
      */
     private Mono<List<BookingRow>> readExcelFromBytes(byte[] fileBytes, String filename) {
         return Mono.fromCallable(() -> {
@@ -164,20 +164,20 @@ public class RoomRateImportController {
 
             try (InputStream inputStream = new ByteArrayInputStream(fileBytes)) {
 
-                // Configurar ExcelBeanReader usando la infraestructura existente
+                // Configure ExcelBeanReader using existing infrastructure
                 ReaderConfiguration readerConfiguration = new ReaderConfiguration();
                 readerConfiguration.setIgnoreHeaders(true);
                 readerConfiguration.setInputStream(inputStream);
                 readerConfiguration.setReadLastActiveSheet(true);
 
-                // Crear el reader con la clase BookingRow existente
+                // Create the reader with the existing BookingRow class
                 ExcelBeanReader<BookingRow> reader = new ExcelBeanReader<>(readerConfiguration, BookingRow.class);
                 ExcelBean<BookingRow> excelBean = new ExcelBean<>(reader);
 
-                // Leer todas las filas
+                // Read all rows
                 for (BookingRow bookingRow : excelBean) {
                     if (bookingRow != null) {
-                        // Limpiar espacios en blanco como en el código original
+                        // Clean up whitespace as in the original code
                         removeBlankSpacesInBookingRow(bookingRow);
                         bookingRows.add(bookingRow);
                     }
@@ -197,7 +197,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Limpia espacios en blanco de BookingRow (migrado del código original)
+     * Clean up whitespace in BookingRow (migrated from the original code)
      */
     private void removeBlankSpacesInBookingRow(BookingRow bookingRow) {
         if (bookingRow.getManageHotelCode() != null) {
@@ -236,7 +236,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Maneja errores de forma consistente
+     * Handle errors consistently
      */
     private Mono<ResponseEntity<ImportResult>> handleError(Throwable error) {
         log.error("Error in room rate import", error);
@@ -251,7 +251,7 @@ public class RoomRateImportController {
     }
 
     /**
-     * Determina el status HTTP apropiado para el error
+     * Determines the appropriate HTTP status for the error
      */
     private HttpStatus determineHttpStatus(Throwable error) {
         if (error instanceof IllegalArgumentException) {
@@ -262,5 +262,4 @@ public class RoomRateImportController {
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
     }
-
 }

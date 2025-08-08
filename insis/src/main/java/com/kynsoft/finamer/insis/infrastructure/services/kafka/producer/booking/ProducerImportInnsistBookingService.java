@@ -20,7 +20,8 @@ public class ProducerImportInnsistBookingService {
     @Async
     public void create(ImportInnsistKafka entity){
         try{
-            producer.send("finamer-import-innsist", entity);
+            //producer.send("finamer-import-innsist", entity);
+            producer.send("import-innsist-v2", entity);
         }catch (Exception ex){
             Logger.getLogger(ProducerImportInnsistBookingService.class.getName()).log(Level.SEVERE, null, ex);
         }

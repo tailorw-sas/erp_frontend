@@ -1,6 +1,7 @@
 package com.kynsoft.finamer.invoicing.domain.dto.importresult;
 
 import com.kynsoft.finamer.invoicing.domain.dto.validation.ValidationError;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Resultado completo de un proceso de importación
+ * Complete result of an import process
  */
 @Data
 @Builder
@@ -23,6 +24,7 @@ public class ImportResult {
     private boolean success;
     private String importProcessId;
     private String sourceType;
+    private ImportType importType;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int totalCount;
@@ -34,7 +36,7 @@ public class ImportResult {
     private ImportStats stats;
 
     /**
-     * Calcula la duración del proceso en milisegundos
+     * Calculate the duration of the process in milliseconds
      */
     public long getDurationMs() {
         if (startTime != null && endTime != null) {
@@ -44,14 +46,14 @@ public class ImportResult {
     }
 
     /**
-     * Indica si hubo errores durante el proceso
+     * Indicates if there were errors during the process
      */
     public boolean hasErrors() {
         return errors != null && !errors.isEmpty();
     }
 
     /**
-     * Obtiene el porcentaje de éxito del procesamiento
+     * Gets the percentage of success of the processing
      */
     public double getSuccessRate() {
         if (totalCount == 0) return 0;
@@ -59,7 +61,7 @@ public class ImportResult {
     }
 
     /**
-     * Agrupa errores por fuente para mejor presentación en UI
+     * Group errors by source for better UI presentation
      */
     public Map<String, List<ValidationError>> getErrorsBySource() {
         if (errors == null) return Collections.emptyMap();
@@ -71,7 +73,8 @@ public class ImportResult {
     }
 
     /**
-     * Genera un resumen de errores para mostrar en UI
+     * Generates an error summary to display in the UI
+     * @return
      */
     public List<ErrorSummary> getErrorSummary() {
         return getErrorsBySource().entrySet().stream()
@@ -83,13 +86,22 @@ public class ImportResult {
                 .collect(Collectors.toList());
     }
 
-    // Factory methods para diferentes tipos de resultado
-    public static ImportResult success(String importProcessId, String sourceType,
+    /**
+     * Factory methods for different types of results
+     * @param importProcessId
+     * @param sourceType
+     * @param totalCount
+     * @param generatedBookings
+     * @param generatedInvoices
+     * @return
+     */
+    public static ImportResult success(String importProcessId, String sourceType, ImportType importType,
                                        int totalCount, int generatedBookings, int generatedInvoices) {
         return ImportResult.builder()
                 .success(true)
                 .importProcessId(importProcessId)
                 .sourceType(sourceType)
+                .importType(importType)
                 .totalCount(totalCount)
                 .processedCount(totalCount)
                 .generatedBookings(generatedBookings)
@@ -100,12 +112,14 @@ public class ImportResult {
                 .build();
     }
 
-    public static ImportResult failed(String importProcessId, String sourceType,
+
+    public static ImportResult failed(String importProcessId, String sourceType, ImportType importType,
                                       int totalCount, List<ValidationError> errors, String message) {
         return ImportResult.builder()
                 .success(false)
                 .importProcessId(importProcessId)
                 .sourceType(sourceType)
+                .importType(importType)
                 .totalCount(totalCount)
                 .processedCount(0)
                 .generatedBookings(0)
@@ -116,9 +130,9 @@ public class ImportResult {
                 .build();
     }
 
-    public static ImportResult validationFailed(String importProcessId, String sourceType,
+    public static ImportResult validationFailed(String importProcessId, String sourceType, ImportType importType,
                                                 int totalCount, List<ValidationError> errors) {
-        return failed(importProcessId, sourceType, totalCount, errors,
+        return failed(importProcessId, sourceType, importType, totalCount, errors,
                 "Import failed due to validation errors");
     }
 }

@@ -10,8 +10,8 @@ import java.time.LocalDate;
 import java.util.*;
 
 /**
- * Cache en memoria de todos los datos de referencia necesarios para la validación
- * y procesamiento de Room Rates. Elimina la necesidad de consultas repetitivas a BD.
+ * In-memory cache containing all reference data required for Room Rate validation and processing.
+ * Eliminates the need for repetitive database lookups.
  */
 @Data
 @Builder
@@ -19,31 +19,36 @@ import java.util.*;
 @AllArgsConstructor
 public class ReferenceDataCache {
 
-    // === Datos Maestros ===
+    // === Master Data ===
     private Map<String, ManageHotelDto> hotels;
     private Map<String, ManageAgencyDto> agencies;
     private Map<String, ManageRoomTypeDto> roomTypes;
     private Map<String, ManageRatePlanDto> ratePlans;
     private Map<String, ManageNightTypeDto> nightTypes;
+    private ManageInvoiceStatusDto processedStatus;
+    private ManageInvoiceTypeDto invoiceType;
 
-    // === Permisos del Usuario ===
+    // === User Permissions ===
     private Set<UUID> userAllowedHotels;
     private Set<UUID> userAllowedAgencies;
 
-    // === Operaciones de Cierre ===
-    private Map<String, InvoiceCloseOperationDto> closeOperations; // Por código de hotel
+    // === Close Operations ===
+    private Map<String, InvoiceCloseOperationDto> closeOperations; // By hotel code
 
-    // === Datos para Validaciones Avanzadas ===
-    private Set<String> existingBookingNumbers; // Hotel booking numbers ya existentes en BD
-    private Set<String> existingHotelInvoiceNumbers; // Hotel invoice numbers ya existentes en BD
+    // === Advanced Validation Data ===
+    private Set<String> existingBookingNumbers; // Existing hotel booking numbers in DB
+    private Set<String> existingHotelInvoiceNumbers; // Existing hotel invoice numbers in DB
 
-    // === Metadatos del Cache ===
+    // === Cache Metadata ===
     private String employeeId;
     private Date createdAt;
     private long creationTimeMs;
 
     /**
-     * Verifica si un hotel existe y el usuario tiene acceso
+     * Checks whether the hotel exists and the user has access to it.
+     *
+     * @param hotelCode Hotel code to validate
+     * @return true if the hotel exists and the user is authorized, false otherwise
      */
     public boolean hasValidHotelAccess(String hotelCode) {
         ManageHotelDto hotel = hotels.get(hotelCode);
@@ -51,7 +56,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si una agencia existe y el usuario tiene acceso
+     * Checks whether the agency exists and the user has access to it.
+     *
+     * @param agencyCode Agency code to validate
+     * @return true if the agency exists and the user is authorized, false otherwise
      */
     public boolean hasValidAgencyAccess(String agencyCode) {
         ManageAgencyDto agency = agencies.get(agencyCode);
@@ -59,7 +67,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Obtiene un hotel por código si existe y hay acceso
+     * Retrieves the hotel if it exists and the user has access to it.
+     *
+     * @param hotelCode Hotel code
+     * @return Optional of ManageHotelDto if valid and accessible
      */
     public Optional<ManageHotelDto> getHotelIfAllowed(String hotelCode) {
         ManageHotelDto hotel = hotels.get(hotelCode);
@@ -70,7 +81,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Obtiene una agencia por código si existe y hay acceso
+     * Retrieves the agency if it exists and the user has access to it.
+     *
+     * @param agencyCode Agency code
+     * @return Optional of ManageAgencyDto if valid and accessible
      */
     public Optional<ManageAgencyDto> getAgencyIfAllowed(String agencyCode) {
         ManageAgencyDto agency = agencies.get(agencyCode);
@@ -81,7 +95,11 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si un room type existe para un hotel específico
+     * Validates whether a room type exists (room types can be optional).
+     *
+     * @param roomTypeCode Room type code
+     * @param hotelCode Hotel code (unused currently)
+     * @return true if valid or empty, false otherwise
      */
     public boolean hasValidRoomType(String roomTypeCode, String hotelCode) {
         if (roomTypeCode == null || roomTypeCode.trim().isEmpty()) {
@@ -91,7 +109,11 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si un rate plan existe para un hotel específico
+     * Validates whether a rate plan exists (rate plans can be optional).
+     *
+     * @param ratePlanCode Rate plan code
+     * @param hotelCode Hotel code (unused currently)
+     * @return true if valid or empty, false otherwise
      */
     public boolean hasValidRatePlan(String ratePlanCode, String hotelCode) {
         if (ratePlanCode == null || ratePlanCode.trim().isEmpty()) {
@@ -101,7 +123,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si un night type existe
+     * Validates whether a night type exists (can be optional).
+     *
+     * @param nightTypeCode Night type code
+     * @return true if valid or empty, false otherwise
      */
     public boolean hasValidNightType(String nightTypeCode) {
         if (nightTypeCode == null || nightTypeCode.trim().isEmpty()) {
@@ -111,7 +136,12 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si hay operaciones de cierre que impidan procesar en una fecha específica
+     * Checks whether the given transaction date is within the allowed window
+     * for a hotel based on close operation definitions.
+     *
+     * @param hotelCode Hotel code
+     * @param transactionDate Date in string format to validate
+     * @return true if allowed to process, false otherwise
      */
     public boolean isDateAllowedForProcessing(String hotelCode, String transactionDate) {
         InvoiceCloseOperationDto closeOp = closeOperations.get(hotelCode);
@@ -133,7 +163,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si un hotel booking number ya existe en BD
+     * Checks whether a hotel booking number already exists in the system.
+     *
+     * @param hotelBookingNumber Booking number to check
+     * @return true if duplicate, false otherwise
      */
     public boolean isBookingNumberDuplicate(String hotelBookingNumber) {
         if (hotelBookingNumber == null) return false;
@@ -142,7 +175,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Verifica si un hotel invoice number ya existe en BD
+     * Checks whether a hotel invoice number already exists in the system.
+     *
+     * @param hotelInvoiceNumber Invoice number to check
+     * @return true if duplicate, false otherwise
      */
     public boolean isHotelInvoiceNumberDuplicate(String hotelInvoiceNumber) {
         if (hotelInvoiceNumber == null) return false;
@@ -150,7 +186,9 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Obtiene estadísticas del cache para monitoreo
+     * Returns statistics about the cached data for monitoring purposes.
+     *
+     * @return CacheStats with aggregated information
      */
     public CacheStats getStats() {
         return CacheStats.builder()
@@ -167,7 +205,9 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Valida que el cache tenga todos los datos esenciales
+     * Validates that the cache contains all required reference data to be considered valid.
+     *
+     * @return true if cache is usable, false otherwise
      */
     public boolean isValid() {
         return hotels != null && !hotels.isEmpty() &&
@@ -178,7 +218,10 @@ public class ReferenceDataCache {
     }
 
     /**
-     * Factory method para crear un cache vacío
+     * Factory method to create an empty cache for a given employee.
+     *
+     * @param employeeId ID of the employee initiating the cache
+     * @return ReferenceDataCache with initialized empty maps and sets
      */
     public static ReferenceDataCache empty(String employeeId) {
         return ReferenceDataCache.builder()
@@ -199,6 +242,9 @@ public class ReferenceDataCache {
 
     @Data
     @Builder
+    /**
+     * Snapshot of cache statistics used for observability and diagnostics.
+     */
     public static class CacheStats {
         private int hotelCount;
         private int agencyCount;
@@ -210,10 +256,16 @@ public class ReferenceDataCache {
         private long creationTimeMs;
         private long cacheAgeMs;
 
+        /**
+         * @return creation time in seconds
+         */
         public double getCreationTimeSeconds() {
             return creationTimeMs / 1000.0;
         }
 
+        /**
+         * @return age of the cache in seconds
+         */
         public double getCacheAgeSeconds() {
             return cacheAgeMs / 1000.0;
         }

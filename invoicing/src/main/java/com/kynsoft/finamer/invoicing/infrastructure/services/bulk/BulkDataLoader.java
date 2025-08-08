@@ -6,6 +6,9 @@ import com.kynsoft.finamer.invoicing.domain.dto.roomrate.UnifiedRoomRateDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.DuplicateValidationResult;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelBookingCombinationDto;
 import com.kynsoft.finamer.invoicing.domain.dto.validation.HotelInvoiceCombinationDto;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceStatus;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EInvoiceType;
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.ImportType;
 import com.kynsoft.finamer.invoicing.domain.services.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Servicio optimizado para cargar en masa todos los datos de referencia necesarios
- * para validar y procesar room rates. Elimina consultas N+1 y mejora performance.
+ * Optimized service for bulk loading of all necessary reference data
+ * to validate and process room rates. Eliminates N+1 queries and improves performance.
  */
 @Service
 @RequiredArgsConstructor
@@ -34,59 +37,74 @@ public class BulkDataLoader {
     private final IManageNightTypeService nightTypeService;
     private final IInvoiceCloseOperationService closeOperationService;
     private final IManageEmployeeService employeeService;
-    private final IManageBookingService bookingService; // Para cargar booking numbers existentes
+    private final IManageBookingService bookingService;
+    private final IManageInvoiceStatusService invoiceStatusService;
+    private final IManageInvoiceTypeService invoiceTypeService;
 
-    // Inyectar el executor de I/O directamente
     @Qualifier("ioExecutor")
     private final TaskExecutor ioExecutor;
 
     /**
-     * Precarga todos los datos de referencia necesarios para procesar una lista de room rates
+     * Preloads all the reference data needed to process a list of room rates
      *
-     * @param roomRates Lista de room rates a procesar
-     * @param employeeId ID del empleado que ejecuta la importación
-     * @param importType Tipo de importación (VIRTUAL, NO_VIRTUAL, INNSIST)
-     * @return Cache completo con todos los datos necesarios
+     * @param unifiedDtos List of room rates to process
+     * @param importType Import type (VIRTUAL, NO_VIRTUAL, INNSIST)
+     * @param employeeId ID of the employee performing the import
+     * @return Full cache with all the necessary data
      */
-    public Mono<ReferenceDataCache> preloadReferenceData(List<UnifiedRoomRateDto> roomRates, String employeeId, String importType) {
-        log.info("Starting bulk data loading for {} room rates, employee: {}, importType: {}",
-                roomRates.size(), employeeId, importType);
+    public Mono<ReferenceDataCache> preloadReferenceData(List<UnifiedRoomRateDto> unifiedDtos, ImportType importType, String employeeId) {
+        log.info("Starting bulk data loading for {} room rates, importType: {}, employee: {}", unifiedDtos.size(), importType, employeeId);
         long startTime = System.currentTimeMillis();
 
         return Mono.fromCallable(() -> {
 
-                    // 1. Extraer todos los códigos únicos del Excel/datos de entrada
-                    DataCodes codes = extractUniqueCodes(roomRates);
+                    // 1. Extract all unique codes from Excel/input data
+                    DataCodes codes = extractUniqueCodes(unifiedDtos);
                     log.debug("Extracted codes - Hotels: {}, Agencies: {}, RoomTypes: {}, RatePlans: {}, NightTypes: {}",
                             codes.hotelCodes.size(), codes.agencyCodes.size(),
                             codes.roomTypeCodes.size(), codes.ratePlanCodes.size(), codes.nightTypeCodes.size());
 
-                    // 2. Cargar permisos del usuario primero (necesario para filtrar datos)
+                    // 2. Load user permissions first (needed to filter data)
                     UserPermissions userPermissions = loadUserPermissions(employeeId);
                     log.debug("User permissions loaded - Hotels: {}, Agencies: {}",
                             userPermissions.allowedHotels.size(), userPermissions.allowedAgencies.size());
 
-                    // 3. Cargar datos maestros en paralelo (una consulta por tipo)
+                    // 3. Load master data in parallel (one query per type)
                     Map<String, ManageHotelDto> hotels = loadHotelsInBulk(codes.hotelCodes, userPermissions.allowedHotels);
                     Map<String, ManageAgencyDto> agencies = loadAgenciesInBulk(codes.agencyCodes, userPermissions.allowedAgencies);
 
-                    // 4. Cargar datos opcionales solo si están presentes en los room rates
+                    // 3.1 Load the parent agencies of those whose aliases are not 000-MySelf or whose codes are already in codes.agencyCodes
+                    Set<String> agencyParentCodes = agencies.values().stream()
+                            .map(ManageAgencyDto::getAgencyAlias)
+                            .filter(alias -> alias != null && !alias.trim().startsWith("000-"))
+                            .map(alias -> alias.split("-", 2)[0].trim())
+                            .filter(code -> !codes.agencyCodes.contains(code))
+                            .collect(Collectors.toSet());
+                    Map<String, ManageAgencyDto> agenciesParent = loadAgenciesInBulk(agencyParentCodes, userPermissions.allowedAgencies);
+                    // Merge agenciesParent into main agencies map
+                    agencies.putAll(agenciesParent);
+
+                    // 4. Load optional data only if present in room rates
                     Map<String, ManageRoomTypeDto> roomTypes = loadRoomTypesInBulk(codes.roomTypeCodes);
                     Map<String, ManageRatePlanDto> ratePlans = loadRatePlansInBulk(codes.ratePlanCodes);
                     Map<String, ManageNightTypeDto> nightTypes = loadNightTypesInBulk(codes.nightTypeCodes);
 
-                    // 5. Cargar operaciones de cierre para hoteles relevantes
+                    // 5. Load closing operations for relevant hotels
                     Set<UUID> hotelIds = hotels.values().stream().map(ManageHotelDto::getId).collect(Collectors.toSet());
                     Map<String, InvoiceCloseOperationDto> closeOperations = loadCloseOperationsInBulk(hotelIds);
 
-                    // 6. Cargar duplicados SOLO según el tipo de importación usando combinaciones pre-extraídas
+                    // 6. Load duplicates ONLY based on import type using pre-extracted combinations
                     Set<String> existingBookingNumbers = loadExistingBookingNumbers(codes.hotelBookingCombinations, importType);
                     Set<String> existingHotelInvoiceNumbers = loadExistingHotelInvoiceNumbers(codes.hotelInvoiceCombinations, importType, hotels);
+
+                    // 6. Load invoice status and invoice Type
+                    ManageInvoiceStatusDto processedStatus = invoiceStatusService.findByEInvoiceStatus(EInvoiceStatus.PROCESSED);
+                    ManageInvoiceTypeDto invoiceType = invoiceTypeService.findByEInvoiceType(EInvoiceType.INVOICE);
 
                     long endTime = System.currentTimeMillis();
                     long loadingTime = endTime - startTime;
 
-                    // 7. Construir cache completo
+                    // 7. Build full cache
                     ReferenceDataCache cache = ReferenceDataCache.builder()
                             .hotels(hotels)
                             .agencies(agencies)
@@ -98,6 +116,8 @@ public class BulkDataLoader {
                             .closeOperations(closeOperations)
                             .existingBookingNumbers(existingBookingNumbers)
                             .existingHotelInvoiceNumbers(existingHotelInvoiceNumbers)
+                            .processedStatus(processedStatus)
+                            .invoiceType(invoiceType)
                             .employeeId(employeeId)
                             .createdAt(new Date())
                             .creationTimeMs(loadingTime)
@@ -113,43 +133,45 @@ public class BulkDataLoader {
     }
 
     /**
-     * Extrae todos los códigos únicos de los room rates para hacer consultas bulk
-     * CORREGIDO: Extrae combinaciones Hotel+BookingNumber/InvoiceNumber directamente
+     * Extracts all unique codes from room rates for bulk queries
+     * FIXED: Extracts Hotel+BookingNumber/InvoiceNumber combinations directly
+     * @param unifiedDtos
+     * @return
      */
-    private DataCodes extractUniqueCodes(List<UnifiedRoomRateDto> roomRates) {
+    private DataCodes extractUniqueCodes(List<UnifiedRoomRateDto> unifiedDtos) {
         DataCodes codes = new DataCodes();
 
-        for (UnifiedRoomRateDto roomRate : roomRates) {
-            // Códigos obligatorios
-            if (roomRate.getHotelCode() != null) {
-                codes.hotelCodes.add(roomRate.getHotelCode().trim());
+        for (UnifiedRoomRateDto unifiedDto : unifiedDtos) {
+            // Mandatory codes
+            if (unifiedDto.getHotelCode() != null) {
+                codes.hotelCodes.add(unifiedDto.getHotelCode().trim());
             }
-            if (roomRate.getAgencyCode() != null) {
-                codes.agencyCodes.add(roomRate.getAgencyCode().trim());
-            }
-
-            // Códigos opcionales - solo agregar si están presentes
-            if (isNotEmpty(roomRate.getRoomType())) {
-                codes.roomTypeCodes.add(roomRate.getRoomType().trim());
-            }
-            if (isNotEmpty(roomRate.getRatePlan())) {
-                codes.ratePlanCodes.add(roomRate.getRatePlan().trim());
-            }
-            if (isNotEmpty(roomRate.getNightType())) {
-                codes.nightTypeCodes.add(roomRate.getNightType().trim());
+            if (unifiedDto.getAgencyCode() != null) {
+                codes.agencyCodes.add(unifiedDto.getAgencyCode().trim());
             }
 
-            if (isNotEmpty(roomRate.getHotelCode()) && isNotEmpty(roomRate.getHotelBookingNumber())) {
+            // Optional codes - only add if present
+            if (isNotEmpty(unifiedDto.getRoomType())) {
+                codes.roomTypeCodes.add(unifiedDto.getRoomType().trim());
+            }
+            if (isNotEmpty(unifiedDto.getRatePlan())) {
+                codes.ratePlanCodes.add(unifiedDto.getRatePlan().trim());
+            }
+            if (isNotEmpty(unifiedDto.getNightType())) {
+                codes.nightTypeCodes.add(unifiedDto.getNightType().trim());
+            }
+
+            if (isNotEmpty(unifiedDto.getHotelCode()) && isNotEmpty(unifiedDto.getHotelBookingNumber())) {
                 codes.hotelBookingCombinations.add(new HotelBookingCombinationDto(
-                        roomRate.getHotelCode().toUpperCase().trim(),
-                        roomRate.getHotelBookingNumber().replaceAll("\\s+", " ").trim()
+                        unifiedDto.getHotelCode().toUpperCase().trim(),
+                        unifiedDto.getHotelBookingNumber().replaceAll("\\s+", " ").trim()
                 ));
             }
 
-            if (isNotEmpty(roomRate.getHotelCode()) && isNotEmpty(roomRate.getHotelInvoiceNumber())) {
+            if (isNotEmpty(unifiedDto.getHotelCode()) && isNotEmpty(unifiedDto.getHotelInvoiceNumber())) {
                 codes.hotelInvoiceCombinations.add(new HotelInvoiceCombinationDto(
-                        roomRate.getHotelCode().toUpperCase().trim(),
-                        roomRate.getHotelInvoiceNumber().trim()
+                        unifiedDto.getHotelCode().toUpperCase().trim(),
+                        unifiedDto.getHotelInvoiceNumber().trim()
                 ));
             }
         }
@@ -161,7 +183,9 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga permisos del usuario (hoteles y agencias permitidas)
+     * Load user permissions (allowed hotels and agencies)
+     * @param employeeId
+     * @return
      */
     private UserPermissions loadUserPermissions(String employeeId) {
         try {
@@ -179,7 +203,10 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga hoteles en masa - UNA SOLA consulta
+     * Load hotels in bulk
+     * @param hotelCodes
+     * @param allowedHotels
+     * @return
      */
     private Map<String, ManageHotelDto> loadHotelsInBulk(Set<String> hotelCodes, Set<UUID> allowedHotels) {
         if (hotelCodes.isEmpty()) {
@@ -189,13 +216,13 @@ public class BulkDataLoader {
         try {
             List<ManageHotelDto> hotels = hotelService.findByCodeIn(new ArrayList<>(hotelCodes));
 
-            // Filtrar solo hoteles a los que el usuario tiene acceso
+            // Filter only hotels to which the user has access
             return hotels.stream()
                     .filter(hotel -> allowedHotels.contains(hotel.getId()))
                     .collect(Collectors.toMap(
                             ManageHotelDto::getCode,
                             hotel -> hotel,
-                            (existing, replacement) -> existing // En caso de duplicados, mantener el existente
+                            (existing, replacement) -> existing // In case of duplicates, keep the existing one
                     ));
         } catch (Exception e) {
             log.error("Error loading hotels in bulk: {}", hotelCodes, e);
@@ -204,7 +231,10 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga agencias en masa - UNA SOLA consulta
+     * Load agencies in bulk
+     * @param agencyCodes
+     * @param allowedAgencies
+     * @return
      */
     private Map<String, ManageAgencyDto> loadAgenciesInBulk(Set<String> agencyCodes, Set<UUID> allowedAgencies) {
         if (agencyCodes.isEmpty()) {
@@ -214,7 +244,7 @@ public class BulkDataLoader {
         try {
             List<ManageAgencyDto> agencies = agencyService.findByCodeIn(new ArrayList<>(agencyCodes));
 
-            // Filtrar solo agencias a las que el usuario tiene acceso
+            // Filter only agencies to which the user has access
             return agencies.stream()
                     .filter(agency -> allowedAgencies.contains(agency.getId()))
                     .collect(Collectors.toMap(
@@ -229,7 +259,9 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga room types en masa - solo si hay códigos presentes
+     * Load room types in bulk - only if codes are present
+     * @param roomTypeCodes
+     * @return
      */
     private Map<String, ManageRoomTypeDto> loadRoomTypesInBulk(Set<String> roomTypeCodes) {
         if (roomTypeCodes.isEmpty()) {
@@ -251,7 +283,9 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga rate plans en masa - solo si hay códigos presentes
+     * Load rate plans in bulk - only if codes are present
+     * @param ratePlanCodes
+     * @return
      */
     private Map<String, ManageRatePlanDto> loadRatePlansInBulk(Set<String> ratePlanCodes) {
         if (ratePlanCodes.isEmpty()) {
@@ -273,7 +307,9 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga night types en masa - solo si hay códigos presentes
+     * Load night types in bulk - only if codes are present
+     * @param nightTypeCodes
+     * @return
      */
     private Map<String, ManageNightTypeDto> loadNightTypesInBulk(Set<String> nightTypeCodes) {
         if (nightTypeCodes.isEmpty()) {
@@ -295,7 +331,9 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga operaciones de cierre para los hoteles relevantes
+     * Load closing operations for relevant hotels
+     * @param hotelIds
+     * @return
      */
     private Map<String, InvoiceCloseOperationDto> loadCloseOperationsInBulk(Set<UUID> hotelIds) {
         if (hotelIds.isEmpty()) {
@@ -317,17 +355,20 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga booking numbers existentes - OPTIMIZADO y CORREGIDO
-     * Usa combinaciones pre-extraídas evitando duplicar lógica
+     * Load existing booking numbers - OPTIMIZED and FIXED
+     * Use pre-extracted combinations to avoid duplicate logic
+     * @param combinations
+     * @param importType
+     * @return
      */
-    private Set<String> loadExistingBookingNumbers(Set<HotelBookingCombinationDto> combinations, String importType) {
+    private Set<String> loadExistingBookingNumbers(Set<HotelBookingCombinationDto> combinations, ImportType importType) {
 
         if (combinations.isEmpty()) {
             log.debug("No booking number combinations to check for importType: {}", importType);
             return new HashSet<>();
         }
 
-        // Filtrar combinaciones adicionales según import type si es necesario
+        // Filter additional combinations by import type if needed
         List<HotelBookingCombinationDto> filteredCombinations = combinations.stream()
                 .filter(combination -> shouldValidateBookingForImportType(combination, importType))
                 .collect(Collectors.toList());
@@ -351,13 +392,17 @@ public class BulkDataLoader {
     }
 
     /**
-     * Carga hotel invoice numbers - OPTIMIZADO y CORREGIDO
-     * Usa combinaciones pre-extraídas y filtra por hoteles virtuales
+     * Upload hotel invoice numbers - OPTIMIZED and FIXED
+     * Use pre-extracted combinations and filter by virtual hotels
+     * @param combinations
+     * @param importType
+     * @param hotels
+     * @return
      */
-    private Set<String> loadExistingHotelInvoiceNumbers(Set<HotelInvoiceCombinationDto> combinations, String importType, Map<String,
-            ManageHotelDto> hotels) {
+    private Set<String> loadExistingHotelInvoiceNumbers(Set<HotelInvoiceCombinationDto> combinations, ImportType importType,
+                                                        Map<String, ManageHotelDto> hotels) {
 
-         if (!"VIRTUAL".equals(importType)) {
+         if (importType == ImportType.BOOKING_FROM_FILE_VIRTUAL_HOTEL) {
             log.debug("Skipping hotel invoice number validation for non-virtual import: {}", importType);
             return new HashSet<>();
         }
@@ -367,7 +412,7 @@ public class BulkDataLoader {
             return new HashSet<>();
         }
 
-        // Filtrar solo combinaciones de hoteles virtuales
+        // Filter only virtual hotel combinations
         List<HotelInvoiceCombinationDto> virtualHotelCombinations = combinations.stream()
                 .filter(combination -> {
                     ManageHotelDto hotel = hotels.get(combination.getHotelCode());
@@ -395,17 +440,19 @@ public class BulkDataLoader {
     }
 
     /**
-     * Determina si debe validar booking duplicados según el tipo de importación
+     * Determines whether to validate duplicate bookings based on the import type
+     * @param combination
+     * @param importType
+     * @return
      */
-    private boolean shouldValidateBookingForImportType(HotelBookingCombinationDto combination, String importType) {
-        // Todas las importaciones necesitan validar booking numbers
-        // Esta lógica se puede expandir si hay casos específicos por tipo
+    private boolean shouldValidateBookingForImportType(HotelBookingCombinationDto combination, ImportType importType) {
 
         switch (importType) {
-            case "VIRTUAL":
-            case "NO_VIRTUAL":
-            case "INNSIST":
+            case INVOICE_BOOKING_FROM_FILE:
+            case BOOKING_FROM_FILE_VIRTUAL_HOTEL:
+            case INSIST:
                 return true;
+            case NONE:
             default:
                 log.warn("Unknown import type: {}, defaulting to validate", importType);
                 return true;
@@ -416,7 +463,7 @@ public class BulkDataLoader {
         return value != null && !value.trim().isEmpty();
     }
 
-    // Clases auxiliares para organizar datos
+    // Helper classes for organizing data
     private static class DataCodes {
         Set<String> hotelCodes = new HashSet<>();
         Set<String> agencyCodes = new HashSet<>();

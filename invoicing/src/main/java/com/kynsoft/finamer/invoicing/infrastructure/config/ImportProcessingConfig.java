@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * Configuración de infraestructura para el procesamiento de importaciones
- * Optimizada para manejar alto volumen de room rates con paralelización controlada
+ * Infrastructure configuration for import processing
+ * Optimized to handle high volume room rates with controlled parallelization
  */
 @Configuration
 @EnableAsync
@@ -19,25 +19,25 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ImportProcessingConfig {
 
     /**
-     * Executor para procesos principales de importación
-     * Pool pequeño porque cada importación consume recursos significativos
+     * Executor for main import processes
+     * Small pool because each import consumes significant resources
      */
     @Bean("importExecutor")
     public TaskExecutor importExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        // Pool pequeño para importaciones completas
+        // Small pool for full imports
         executor.setCorePoolSize(2);
         executor.setMaxPoolSize(4);
         executor.setQueueCapacity(10);
 
-        // Configuración de threads
+        // Thread Configuration
         executor.setThreadNamePrefix("import-main-");
         executor.setKeepAliveSeconds(60);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(120);
 
-        // Política de rechazo: el caller ejecuta la tarea si no hay espacio
+        //Rejection policy: the caller executes the task if there is no space
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
         executor.initialize();
@@ -45,14 +45,14 @@ public class ImportProcessingConfig {
     }
 
     /**
-     * Executor para procesamiento de lotes (batches) de room rates
-     * Pool más grande para paralelizar el procesamiento de datos
+     * Executor for batch processing of room rates
+     * Larger pool to parallelize data processing
      */
     @Bean("batchProcessor")
     public TaskExecutor batchProcessor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        // Pool más grande para procesamiento paralelo de lotes
+        // Largest pool for parallel batch processing
         executor.setCorePoolSize(4);
         executor.setMaxPoolSize(8);
         executor.setQueueCapacity(100);
@@ -62,7 +62,7 @@ public class ImportProcessingConfig {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(60);
 
-        // Política más agresiva: descartar tareas si no hay capacidad
+        // More aggressive policy: discard tasks if there is no capacity
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
 
         executor.initialize();
@@ -70,14 +70,14 @@ public class ImportProcessingConfig {
     }
 
     /**
-     * Executor para operaciones de I/O (lectura de archivos, consultas a BD)
-     * Pool dedicado para operaciones que pueden bloquear
+     * Executor for I/O operations (file readings, database queries)
+     * Dedicated pool for potentially blocking operations
      */
     @Bean("ioExecutor")
     public TaskExecutor ioExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
-        // Pool más grande para I/O porque las tareas pueden bloquear
+        // Larger pool for I/O because tasks can block
         executor.setCorePoolSize(6);
         executor.setMaxPoolSize(12);
         executor.setQueueCapacity(200);
@@ -94,8 +94,8 @@ public class ImportProcessingConfig {
     }
 
     /**
-     * Executor para validaciones que pueden ejecutarse en paralelo
-     * Pool optimizado para CPU-intensive tasks
+     * Executor for validations that can run in parallel
+     * Pool optimized for CPU-intensive tasks
      */
     @Bean("validationExecutor")
     public TaskExecutor validationExecutor() {

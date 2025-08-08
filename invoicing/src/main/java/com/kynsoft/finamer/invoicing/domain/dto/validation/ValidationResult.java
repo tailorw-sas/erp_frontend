@@ -109,7 +109,7 @@ public class ValidationResult {
     }
 
     // Factory methods
-    public static ValidationResult success(List<com.kynsoft.finamer.invoicing.domain.dto.roomrate.UnifiedRoomRateDto> validRoomRates,
+    public static ValidationResult success(List<UnifiedRoomRateDto> validRoomRates,
                                            int totalProcessed, long validationTimeMs) {
         return ValidationResult.builder()
                 .validRoomRates(validRoomRates)

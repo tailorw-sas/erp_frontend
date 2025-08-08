@@ -4,13 +4,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuración específica para el procesamiento de room rates
+ * Specific configuration for processing room rates
  */
 @Configuration
 public class RoomRateProcessingConfig {
 
     /**
-     * Configuración de tamaños de lote para diferentes operaciones
+     * Setting lot sizes for different operations
      */
     @Bean
     public BatchSizeConfig batchSizeConfig() {
@@ -24,7 +24,7 @@ public class RoomRateProcessingConfig {
     }
 
     /**
-     * Configuración de timeouts para diferentes operaciones
+     * Setting timeouts for different operations
      */
     @Bean
     public ProcessingTimeouts processingTimeouts() {
@@ -46,7 +46,7 @@ public class RoomRateProcessingConfig {
         private int maxConcurrentBatches;
 
         /**
-         * Ajusta el tamaño de lote basado en la cantidad total de elementos
+         * Adjusts the batch size based on the total number of items
          */
         public int getAdjustedBatchSize(int baseSize, int totalElements) {
             if (totalElements < 100) {
@@ -67,10 +67,10 @@ public class RoomRateProcessingConfig {
         private int overallImportTimeoutMinutes;
 
         /**
-         * Calcula timeout dinámico basado en la cantidad de elementos
+         * Calculates dynamic timeout based on the number of elements
          */
         public int calculateDynamicTimeout(int baseTimeoutSeconds, int elementCount) {
-            // Agregar 1 segundo por cada 100 elementos adicionales
+            // Add 1 second for every 100 additional items
             int additionalTime = (elementCount / 100) * 1;
             return baseTimeoutSeconds + additionalTime;
         }

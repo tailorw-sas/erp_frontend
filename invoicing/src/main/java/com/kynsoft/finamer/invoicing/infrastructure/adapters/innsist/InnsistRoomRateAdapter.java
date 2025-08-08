@@ -17,9 +17,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Adaptador que convierte ImportInnsistBookingKafka (que en realidad son Room Rates de Innsist) al formato unificado UnifiedRoomRateDto.
+ * Adapter that converts ImportInnsistBookingKafka (which is actually Innsist Room Rates) to the unified UnifiedRoomRateDto format.
  *
- * Migra la lógica actual manteniendo compatibilidad con el sistema existente.
+ * Migrates the current logic while maintaining compatibility with the existing system.
  */
 @Component("innsistRoomRateAdapter")
 @Slf4j
@@ -50,7 +50,7 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Convierte un BookingRow individual a UnifiedRoomRateDto
+     * Converts an individual BookingRow to UnifiedRoomRateDto
      */
     private List<UnifiedRoomRateDto> adaptSingleRow(ImportInnsistBookingKafka innsistBookingKafka, String importProcessId) {
         try {
@@ -58,13 +58,13 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
             for (ImportInnsistRoomRateKafka roomRate : innsistBookingKafka.getRoomRates()) {
                 result.add(
                     UnifiedRoomRateDto.builder()
-                    // === Metadatos de Origen ===
+                    // === Source Metadata ===
                         .importProcessId(importProcessId)
                         .sourceType(SOURCE_TYPE)
                         .sourceIdentifier("Row " + innsistBookingKafka.getId())
                         .rowReference(innsistBookingKafka.getId().toString())
 
-                    // === Datos del Room Rate (migrados desde BookingRow) ===
+                    // === Room Rate data (migrated from BookingRow) ===
                         .transactionDate(innsistBookingKafka.getInvoiceDate().toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd")))
                         .hotelCode(innsistBookingKafka.getManageHotelCode())
                         .agencyCode(innsistBookingKafka.getManageAgencyCode())
@@ -90,10 +90,6 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
                         .folioNumber(innsistBookingKafka.getFolioNumber())
                         //.hotelType(cleanString(bookingRow.getHotelType()))
 
-                        // === Datos Calculados ===
-                        .bookingGroupKey(calculateBookingGroupKey(innsistBookingKafka))
-                        .invoiceGroupKey(calculateInvoiceGroupKey(innsistBookingKafka))
-
                         .build());
 
             }
@@ -101,12 +97,12 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
             return result;
         } catch (Exception e) {
             log.error("Error adapting id {}: {}", innsistBookingKafka.getId(), e.getMessage());
-            return null; // Filtrado en el stream principal
+            return null; // Filtering on the main stream
         }
     }
 
     /**
-     * Calcula la clave de agrupación para bookings basada en reglas de negocio actuales
+     * Calculates the grouping key for bookings based on current business rules
      */
     private String calculateBookingGroupKey(ImportInnsistBookingKafka bookingRow) {
         // Usar la misma lógica que el sistema actual
@@ -118,7 +114,7 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Calcula la clave de agrupación para invoices
+     * Calculate the grouping key for invoices
      */
     private String calculateInvoiceGroupKey(ImportInnsistBookingKafka bookingRow) {
         return String.format("%s|%s|%s",
@@ -128,7 +124,7 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
     }
 
     /**
-     * Limpia strings removiendo espacios extra y manejando nulls
+     * Cleans strings by removing extra spaces and handling nulls
      */
     private String cleanString(String value) {
         if (value == null) {
@@ -155,10 +151,10 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
 
         List<?> list = (List<?>) source;
         if (list.isEmpty()) {
-            return true; // Lista vacía es válida
+            return true; // Empty List
         }
 
-        // Verificar que el primer elemento sea BookingRow
+        // Verify that the first element is BookingRow
         return list.get(0) instanceof BookingRow;
     }
 
@@ -167,7 +163,7 @@ public class InnsistRoomRateAdapter implements RoomRateSourceAdapter {
         return AdapterInfo.create(
                 SOURCE_TYPE,
                 "Adapter for Innsist files containing room rate data (currently named BookingRow)",
-                List.class // Esperamos List<ImportInnsistBookingKafka>
+                List.class // We expect List<ImportInnsistBookingKafka>
         );
     }
 }

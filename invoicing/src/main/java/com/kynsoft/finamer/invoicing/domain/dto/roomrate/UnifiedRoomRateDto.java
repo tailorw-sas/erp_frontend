@@ -1,5 +1,6 @@
 package com.kynsoft.finamer.invoicing.domain.dto.roomrate;
 
+import com.kynsoft.finamer.invoicing.domain.dtoEnum.EGenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,8 +9,8 @@ import lombok.NoArgsConstructor;
 import java.util.Objects;
 
 /**
- * DTO unificado que representa Room Rates de cualquier fuente (Excel, Sistemas Externos, etc.)
- * Centraliza la estructura de datos para procesamiento uniforme.
+ * Unified DTO that represents Room Rates from any source (Excel, External Systems, etc.)
+ * Centralizes the data structure for uniform processing.
  */
 @Data
 @Builder
@@ -17,13 +18,13 @@ import java.util.Objects;
 @AllArgsConstructor
 public class UnifiedRoomRateDto {
 
-    // === Metadatos de Origen ===
+    // === Source Metadata ===
     private String importProcessId;
-    private String sourceType;        // "EXCEL", "EXTERNAL_SYSTEM_A", "EXTERNAL_SYSTEM_B"
+    private String sourceType;        // "EXCEL", "INNSIST", "EXTERNAL_SYSTEM_B"
     private String sourceIdentifier;  // "Row 15", "Object ID: 12345", etc.
     private String rowReference;        // Para ordenamiento y referencia
 
-    // === Datos del Room Rate ===
+    // === Room Rate Data ===
     private String transactionDate;
     private String hotelCode;
     private String agencyCode;
@@ -49,12 +50,11 @@ public class UnifiedRoomRateDto {
     private String nightType;
     private String folioNumber;
 
-    // === Datos Calculados/Derivados ===
-    private String bookingGroupKey;   // Se calcula según reglas de agrupación
-    private String invoiceGroupKey;   // Se calcula según reglas de agrupación
+    // === Calculated/Derived Data ===
+    private EGenerationType generationType;
 
     /**
-     * Construye el nombre completo del huésped
+     * Construct the full name of the guest
      */
     public String getFullName() {
         if (Objects.nonNull(firstName) && Objects.nonNull(lastName)) {
@@ -70,29 +70,60 @@ public class UnifiedRoomRateDto {
     }
 
     /**
-     * Calcula la clave de agrupación para bookings según reglas de negocio
+     * Calculate the grouping key for booking based on business rules
+     * @return
      */
     public String calculateBookingGroupKey() {
-        // La lógica puede variar según el tipo de import y reglas de negocio
-        return String.format("%s|%s|%s|%s",
-                Objects.toString(hotelCode, ""),
-                Objects.toString(agencyCode, ""),
-                Objects.toString(hotelBookingNumber, ""),
-                Objects.toString(transactionDate, ""));
+        switch (generationType) {
+            case ByHotelInvoiceNumber:
+                return String.format("%s|%s|%s|%s",
+                        Objects.toString(hotelCode, ""),
+                        Objects.toString(agencyCode, ""),
+                        normalizeDate(transactionDate),
+                        Objects.toString(hotelInvoiceNumber, ""));
+            case ByCheckIn:
+                return String.format("%s|%s|%s|%s",
+                        Objects.toString(hotelCode, ""),
+                        Objects.toString(agencyCode, ""),
+                        normalizeDate(transactionDate),
+                        normalizeDate(checkIn));
+            case ByCheckInCheckOut:
+                return String.format("%s|%s|%s|%s|%s",
+                        Objects.toString(hotelCode, ""),
+                        Objects.toString(agencyCode, ""),
+                        normalizeDate(transactionDate),
+                        normalizeDate(checkIn),
+                        normalizeDate(checkOut));
+            case ByCoupon:
+                return String.format("%s|%s|%s|%s",
+                        Objects.toString(hotelCode, ""),
+                        Objects.toString(agencyCode, ""),
+                        normalizeDate(transactionDate),
+                        Objects.toString(coupon, ""));
+            case ByBooking:
+            default:
+                return String.format("%s|%s|%s|%s",
+                        Objects.toString(hotelCode, ""),
+                        Objects.toString(agencyCode, ""),
+                        normalizeDate(transactionDate),
+                        Objects.toString(hotelBookingNumber, ""));
+        }
     }
 
     /**
-     * Calcula la clave de agrupación para invoices según reglas de negocio
+     * Calculate the grouping key for booking based on business rules
+     * @return
      */
-    public String calculateInvoiceGroupKey() {
-        return String.format("%s|%s|%s",
-                Objects.toString(hotelCode, ""),
-                Objects.toString(agencyCode, ""),
-                Objects.toString(transactionDate, ""));
+    public String forceGroupByBooking() {
+            return String.format("%s|%s|%s|%s",
+                    Objects.toString(hotelCode, ""),
+                    Objects.toString(agencyCode, ""),
+                    normalizeDate(transactionDate),
+                    Objects.toString(hotelBookingNumber, ""));
     }
 
     /**
-     * Valida que los campos esenciales estén presentes
+     * Validates that the essential fields are present
      */
     public boolean hasEssentialFields() {
         return Objects.nonNull(hotelCode) &&
@@ -102,12 +133,22 @@ public class UnifiedRoomRateDto {
     }
 
     /**
-     * Retorna un identificador único para este room rate dentro del proceso de importación
+     * Returns a unique identifier for this room rate within the import process
      */
     public String getUniqueIdentifier() {
         return String.format("%s-%s-%s",
                 importProcessId,
                 sourceType,
                 sourceIdentifier);
+    }
+
+    private static String normalizeDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return "";
+        try {
+            return java.time.LocalDate.parse(dateStr)
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (Exception e) {
+            return dateStr; // fallback to original if parsing fails
+        }
     }
 }
