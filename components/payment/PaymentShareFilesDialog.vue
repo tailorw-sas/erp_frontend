@@ -799,7 +799,7 @@ onMounted(async () => {
             :options="options"
             :pagination="Pagination"
             @on-change-filter="ParseDataTableFilter"
-            @update:clicked-item="getItemById($event)"
+            @update:clicked-item="getItemById($event.id)"
             @on-confirm-create="clearForm"
             @on-change-pagination="payloadOnChangePage = $event"
             @on-list-item="ResetListItems" @on-sort-field="OnSortField"
